@@ -1,30 +1,38 @@
 #pragma once
 
+#ifndef DAK_TANTRIX_COLOR_H
+#define DAK_TANTRIX_COLOR_H
+
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include <compare>
 #include <cstdint>
 
-////////////////////////////////////////////////////////////////////////////
-//
-// Colors of lines on the tiles.
-
-struct color_t
+namespace dak::tantrix
 {
-   static constexpr color_t red()      { return color_t(0); }
-   static constexpr color_t green()    { return color_t(1); }
-   static constexpr color_t blue()     { return color_t(2); }
-   static constexpr color_t yellow()   { return color_t(3); }
+   ////////////////////////////////////////////////////////////////////////////
+   //
+   // Colors of lines on the tiles.
 
-   color_t() = default;
+   struct color_t
+   {
+      static constexpr color_t red()      { return color_t(0); }
+      static constexpr color_t green()    { return color_t(1); }
+      static constexpr color_t blue()     { return color_t(2); }
+      static constexpr color_t yellow()   { return color_t(3); }
 
-   int as_int() const { return int(my_color); }
+      color_t() = default;
 
-   auto operator<=>(const color_t& an_other) const = default;
+      int as_int() const { return int(my_color); }
 
-private:
-   constexpr color_t(std::int8_t a_dir) : my_color(a_dir % 6) {}
+      auto operator<=>(const color_t& an_other) const = default;
 
-   std::int8_t my_color = 0;
-};
+   private:
+      constexpr color_t(std::int8_t a_dir) : my_color(a_dir % 6) {}
 
+      std::int8_t my_color = 0;
+   };
+}
+
+
+#endif /* DAK_TANTRIX_COLOR_H */

@@ -1,5 +1,8 @@
 #pragma once
 
+#ifndef DAK_TANTRIX_TANTRIX_H
+#define DAK_TANTRIX_TANTRIX_H
+
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include "direction.h"
@@ -8,3 +11,5 @@
 #include "tile.h"
 #include "solution.h"
 #include "puzzle.h"
+
+#endif /* DAK_TANTRIX_TANTRIX_H */

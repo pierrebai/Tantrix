@@ -3,6 +3,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace dak::tantrix;
 
 std::ostream& operator <<(ostream& stream, const color_t& color)
 {

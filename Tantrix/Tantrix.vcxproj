@@ -173,6 +173,7 @@
     <ClCompile Include="puzzle.cpp" />
     <ClCompile Include="solution.cpp" />
     <ClCompile Include="solve.cpp" />
+    <ClCompile Include="tile.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
