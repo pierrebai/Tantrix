@@ -1,198 +1,30 @@
-// Tantrix.cpp : Defines the functions for the static library.
-//
-
-#include "tantrix.h"
+#include "puzzle.h"
 
 #include <algorithm>
 #include <thread>
 #include <future>
-
-////////////////////////////////////////////////////////////////////////////
-//
-// Direction of movement from tile to tile on the hexagoal grid.
-//
-// We can:
-//    - Rotate by a multiple of sixth of a turn.
-
-const direction_t directions[6] =
-{
-   direction_t::dir_0(),
-   direction_t::dir_1(),
-   direction_t::dir_2(),
-   direction_t::dir_3(),
-   direction_t::dir_4(),
-   direction_t::dir_5(),
-};
-
-
-////////////////////////////////////////////////////////////////////////////
-//
-// Position of the tile in the hexagonal grid.
-
-position_t position_t::rotate(int rotation) const
-{
-   int factor_x_from_x;
-   int factor_x_from_y;
-   int factor_y_from_x;
-   int factor_y_from_y;
-
-   switch (rotation % 6)
-   {
-      default:
-      case 0:
-         return *this;
-      case 1:
-         factor_x_from_x = 0;
-         factor_x_from_y = -1;
-         factor_y_from_x = 1;
-         factor_y_from_y = 1;
-         break;
-      case 2:
-         factor_x_from_x = -1;
-         factor_x_from_y = -1;
-         factor_y_from_x = 1;
-         factor_y_from_y = 0;
-         break;
-      case 3:
-         factor_x_from_x = -1;
-         factor_x_from_y = 0;
-         factor_y_from_x = 0;
-         factor_y_from_y = -1;
-         break;
-      case 4:
-         factor_x_from_x = 1;
-         factor_x_from_y = 1;
-         factor_y_from_x = -1;
-         factor_y_from_y = 0;
-         break;
-      case 5:
-         factor_x_from_x = 1;
-         factor_x_from_y = 1;
-         factor_y_from_x = -1;
-         factor_y_from_y = 0;
-         break;
-   }
-
-   return position_t(
-      my_x * factor_x_from_x + my_x * factor_x_from_y,
-      my_x * factor_y_from_x + my_x * factor_y_from_y);
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-//
-// Solution that places all the given tiles.
-//
-// We can:
-//    - Rotate a solution of a given amount (increment of sixth of a turn).
-//    - Check if a position is already occupied.
-//    - Check if a tile at a given position would be compatible with the solution.
-//    - Check if two solutions are the exactly the same.
-//    - Check if vector of solutions already contains a solution.
-//    - Add a solution if it is not already known.
-
-void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
-{
-   my_tiles[a_pos] = a_tile;
-   my_last_pos = a_pos;
-
-}
-
-bool solution_t::is_occupied(const position_t& a_pos) const
-{
-   return my_tiles.find(a_pos) != my_tiles.end();
-}
-
-bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
-{
-   if (my_tiles.find(a_pos) != my_tiles.end())
-      return false;
-
-   for (const auto& [pos, tile] : my_tiles)
-   {
-      const auto dir = pos.relative(a_pos);
-      if (dir.has_value())
-      {
-         if (tile.color(dir.value()) != a_tile.color(dir.value().rotate(3)))
-         {
-            return false;
-         }
-      }
-   }
-   return true;
-}
-
-solution_t solution_t::rotate(int rotation) const
-{
-   solution_t rotated;
-
-   for (const auto& [pos, tile] : my_tiles)
-      rotated.my_tiles[pos.rotate(rotation)] = tile.rotate(rotation);
-
-   return rotated;
-}
-
-bool solution_t::has_line(const color_t& a_color) const
-{
-   position_t start_pos;
-   size_t expected_count = 0;
-   for (const auto& [pos, tile] : my_tiles)
-   {
-      if (!tile.has_color(a_color))
-         continue;
-      expected_count += 1;
-      start_pos = pos;
-   }
-
-   std::set<position_t> seen;
-   std::set<position_t> todo;
-   todo.insert(start_pos);
-   while (todo.size() > 0)
-   {
-      const auto pos = *todo.begin();
-      todo.erase(todo.begin());
-      seen.insert(pos);
-      for (const auto& dir : directions)
-      {
-         const auto new_pos = pos.move(dir);
-         if (seen.count(new_pos) > 0)
-            continue;
-         if (todo.count(new_pos) > 0)
-            continue;
-         if (my_tiles.find(pos)->second.color(dir) != a_color)
-            continue;
-         if (!is_occupied(new_pos))
-            continue;
-         if (!my_tiles.find(new_pos)->second.has_color(a_color))
-            continue;
-         todo.insert(new_pos);
-      }
-   }
-
-   return seen.size() == expected_count;
-}
 
 
 ////////////////////////////////////////////////////////////////////////////
 //
 // Keeper of all solutions.
 
-void add_solution(std::vector<solution_t>& all_solutions, solution_t&& a_solution)
+static void add_solution(std::vector<solution_t>& all_solutions, solution_t&& a_solution)
 {
    all_solutions.emplace_back(a_solution);
 }
 
-void add_solutions(std::vector<solution_t>& all_solutions, all_solutions_t&& other_solutions)
+static void add_solutions(std::vector<solution_t>& all_solutions, all_solutions_t&& other_solutions)
 {
    all_solutions.insert(all_solutions.end(), other_solutions.begin(), other_solutions.end());
 }
 
-void add_solution(std::set<solution_t>& all_solutions, solution_t&& a_solution)
+static void add_solution(std::set<solution_t>& all_solutions, solution_t&& a_solution)
 {
    all_solutions.insert(a_solution);
 }
 
-void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
+static void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
 {
    all_solutions.insert(other_solutions.begin(), other_solutions.end());
 }

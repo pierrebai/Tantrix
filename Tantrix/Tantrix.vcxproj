@@ -159,10 +159,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="color.h" />
+    <ClInclude Include="direction.h" />
+    <ClInclude Include="position.h" />
+    <ClInclude Include="puzzle.h" />
+    <ClInclude Include="solution.h" />
     <ClInclude Include="tantrix.h" />
+    <ClInclude Include="tile.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Tantrix.cpp" />
+    <ClCompile Include="direction.cpp" />
+    <ClCompile Include="position.cpp" />
+    <ClCompile Include="puzzle.cpp" />
+    <ClCompile Include="solution.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
