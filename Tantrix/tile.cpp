@@ -32,10 +32,10 @@ namespace dak::tantrix
       { R, R, Y, B, B, Y },   // 13
       { Y, Y, B, B, R, R },   // 14
       { Y, Y, R, G, G, R },   // 15
-      { Y, Y, R, G, R, G },   // 18
-      { R, R, G, Y, G, Y },   // 19
       { R, R, Y, G, G, Y },   // 16
       { Y, Y, G, R, G, R },   // 17
+      { Y, Y, R, G, R, G },   // 18
+      { R, R, G, Y, G, Y },   // 19
       { R, R, Y, G, Y, G },   // 20
       { Y, Y, G, G, R, R },   // 21
       { Y, Y, G, R, R, G },   // 22
