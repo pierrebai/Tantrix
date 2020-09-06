@@ -6,7 +6,7 @@
 #include "tile.h"
 
 #include <map>
-
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////
 //
@@ -32,6 +32,8 @@ struct solution_t
    void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
    position_t last_add_pos() const { return my_last_pos; }
+
+   std::vector<position_t> get_borders(const color_t& a_color) const;
 
    solution_t rotate(int rotation) const;
 

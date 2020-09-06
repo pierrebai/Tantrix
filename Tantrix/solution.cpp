@@ -1,5 +1,6 @@
 #include "solution.h"
 
+#include <algorithm>
 #include <set>
 
 
@@ -54,6 +55,31 @@ solution_t solution_t::rotate(int rotation) const
       rotated.my_tiles[pos.rotate(rotation)] = tile.rotate(rotation);
 
    return rotated;
+}
+
+std::vector<position_t> solution_t::get_borders(const color_t& a_color) const
+{
+   std::vector<position_t> positions;
+
+   for (const auto& [pos, tile] : my_tiles)
+   {
+      for (const auto& dir : directions)
+      {
+         if (tile.color(dir) != a_color)
+            continue;
+
+         const auto new_pos = pos.move(dir);
+         if (is_occupied(new_pos))
+            continue;
+
+         positions.push_back(new_pos);
+      }
+   }
+
+   std::sort(positions.begin(), positions.end());
+   positions.erase(std::unique(positions.begin(), positions.end()), positions.end());
+
+   return positions;
 }
 
 bool solution_t::has_line(const color_t& a_color) const
