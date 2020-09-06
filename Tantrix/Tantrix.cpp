@@ -91,17 +91,24 @@ position_t position_t::rotate(int rotation) const
 //    - Check if vector of solutions already contains a solution.
 //    - Add a solution if it is not already known.
 
-bool is_occupied(const solution_t& a_solution, const position_t& a_pos)
+void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
 {
-   return a_solution.find(a_pos) != a_solution.end();
+   my_tiles[a_pos] = a_tile;
+   my_last_pos = a_pos;
+
 }
 
-bool is_compatible(const solution_t& a_solution, const tile_t& a_tile, const position_t a_pos)
+bool solution_t::is_occupied(const position_t& a_pos) const
 {
-   if (a_solution.find(a_pos) != a_solution.end())
+   return my_tiles.find(a_pos) != my_tiles.end();
+}
+
+bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
+{
+   if (my_tiles.find(a_pos) != my_tiles.end())
       return false;
 
-   for (const auto& [pos, tile] : a_solution)
+   for (const auto& [pos, tile] : my_tiles)
    {
       const auto dir = pos.relative(a_pos);
       if (dir.has_value())
@@ -116,144 +123,205 @@ bool is_compatible(const solution_t& a_solution, const tile_t& a_tile, const pos
 }
 
 
-solution_t rotate(const solution_t& a_solution, int rotation)
+solution_t solution_t::rotate(int rotation) const
 {
    solution_t rotated;
 
-   for (const auto& [pos, tile] : a_solution)
-      rotated[pos.rotate(rotation)] = tile.rotate(rotation);
+   for (const auto& [pos, tile] : my_tiles)
+      rotated.my_tiles[pos.rotate(rotation)] = tile.rotate(rotation);
 
    return rotated;
 }
 
-bool is_exactly_same(const solution_t& a_solution, const solution_t& another_solution)
-{
-   for (const auto& [pos, tile] : a_solution)
-   {
-      const auto another_tile_pos = another_solution.find(pos);
-      if (another_tile_pos == another_solution.end())
-         return false;
 
-      if (another_tile_pos->second != tile)
-         return false;
+////////////////////////////////////////////////////////////////////////////
+//
+// Keeper of all solutions.
+
+void add_solution(std::vector<solution_t>& all_solutions, solution_t&& a_solution)
+{
+   all_solutions.emplace_back(a_solution);
+}
+
+void add_solutions(std::vector<solution_t>& all_solutions, all_solutions_t&& other_solutions)
+{
+   all_solutions.insert(all_solutions.end(), other_solutions.begin(), other_solutions.end());
+}
+
+void add_solution(std::set<solution_t>& all_solutions, solution_t&& a_solution)
+{
+   all_solutions.insert(a_solution);
+}
+
+void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
+{
+   all_solutions.insert(other_solutions.begin(), other_solutions.end());
+}
+
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Puzzle, provide tiles and next position to try.
+//
+// Restrict the order in which tiles are selected.
+
+puzzle_t::puzzle_t()
+{
+}
+
+puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles)
+{
+   for (const auto& tile : some_tiles)
+   {
+      if (tile.has_color(color_t::yellow()))
+         my_yellow_tiles.emplace_back(tile);
+      else
+         my_red_tiles.emplace_back(tile);
+   }
+}
+
+bool puzzle_t::has_more_sub_puzzles() const
+{
+   return my_yellow_tiles.size() > 0 || my_red_tiles.size() > 0;
+}
+
+std::vector<puzzle_t::sub_puzzle> puzzle_t::sub_puzzles() const
+{
+   std::vector<sub_puzzle> subs;
+   if (my_yellow_tiles.size())
+   {
+      for (size_t i = 0; i < my_yellow_tiles.size(); ++i)
+      {
+         puzzle_t sub_puzzle(*this);
+         sub_puzzle.my_yellow_tiles.erase(sub_puzzle.my_yellow_tiles.begin() + i);
+         subs.emplace_back(my_yellow_tiles[i], sub_puzzle);
+      }
+   }
+   else
+   {
+      for (size_t i = 0; i < my_red_tiles.size(); ++i)
+      {
+         puzzle_t sub_puzzle(*this);
+         sub_puzzle.my_red_tiles.erase(sub_puzzle.my_red_tiles.begin() + i);
+         subs.emplace_back(my_red_tiles[i], sub_puzzle);
+      }
+   }
+   return subs;
+}
+
+std::vector<position_t> puzzle_t::get_next_positions(const solution_t& partial_solution, const tile_t& a_tile) const
+{
+   std::vector<position_t> next_positions;
+
+   if (a_tile.has_color(color_t::yellow()))
+   {
+      const auto last_pos = partial_solution.last_add_pos();
+      for (const direction_t& dir : directions)
+      {
+         const auto new_pos = last_pos.move(dir);
+         if (partial_solution.is_occupied(new_pos))
+            continue;
+         if (partial_solution.tiles().find(last_pos)->second.color(dir) != color_t::yellow())
+            continue;
+         next_positions.emplace_back(new_pos);
+         break;
+      }
+   }
+   else
+   {
+      // TODO: find all red positions.
    }
 
-   return true;
-}
-
-bool has_same_solution(const std::vector<solution_t>& some_solutions, const solution_t& a_solution)
-{
-   for (const auto& solution : some_solutions)
-      if (is_exactly_same(solution, a_solution))
-         return true;
-   return false;
-}
-
-void add_unique_solution(std::vector<solution_t>& some_solutions, const solution_t& a_solution)
-{
-   //if (!has_same_solution(some_solutions, a_solution))
-      some_solutions.emplace_back(a_solution);
+   return next_positions;
 }
 
 ////////////////////////////////////////////////////////////////////////////
 //
 // Solve the placement of all given tiles.
 
-void solve_partial(std::vector<solution_t>& solutions, const solution_t& partial_solution, const avail_tiles_t& some_tiles);
+static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle);
 
-void solve_recursion(
-   std::vector<solution_t>& solutions,
+static void solve_recursion(
+   all_solutions_t& solutions,
    const solution_t& partial_solution,
-   const avail_tiles_t& some_tiles,
+   const puzzle_t& a_sub_puzzle,
    const tile_t& new_tile, position_t new_pos)
 {
    solution_t new_partial = partial_solution;
-   new_partial[new_pos] = new_tile;
+   new_partial.add_tile(new_tile, new_pos);
 
-   if (some_tiles.size())
+   if (a_sub_puzzle.has_more_sub_puzzles())
    {
-      solve_partial(solutions, new_partial, some_tiles);
+      solve_partial(solutions, new_partial, a_sub_puzzle);
    }
    else
    {
-      add_unique_solution(solutions, new_partial);
+      add_solution(solutions, std::move(new_partial));
    }
 }
 
-void solve_partial_with_tile(std::vector<solution_t>& solutions, const solution_t& partial_solution, const avail_tiles_t& some_tiles, const tile_t& a_tile)
+static void solve_sub_puzzle_with_tile(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const tile_t& a_tile)
 {
-   for (const direction_t& dir : directions)
+   const auto next_positions = a_sub_puzzle.get_next_positions(partial_solution, a_tile);
+   for (const auto new_pos : next_positions)
    {
-      for (const auto& [end_pos, end_tile] : partial_solution)
+      for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
       {
-         const auto new_pos = end_pos.move(dir);
-         if (is_occupied(partial_solution, new_pos))
-            continue;
-
-         for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
+         const tile_t& tile = a_tile.rotate(selected_orientation);
+         if (partial_solution.is_compatible(tile, new_pos))
          {
-            const tile_t& tile = a_tile.rotate(selected_orientation);
-            if (is_compatible(partial_solution, tile, new_pos))
-            {
-               solve_recursion(solutions, partial_solution, some_tiles, tile, new_pos);
-            }
+            solve_recursion(solutions, partial_solution, a_sub_puzzle, tile, new_pos);
          }
       }
    }
 }
 
-void solve_partial(std::vector<solution_t>& solutions, const solution_t& partial_solution, const avail_tiles_t& some_tiles)
+static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle)
 {
-   for (size_t selected_tile = 0; selected_tile < some_tiles.size(); ++selected_tile)
+   const auto sub_sub_puzzles = a_sub_puzzle.sub_puzzles();
+   for (const auto&[tile, sub_sub_puzzle] : sub_sub_puzzles)
    {
-      avail_tiles_t new_avail = some_tiles;
-      new_avail.erase(new_avail.begin() + selected_tile);
-      solve_partial_with_tile(solutions, partial_solution, new_avail, some_tiles[selected_tile]);
+      solve_sub_puzzle_with_tile(solutions, partial_solution, sub_sub_puzzle, tile);
    } 
 }
 
-std::vector<solution_t> solve_base_solution(const solution_t& base_solution, const avail_tiles_t& some_tiles, size_t selected_tile)
+static all_solutions_t solve_sub_puzzle(const puzzle_t& a_sub_puzzle, const tile_t& a_tile)
 {
-   std::vector<solution_t> solutions;
+   all_solutions_t solutions;
 
-    avail_tiles_t new_avail = some_tiles;
-   new_avail.erase(new_avail.begin() + selected_tile);
-
-   solve_partial_with_tile(solutions, base_solution, new_avail, some_tiles[selected_tile]);
+   solution_t partial_solution(a_tile, position_t(0, 0));
+   solve_partial(solutions, partial_solution, a_sub_puzzle);
 
    return solutions;
 }
 
-std::vector<solution_t> solve(avail_tiles_t some_tiles)
+all_solutions_t solve(const puzzle_t& a_puzzle)
 {
    // The first tile can be chosen arbitrarily and placed.
    // This will force the orientation of the solution, so
    // we won't have to compare with rotations or translations.
-   const solution_t base_solution({ std::make_pair(position_t(0, 0), some_tiles.back()) });
-   some_tiles.pop_back();
+   const auto sub_puzzles = a_puzzle.sub_puzzles();
 
-   std::vector<std::future<std::vector<solution_t>>> solutions_async;
+   std::vector<std::future<all_solutions_t>> solutions_async;
 
-   for (size_t selected_tile = 0; selected_tile < some_tiles.size(); ++selected_tile)
+   for (const auto&[tile, puzzle] : sub_puzzles)
    {
-      auto new_async = std::async(std::launch::async, solve_base_solution, base_solution, (const avail_tiles_t &)some_tiles, selected_tile);
+      auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, tile);
       solutions_async.emplace_back(std::move(new_async));
    }
 
-   std::vector<solution_t> all_solutions;
+   all_solutions_t all_solutions;
 
    for (auto& new_solutions_async : solutions_async)
    {
-      const auto& partial_solutions = new_solutions_async.get();
-      all_solutions.insert(all_solutions.end(), partial_solutions.begin(), partial_solutions.end());
-      //for (const auto& solution : partial_solutions)
-      //   add_unique_solution(all_solutions, solution);
+      auto partial_solutions = new_solutions_async.get();
+      add_solutions(all_solutions, std::move(partial_solutions));
    }
 
    return all_solutions;
 }
 
-std::vector<solution_t> solve_genius_puzzle()
+all_solutions_t solve_genius_puzzle()
 {
    const color_t R = color_t::red();
    const color_t G = color_t::green();
@@ -262,35 +330,35 @@ std::vector<solution_t> solve_genius_puzzle()
 
    const color_t tiles_colors[][6] =
    {
-      { R, Y, B, Y, R, B },
-      { R, R, Y, B, B, Y },
-      { B, B, G, Y, Y, G },
-      { R, R, Y, G, G, Y },
-      { B, B, G, R, G, R },
-      { Y, Y, B, R, B, R },
-      { R, B, Y, B, R, Y },
-      { Y, Y, R, B, R, B },
-      { Y, Y, B, G, G, B },
-      { B, B, Y, R, Y, R },
-      { B, Y, R, Y, B, R },
-      { R, R, G, G, B, B },
+      { R, Y, B, Y, R, B },   //  4
+      { R, R, Y, B, B, Y },   // 13
+      { B, B, G, Y, Y, G },   // 49
+      { R, R, Y, G, G, Y },   // 16
+      { Y, Y, B, R, B, R },   //  1
+      { R, B, Y, B, R, Y },   //  6
+      { Y, Y, R, B, R, B },   // 10
+      { Y, Y, B, G, G, B },   // 48
+      { B, B, Y, R, Y, R },   //  7
+      { B, Y, R, Y, B, R },   //  9
+      { R, R, G, G, B, B },   // 28
+      { B, B, G, R, G, R },   // 37
    };
 
-   const avail_tiles_t tiles =
+   const std::vector<tile_t> tiles =
    {
-      tile_t(tiles_colors[0]),
-      tile_t(tiles_colors[1]),
-      tile_t(tiles_colors[2]),
-      tile_t(tiles_colors[3]),
-      tile_t(tiles_colors[4]),
-      //tile_t(tiles_colors[5]),
-      //tile_t(tiles_colors[6]),
-      //tile_t(tiles_colors[7]),
-      //tile_t(tiles_colors[8]),
-      //tile_t(tiles_colors[9]),
-      //tile_t(tiles_colors[10]),
-      //tile_t(tiles_colors[11]),
+      tile_t( 4, tiles_colors[0]),
+      tile_t(13, tiles_colors[1]),
+      tile_t(49, tiles_colors[2]),
+      tile_t(16, tiles_colors[3]),
+      tile_t( 1, tiles_colors[4]),
+      tile_t( 6, tiles_colors[5]),
+      tile_t(10, tiles_colors[6]),
+      tile_t(48, tiles_colors[7]),
+      tile_t( 7, tiles_colors[8]),
+      tile_t( 9, tiles_colors[9]),
+      //tile_t(28, tiles_colors[10]),
+      //tile_t(37, tiles_colors[11]),
    };
 
-   return solve(tiles);
+   return solve(puzzle_t(tiles));
 }

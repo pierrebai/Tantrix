@@ -4,7 +4,9 @@
 
 #include <vector>
 #include <map>
+#include <set>
 #include <optional>
+#include <compare>
 
 
 ////////////////////////////////////////////////////////////////////////////
@@ -46,9 +48,7 @@ struct direction_t
    int delta_x() const { return my_delta_x; }
    int delta_y() const { return my_delta_y; }
 
-   int operator==(const direction_t& an_other) const { return my_dir == an_other.my_dir; }
-   int operator!=(const direction_t& an_other) const { return my_dir != an_other.my_dir; }
-   int operator< (const direction_t& an_other) const { return my_dir <  an_other.my_dir; }
+   auto operator<=>(const direction_t& an_other) const = default;
 
 private:
    constexpr direction_t(int a_dir, int a_dx, int a_dy) : my_dir(a_dir % 6), my_delta_x(a_dx), my_delta_y(a_dy) {}
@@ -76,9 +76,7 @@ struct color_t
 
    int as_int() const { return my_color; }
 
-   int operator==(const color_t& an_other) const { return my_color == an_other.my_color; }
-   int operator!=(const color_t& an_other) const { return my_color != an_other.my_color; }
-   int operator< (const color_t& an_other) const { return my_color < an_other.my_color; }
+   auto operator<=>(const color_t& an_other) const = default;
 
 private:
    constexpr color_t(int a_dir) : my_color(a_dir % 6) {}
@@ -124,9 +122,7 @@ struct position_t
    int x() const { return my_x; }
    int y() const { return my_y; }
 
-   int operator==(const position_t& an_other) const { return my_x == an_other.my_x && my_y == an_other.my_y; }
-   int operator!=(const position_t& an_other) const { return !(*this == an_other); }
-   int operator< (const position_t& an_other) const { return (my_x < an_other.my_x) || (my_x == an_other.my_x && my_y < an_other.my_y); }
+   auto operator<=>(const position_t& an_other) const = default;
 
 private:
    int my_x = 0;
@@ -144,10 +140,26 @@ struct tile_t
 {
    tile_t() = default;
 
-   tile_t(const color_t some_sides[6])
+   tile_t(int a_number, const color_t some_sides[6])
+   : my_number(a_number)
    {
       for (int i = 0; i < 6; ++i)
          my_sides[i] = some_sides[i];
+   }
+
+   color_t color(const direction_t a_dir) const
+   {
+      return my_sides[a_dir.as_int()];
+   }
+
+   int number() const { return my_number; }
+
+   bool has_color(const color_t& color) const
+   {
+      for (int i = 0; i < 6; ++i)
+         if (color == my_sides[i])
+            return true;
+      return false;
    }
 
    tile_t rotate(int an_amount) const
@@ -157,26 +169,18 @@ struct tile_t
       {
          new_sides[i] = my_sides[(i + an_amount) % 6];
       }
-      return tile_t(new_sides);
+      return tile_t(my_number, new_sides);
    }
 
-    bool is_same(const tile_t& an_other) const
+   bool is_same(const tile_t& an_other) const
    {
-      for (int i = 0; i < 6; ++i)
-         if (rotate(i) == *this)
-            return true;
-      return false;
+      return my_number == an_other.my_number;
    }
 
-   bool operator==(const tile_t& an_other) const = default;
-   bool operator!=(const tile_t& an_other) const = default;
-
-   color_t color(const direction_t a_dir) const
-   {
-      return my_sides[a_dir.as_int()];
-   }
+   auto operator<=>(const tile_t& an_other) const = default;
 
 private:
+   int my_number = 0;
    color_t  my_sides[6] = { color_t::red(), color_t::red(), color_t::red(), color_t::red(), color_t::red(), color_t::red() };
 };
 
@@ -193,23 +197,68 @@ private:
 //    - Check if vector of solutions already contains a solution.
 //    - Add a solution if it is not already known.
 
-using solution_t = std::map<position_t, tile_t>;
+struct solution_t
+{
+   solution_t() = default;
+   solution_t(const tile_t& a_tile, const position_t& a_pos)
+   {
+      add_tile(a_tile, a_pos);
+   }
 
-solution_t rotate(const solution_t& a_solution, int rotation);
+   const std::map<position_t, tile_t>& tiles() const { return my_tiles; }
+   void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
-bool is_occupied(const solution_t& a_solution, const position_t& a_pos);
-bool is_compatible(const solution_t& a_solution, const tile_t& a_tile, const position_t a_pos);
-bool is_exactly_same(const solution_t& a_solution, const solution_t& another_solution);
+   position_t last_add_pos() const { return my_last_pos; }
 
-bool has_same_solution(const std::vector<solution_t>& some_solutions, const solution_t& a_solution);
-void add_unique_solution(std::vector<solution_t>& some_solutions, const solution_t& a_solution);
+   solution_t rotate(int rotation) const;
+
+   bool is_occupied(const position_t& a_pos) const;
+   bool is_compatible(const tile_t& a_tile, const position_t a_pos) const;
+
+   auto operator<=>(const solution_t& another_solution) const
+   {
+      if (my_tiles == another_solution.my_tiles)
+         return std::strong_ordering::equal;
+      if (my_tiles < another_solution.my_tiles)
+         return std::strong_ordering::less;
+      return std::strong_ordering::greater;
+   }
+
+private:
+   std::map<position_t, tile_t> my_tiles;
+   position_t my_last_pos;
+};
+
+
+////////////////////////////////////////////////////////////////////////////
+//
+// Puzzle, provide tiles and next position to try.
+//
+// Restrict the order in which tiles are selected.
+
+struct puzzle_t
+{
+   using sub_puzzle = std::pair<tile_t, puzzle_t>;
+
+   puzzle_t();
+   puzzle_t(const std::vector<tile_t>& some_tiles);
+
+   std::vector<sub_puzzle> sub_puzzles() const;
+   std::vector<position_t> get_next_positions(const solution_t& partial_solution, const tile_t& a_tile) const;
+   bool has_more_sub_puzzles() const;
+
+private:
+   std::vector<tile_t> my_yellow_tiles;
+   std::vector<tile_t> my_red_tiles;
+};
 
 
 ////////////////////////////////////////////////////////////////////////////
 //
 // Solve the placement of all given tiles.
 
-using avail_tiles_t = std::vector<tile_t>;
+//using all_solutions_t = std::vector<solution_t>;
+using all_solutions_t = std::set<solution_t>;
 
-std::vector<solution_t> solve(avail_tiles_t some_tiles);
-std::vector<solution_t> solve_genius_puzzle();
+all_solutions_t solve(const puzzle_t& a_puzzle);
+all_solutions_t solve_genius_puzzle();
