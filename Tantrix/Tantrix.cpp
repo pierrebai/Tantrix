@@ -122,7 +122,6 @@ bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) con
    return true;
 }
 
-
 solution_t solution_t::rotate(int rotation) const
 {
    solution_t rotated;
@@ -131,6 +130,46 @@ solution_t solution_t::rotate(int rotation) const
       rotated.my_tiles[pos.rotate(rotation)] = tile.rotate(rotation);
 
    return rotated;
+}
+
+bool solution_t::has_line(const color_t& a_color) const
+{
+   position_t start_pos;
+   size_t expected_count = 0;
+   for (const auto& [pos, tile] : my_tiles)
+   {
+      if (!tile.has_color(a_color))
+         continue;
+      expected_count += 1;
+      start_pos = pos;
+   }
+
+   std::set<position_t> seen;
+   std::set<position_t> todo;
+   todo.insert(start_pos);
+   while (todo.size() > 0)
+   {
+      const auto pos = *todo.begin();
+      todo.erase(todo.begin());
+      seen.insert(pos);
+      for (const auto& dir : directions)
+      {
+         const auto new_pos = pos.move(dir);
+         if (seen.count(new_pos) > 0)
+            continue;
+         if (todo.count(new_pos) > 0)
+            continue;
+         if (my_tiles.find(pos)->second.color(dir) != a_color)
+            continue;
+         if (!is_occupied(new_pos))
+            continue;
+         if (!my_tiles.find(new_pos)->second.has_color(a_color))
+            continue;
+         todo.insert(new_pos);
+      }
+   }
+
+   return seen.size() == expected_count;
 }
 
 
@@ -183,6 +222,11 @@ puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles)
 bool puzzle_t::has_more_sub_puzzles() const
 {
    return my_yellow_tiles.size() > 0 || my_red_tiles.size() > 0;
+}
+
+bool puzzle_t::is_solution_valid(const solution_t& a_solution) const
+{
+   return a_solution.has_line(color_t::yellow()) && a_solution.has_line(color_t::red());
 }
 
 std::vector<puzzle_t::sub_puzzle> puzzle_t::sub_puzzles() const
@@ -254,7 +298,7 @@ static void solve_recursion(
    {
       solve_partial(solutions, new_partial, a_sub_puzzle);
    }
-   else
+   else if (a_sub_puzzle.is_solution_valid(partial_solution))
    {
       add_solution(solutions, std::move(new_partial));
    }
@@ -356,8 +400,8 @@ all_solutions_t solve_genius_puzzle()
       tile_t(48, tiles_colors[7]),
       tile_t( 7, tiles_colors[8]),
       tile_t( 9, tiles_colors[9]),
-      //tile_t(28, tiles_colors[10]),
-      //tile_t(37, tiles_colors[11]),
+      tile_t(28, tiles_colors[10]),
+      tile_t(37, tiles_colors[11]),
    };
 
    return solve(puzzle_t(tiles));

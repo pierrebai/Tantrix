@@ -215,6 +215,8 @@ struct solution_t
    bool is_occupied(const position_t& a_pos) const;
    bool is_compatible(const tile_t& a_tile, const position_t a_pos) const;
 
+   bool has_line(const color_t& a_color) const;
+
    auto operator<=>(const solution_t& another_solution) const
    {
       if (my_tiles == another_solution.my_tiles)
@@ -246,6 +248,7 @@ struct puzzle_t
    std::vector<sub_puzzle> sub_puzzles() const;
    std::vector<position_t> get_next_positions(const solution_t& partial_solution, const tile_t& a_tile) const;
    bool has_more_sub_puzzles() const;
+   bool is_solution_valid(const solution_t& a_solution) const;
 
 private:
    std::vector<tile_t> my_yellow_tiles;
