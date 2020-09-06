@@ -298,7 +298,7 @@ static void solve_recursion(
    {
       solve_partial(solutions, new_partial, a_sub_puzzle);
    }
-   else if (a_sub_puzzle.is_solution_valid(partial_solution))
+   else if (a_sub_puzzle.is_solution_valid(new_partial))
    {
       add_solution(solutions, std::move(new_partial));
    }
@@ -399,9 +399,9 @@ all_solutions_t solve_genius_puzzle()
       tile_t(10, tiles_colors[6]),
       tile_t(48, tiles_colors[7]),
       tile_t( 7, tiles_colors[8]),
-      tile_t( 9, tiles_colors[9]),
-      tile_t(28, tiles_colors[10]),
-      tile_t(37, tiles_colors[11]),
+      //tile_t( 9, tiles_colors[9]),
+      //tile_t(28, tiles_colors[10]),
+      //tile_t(37, tiles_colors[11]),
    };
 
    return solve(puzzle_t(tiles));
