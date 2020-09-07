@@ -189,7 +189,7 @@ namespace dak::tantrix
          expected_count += 1;
       }
 
-      // Now fnd how many tiles form a continuous line.
+      // Now find how many tiles form a continuous line.
       const auto my_tiles_end = my_tiles.end();
       size_t found_count = 1;
 
@@ -211,6 +211,9 @@ namespace dak::tantrix
 
          // Line is longer.
          found_count += 1;
+
+         // Find second location of the color on the tile.
+         // The connection point is at dir + 3, so search from dir + 4.
          const tile_t& tile = iter->second;
          dir = tile.find_color(a_color, dir.rotate(4));
       }
@@ -233,6 +236,9 @@ namespace dak::tantrix
 
          // Line is longer.
          found_count += 1;
+
+         // Find second location of the color on the tile.
+         // The connection point is at dir + 3, so search from dir + 4.
          const tile_t& tile = iter->second;
          dir = tile.find_color(a_color, dir.rotate(4));
       }

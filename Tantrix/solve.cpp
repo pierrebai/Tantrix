@@ -31,7 +31,7 @@ namespace dak::tantrix
    // Add many solutions, we assume they have been already normalized.
    static void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
    {
-      all_solutions.insert(other_solutions.begin(), other_solutions.end());
+      all_solutions.merge(other_solutions);
    }
 
 

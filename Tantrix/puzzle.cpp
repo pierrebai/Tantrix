@@ -59,7 +59,7 @@ namespace dak::tantrix
 
       for (const auto color : my_line_colors)
       {
-         auto& tiles = const_cast<tiles_by_color_t&>(my_tiles)[color];
+         const auto& tiles = const_cast<tiles_by_color_t&>(my_tiles)[color];
          if (tiles.size())
          {
             for (size_t i = 0; i < tiles.size(); ++i)
@@ -84,15 +84,15 @@ namespace dak::tantrix
       if (a_tile.has_color(first_color))
       {
          const auto last_pos = partial_solution.last_add_pos();
+         const tile_t& last_tile = partial_solution.tiles().find(last_pos)->second;
          for (const direction_t& dir : directions)
          {
             const auto new_pos = last_pos.move(dir);
+            if (last_tile.color(dir) != first_color)
+               continue;
             if (partial_solution.is_occupied(new_pos))
                continue;
-            if (partial_solution.tiles().find(last_pos)->second.color(dir) != first_color)
-               continue;
             next_positions.emplace_back(new_pos);
-            break;
          }
       }
       else
