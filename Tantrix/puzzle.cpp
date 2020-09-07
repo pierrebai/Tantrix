@@ -128,8 +128,8 @@ namespace dak::tantrix
 
       const std::vector<color_t> puzzle_line_colors =
       {
+         color_t::blue(),
          color_t::yellow(),
-         color_t::red(),
       };
 
       return solve(puzzle_t(puzzle_tiles, puzzle_line_colors));

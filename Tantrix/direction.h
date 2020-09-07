@@ -16,21 +16,24 @@ namespace dak::tantrix
    // Direction of movement from tile to tile on the hexagoal grid.
    //
    // We can:
-   //    - Rotate by a multiple of sixth of a turn.
    //    - Ask the corresponding position delta.
 
    struct direction_t
    {
+      // Create a direction.
       direction_t() = default;
       constexpr direction_t(int a_dir) : my_dir(a_dir % 6) {}
 
+      // Rotate by a multiple of sixth of a turn, returning a new direction.
       constexpr direction_t rotate(int an_amount) const
       {
          return direction_t((my_dir + std::int8_t(an_amount)) % 6u);
       }
 
+      // Convert to integer for array indexing.
       int as_int() const { return int(my_dir); }
 
+      // The corresponding X-coordinate delta of the direction.
       int delta_x() const
       {
          switch (my_dir)
@@ -44,6 +47,8 @@ namespace dak::tantrix
             case 5: return -1;
          }
       }
+
+      // The corresponding Y-coordinate delta of the direction.
       int delta_y() const
       {
          switch (my_dir)
@@ -58,12 +63,14 @@ namespace dak::tantrix
          }
       }
 
+      // Direction comparison.
       auto operator<=>(const direction_t& an_other) const = default;
 
    private:
-      std::int8_t my_dir      =  0;
+      std::int8_t my_dir = 0;
    };
 
+   // All directions for easy looping.
    extern const direction_t directions[6];
 }
 

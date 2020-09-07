@@ -15,6 +15,10 @@ namespace dak::tantrix
    struct solution_t;
    struct puzzle_t;
 
+   ////////////////////////////////////////////////////////////////////////////
+   //
+   // Write various classes to an output stream.
+
    std::ostream& operator<<(std::ostream& a_stream, const direction_t& a_direction);
    std::ostream& operator<<(std::ostream& a_stream, const color_t& a_color);
    std::ostream& operator<<(std::ostream& a_stream, const tile_t& a_tile);

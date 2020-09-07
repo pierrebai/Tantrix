@@ -16,15 +16,19 @@ namespace dak::tantrix
 
    struct color_t
    {
+      // Well-known colors.
       static constexpr color_t red()      { return color_t(0); }
       static constexpr color_t green()    { return color_t(1); }
       static constexpr color_t blue()     { return color_t(2); }
       static constexpr color_t yellow()   { return color_t(3); }
 
+      // Color creation. This creates a red.
       color_t() = default;
 
+      // Gets the color internal integer value, useful for switches or indexing into arrays.
       int as_int() const { return int(my_color); }
 
+      // Color comparison.
       auto operator<=>(const color_t& an_other) const = default;
 
    private:

@@ -28,14 +28,18 @@ namespace dak::tantrix
       using tiles_by_color_t = std::map<color_t, std::vector<tile_t>>;
       using line_colors_t = std::vector<color_t>;
 
+      // Create a puzzle.
       puzzle_t();
       puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors);
 
+      // This is how the puzzle control the solver.
+      // TODO: better document what the puzzle solver control do.
       std::vector<sub_puzzle> sub_puzzles() const;
       std::vector<position_t> get_next_positions(const solution_t& partial_solution, const tile_t& a_tile) const;
       bool has_more_sub_puzzles() const;
       bool is_solution_valid(const solution_t& a_solution) const;
 
+      // The description of the puzzle.
       const tiles_by_color_t& tiles() const { return my_tiles; }
       const line_colors_t& line_colors() const { return my_line_colors; }
 

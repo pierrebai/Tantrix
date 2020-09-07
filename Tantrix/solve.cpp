@@ -9,22 +9,26 @@ namespace dak::tantrix
    //
    // Keeper of all solutions.
 
+   // Add a solution, *even* if it is a duplicate.
    static void add_solution(std::vector<solution_t>& all_solutions, solution_t&& a_solution)
    {
       all_solutions.emplace_back(a_solution);
    }
 
+   // Add many solutions, *even* if they are duplicates.
    static void add_solutions(std::vector<solution_t>& all_solutions, all_solutions_t&& other_solutions)
    {
       all_solutions.insert(all_solutions.end(), other_solutions.begin(), other_solutions.end());
    }
 
+   // Normalize and add a solution if it is not already known.
    static void add_solution(std::set<solution_t>& all_solutions, solution_t&& a_solution)
    {
       a_solution.normalize();
       all_solutions.insert(a_solution);
    }
 
+   // Add many solutions, we assume they have been already normalized.
    static void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
    {
       all_solutions.insert(other_solutions.begin(), other_solutions.end());

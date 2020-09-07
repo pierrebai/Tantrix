@@ -120,9 +120,11 @@ namespace dak::tantrix
       tile_t target_tile(smallest_number);
       while (*smallest_tile != target_tile)
       {
-         rotation += 5;
+         rotation = (rotation + 5) % 6;
          target_tile.rotate_in_place(1);
       }
+
+      my_rotated = (rotation != 0);
 
       tiles_by_pos_t new_tiles;
 
@@ -163,6 +165,11 @@ namespace dak::tantrix
 
    bool solution_t::has_line(const color_t& a_color) const
    {
+      // Find a starting tile containg the color and the two directions where
+      // the color are found on the tile.
+      //
+      // Also count the number of tiles with the color to be compared later.
+
       position_t start_pos;
       direction_t left_start_dir;
       direction_t right_start_dir;
@@ -182,9 +189,11 @@ namespace dak::tantrix
          expected_count += 1;
       }
 
+      // Now fnd how many tiles form a continuous line.
       const auto my_tiles_end = my_tiles.end();
       size_t found_count = 1;
 
+      // Follow the line toward the left.
       position_t pos = start_pos;
       direction_t dir = left_start_dir;
       while (true)
@@ -206,6 +215,7 @@ namespace dak::tantrix
          dir = tile.find_color(a_color, dir.rotate(4));
       }
 
+      // Follow the line toward the right.
       pos = start_pos;
       dir = right_start_dir;
       while (true)
@@ -228,6 +238,43 @@ namespace dak::tantrix
       }
 
    }
+
+   bool solution_t::is_valid() const
+   {
+      using counts_by_color_t = std::map<color_t, int>;
+      using colors_by_pos_t = std::map<position_t, counts_by_color_t>;
+
+      colors_by_pos_t colors_by_pos;
+
+      for (const auto& [pos, tile] : my_tiles)
+      {
+         for (direction_t dir : directions)
+         {
+            const auto new_pos = pos.move(dir);
+            if (is_occupied(new_pos))
+               continue;
+            const auto color = tile.color(dir);
+            colors_by_pos[new_pos][color] += 1;
+
+            if (colors_by_pos[new_pos][color] > 2)
+               return false;
+         }
+      }
+
+      for (const auto& [pos, colors] : colors_by_pos)
+      {
+         int neighbour_count = 0;
+         for (const auto& [color, count] : colors)
+         {
+            neighbour_count += count;
+            if (neighbour_count > 3)
+               return false;
+         }
+      }
+
+      return true;
+   }
+
 
    std::size_t solution_hash_t::operator()(const solution_t& a_solution) const
    {

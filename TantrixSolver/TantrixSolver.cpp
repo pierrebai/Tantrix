@@ -10,13 +10,16 @@ int main()
 {
    const auto solutions = solve_genius_puzzle();
    cout << solutions.size() << endl;
-   if (solutions.size() < 100)
+
+   int max_print = 100;
+
+   for (const auto& sol : solutions)
    {
-      for (const auto& sol : solutions)
-      {
-         cout << "----------------------------" << endl;
-         cout << sol << endl;
-      }
+      cout << "----------------------------" << endl;
+      cout << sol << endl;
+
+      if (--max_print == 0)
+         break;
    }
 }
 
