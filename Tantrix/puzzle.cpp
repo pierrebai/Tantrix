@@ -66,6 +66,7 @@ namespace dak::tantrix
             {
                puzzle_t sub_puzzle(*this);
                sub_puzzle.my_tiles[color].erase(sub_puzzle.my_tiles[color].begin() + i);
+               sub_puzzle.my_depth = my_depth + 1;
                subs.emplace_back(tiles[i], sub_puzzle);
             }
             break;

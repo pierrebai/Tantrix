@@ -42,10 +42,12 @@ namespace dak::tantrix
       // The description of the puzzle.
       const tiles_by_color_t& tiles() const { return my_tiles; }
       const line_colors_t& line_colors() const { return my_line_colors; }
+      size_t depth() const { return my_depth; }
 
    private:
       line_colors_t     my_line_colors;
       tiles_by_color_t  my_tiles;
+      size_t            my_depth = 0;
    };
 
 
