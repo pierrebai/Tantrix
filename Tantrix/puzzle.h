@@ -58,7 +58,6 @@ namespace dak::tantrix
    using all_solutions_t = std::set<solution_t>;
 
    all_solutions_t solve(const puzzle_t& a_puzzle);
-   all_solutions_t solve_genius_puzzle();
 }
 
 #endif /* DAK_TANTRIX_PUZZLE_H */

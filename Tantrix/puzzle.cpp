@@ -106,32 +106,4 @@ namespace dak::tantrix
 
       return next_positions;
    }
-
-
-   all_solutions_t solve_genius_puzzle()
-   {
-      const std::vector<tile_t> puzzle_tiles =
-      {
-         tile_t( 1),
-         tile_t( 4),
-         tile_t( 6),
-         tile_t( 7),
-         tile_t( 9),
-         tile_t(10),
-         tile_t(13),
-         tile_t(16),
-         tile_t(48),
-         tile_t(49),
-         tile_t(28),
-         tile_t(37),
-      };
-
-      const std::vector<color_t> puzzle_line_colors =
-      {
-         color_t::blue(),
-         color_t::yellow(),
-      };
-
-      return solve(puzzle_t(puzzle_tiles, puzzle_line_colors));
-   }
 }
