@@ -60,6 +60,11 @@ namespace dak::tantrix
       void rotate_in_place(int an_amount)
       {
          an_amount %= 6;
+         // Note: we want to rotate clockwise, that is for a rotation of 1,
+         //       the color that was in direction 0 will now be in direction 1.
+         //
+         //       We need to apply the STL rotate algorithm in reverse 
+         //       because in STL, a rotation of 1 brings the object at 1 to 0.
          an_amount = 6 - an_amount;
          std::rotate(my_sides, my_sides + an_amount, my_sides + 6);
       }

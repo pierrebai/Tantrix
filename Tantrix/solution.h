@@ -73,13 +73,19 @@ namespace dak::tantrix
       bool has_line(const color_t& a_color) const;
 
       // Compare solutions.
-      auto operator<=>(const solution_t& another_solution) const
+      std::strong_ordering operator<=>(const solution_t& another_solution) const
       {
          if (my_tiles == another_solution.my_tiles)
             return std::strong_ordering::equal;
          if (my_tiles < another_solution.my_tiles)
             return std::strong_ordering::less;
          return std::strong_ordering::greater;
+      }
+
+      // Compare solutions.
+      bool operator==(const solution_t& another_solution) const
+      {
+         return my_tiles == another_solution.my_tiles;
       }
 
    private:

@@ -40,10 +40,10 @@ namespace dak::tantrix
             factor_y_from_y = -1;
             break;
          case 4:
-            factor_x_from_x =  1;
+            factor_x_from_x =  0;
             factor_x_from_y =  1;
             factor_y_from_x = -1;
-            factor_y_from_y =  0;
+            factor_y_from_y = -1;
             break;
          case 5:
             factor_x_from_x =  1;

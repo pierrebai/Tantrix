@@ -40,6 +40,7 @@ namespace dak::tantrix
       {
          my_x += an_other.my_x;
          my_y += an_other.my_y;
+         return *this;
       }
 
       // Subtract another position from this one.
@@ -47,6 +48,7 @@ namespace dak::tantrix
       {
          my_x -= an_other.my_x;
          my_y -= an_other.my_y;
+         return *this;
       }
 
       // Rotate by a multiple of sixth of a turn around the origin position.

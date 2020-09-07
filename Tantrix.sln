@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tantrix", "Tantrix\Tantrix.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TantrixSolver", "TantrixSolver\TantrixSolver.vcxproj", "{8628B7FB-328B-407D-998F-197076C9FA34}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tantrix_tests", "tantrix_tests\tantrix_tests.vcxproj", "{89D0AA0E-995B-4005-A82A-D62F20085833}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{8628B7FB-328B-407D-998F-197076C9FA34}.Release|x64.Build.0 = Release|x64
 		{8628B7FB-328B-407D-998F-197076C9FA34}.Release|x86.ActiveCfg = Release|Win32
 		{8628B7FB-328B-407D-998F-197076C9FA34}.Release|x86.Build.0 = Release|Win32
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Debug|x64.ActiveCfg = Debug|x64
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Debug|x64.Build.0 = Debug|x64
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Debug|x86.ActiveCfg = Debug|Win32
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Debug|x86.Build.0 = Debug|Win32
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Release|x64.ActiveCfg = Release|x64
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Release|x64.Build.0 = Release|x64
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Release|x86.ActiveCfg = Release|Win32
+		{89D0AA0E-995B-4005-A82A-D62F20085833}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
