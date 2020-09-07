@@ -27,13 +27,15 @@ namespace dak::tantrix
 
    struct solution_t
    {
+      using tiles_by_pos_t = std::map<position_t, tile_t>;
+
       solution_t() = default;
       solution_t(const tile_t& a_tile, const position_t& a_pos)
       {
          add_tile(a_tile, a_pos);
       }
 
-      const std::map<position_t, tile_t>& tiles() const { return my_tiles; }
+      const tiles_by_pos_t& tiles() const { return my_tiles; }
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
       position_t last_add_pos() const { return my_last_pos; }
@@ -41,6 +43,8 @@ namespace dak::tantrix
       std::vector<position_t> get_borders(const color_t& a_color) const;
 
       solution_t rotate(int rotation) const;
+
+      void normalize();
 
       bool is_occupied(const position_t& a_pos) const;
       bool is_compatible(const tile_t& a_tile, const position_t a_pos) const;
@@ -59,7 +63,7 @@ namespace dak::tantrix
       }
 
    private:
-      std::map<position_t, tile_t> my_tiles;
+      tiles_by_pos_t my_tiles;
       position_t my_last_pos;
    };
 

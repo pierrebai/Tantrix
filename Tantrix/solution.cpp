@@ -31,18 +31,19 @@ namespace dak::tantrix
 
    bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
    {
-      if (my_tiles.find(a_pos) != my_tiles.end())
+      const auto my_tiles_end = my_tiles.end();
+      if (my_tiles.find(a_pos) != my_tiles_end)
          return false;
 
-      for (const auto& [pos, tile] : my_tiles)
+      for (const auto dir : directions)
       {
-         const auto dir = pos.relative(a_pos);
-         if (dir.has_value())
+         const auto neighbour = a_pos.move(dir);
+         const auto iter = my_tiles.find(neighbour);
+         if (iter == my_tiles_end)
+            continue;
+         if (iter->second.color(dir.rotate(3)) != a_tile.color(dir))
          {
-            if (tile.color(dir.value()) != a_tile.color(dir.value().rotate(3)))
-            {
-               return false;
-            }
+            return false;
          }
       }
       return true;
@@ -95,6 +96,46 @@ namespace dak::tantrix
       return rotated;
    }
 
+   void solution_t::normalize()
+   {
+      my_last_pos = position_t();
+      if (my_tiles.size() <= 0)
+         return;
+
+      auto smallest_tile   = &my_tiles.begin()->second;
+      auto smallest_number = smallest_tile->number();
+      auto smallest_pos    = my_tiles.begin()->first;
+      for (auto& [pos, tile] : my_tiles)
+      {
+         auto tile_number = tile.number();
+         if (tile_number < smallest_number)
+         {
+            smallest_tile     = &tile;
+            smallest_number   = tile_number;
+            smallest_pos      = pos;
+         }
+      }
+
+      int rotation = 0;
+      tile_t target_tile(smallest_number);
+      while (*smallest_tile != target_tile)
+      {
+         rotation += 5;
+         target_tile.rotate_in_place(1);
+      }
+
+      tiles_by_pos_t new_tiles;
+
+      for (auto& [pos, tile] : my_tiles)
+      {
+         const position_t new_pos(pos.x() - smallest_pos.x(), pos.y() - smallest_pos.y());
+         const position_t rot_pos = new_pos.rotate(rotation);
+         new_tiles[rot_pos] = tile.rotate(rotation);
+      }
+
+      my_tiles.swap(new_tiles);
+   }
+
    std::vector<position_t> solution_t::get_borders(const color_t& a_color) const
    {
       std::vector<position_t> positions;
@@ -123,41 +164,69 @@ namespace dak::tantrix
    bool solution_t::has_line(const color_t& a_color) const
    {
       position_t start_pos;
+      direction_t left_start_dir;
+      direction_t right_start_dir;
       size_t expected_count = 0;
       for (const auto& [pos, tile] : my_tiles)
       {
          if (!tile.has_color(a_color))
             continue;
-         expected_count += 1;
-         start_pos = pos;
-      }
 
-      std::set<position_t> seen;
-      std::set<position_t> todo;
-      todo.insert(start_pos);
-      while (todo.size() > 0)
-      {
-         const auto pos = *todo.begin();
-         todo.erase(todo.begin());
-         seen.insert(pos);
-         for (const auto& dir : directions)
+         if (!expected_count)
          {
-            const auto new_pos = pos.move(dir);
-            if (seen.count(new_pos) > 0)
-               continue;
-            if (todo.count(new_pos) > 0)
-               continue;
-            if (my_tiles.find(pos)->second.color(dir) != a_color)
-               continue;
-            if (!is_occupied(new_pos))
-               continue;
-            if (!my_tiles.find(new_pos)->second.has_color(a_color))
-               continue;
-            todo.insert(new_pos);
+            start_pos = pos;
+            left_start_dir = tile.find_color(a_color, 0);
+            right_start_dir = tile.find_color(a_color, left_start_dir.rotate(1));
          }
+
+         expected_count += 1;
       }
 
-      return seen.size() == expected_count;
+      const auto my_tiles_end = my_tiles.end();
+      size_t found_count = 1;
+
+      position_t pos = start_pos;
+      direction_t dir = left_start_dir;
+      while (true)
+      {
+         pos = pos.move(dir);
+
+         // Check for loops.
+         if (pos == start_pos)
+            return found_count == expected_count;
+
+         // Check for line end.
+         const auto iter = my_tiles.find(pos);
+         if (iter == my_tiles_end)
+            break;
+
+         // Line is longer.
+         found_count += 1;
+         const tile_t& tile = iter->second;
+         dir = tile.find_color(a_color, dir.rotate(4));
+      }
+
+      pos = start_pos;
+      dir = right_start_dir;
+      while (true)
+      {
+         pos = pos.move(dir);
+
+         // Check for loops.
+         if (pos == start_pos)
+            return found_count == expected_count;
+
+         // Check for line end.
+         const auto iter = my_tiles.find(pos);
+         if (iter == my_tiles_end)
+            return found_count == expected_count;
+
+         // Line is longer.
+         found_count += 1;
+         const tile_t& tile = iter->second;
+         dir = tile.find_color(a_color, dir.rotate(4));
+      }
+
    }
 
    std::size_t solution_hash_t::operator()(const solution_t& a_solution) const

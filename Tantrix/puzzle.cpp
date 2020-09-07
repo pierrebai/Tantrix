@@ -88,7 +88,7 @@ namespace dak::tantrix
             const auto new_pos = last_pos.move(dir);
             if (partial_solution.is_occupied(new_pos))
                continue;
-            if (partial_solution.tiles().find(last_pos)->second.color(dir) != color_t::yellow())
+            if (partial_solution.tiles().find(last_pos)->second.color(dir) != first_color)
                continue;
             next_positions.emplace_back(new_pos);
             break;
@@ -112,18 +112,18 @@ namespace dak::tantrix
    {
       const std::vector<tile_t> puzzle_tiles =
       {
-         tiles[ 1],
-         tiles[ 4],
-         tiles[ 6],
-         tiles[ 7],
-         tiles[ 9],
-         tiles[10],
-         tiles[13],
-         tiles[16],
-         tiles[28],
-         tiles[37],
-         tiles[48],
-         tiles[49],
+         tile_t( 1),
+         tile_t( 4),
+         tile_t( 6),
+         tile_t( 7),
+         tile_t( 9),
+         tile_t(10),
+         tile_t(13),
+         tile_t(16),
+         tile_t(48),
+         tile_t(49),
+         tile_t(28),
+         tile_t(37),
       };
 
       const std::vector<color_t> puzzle_line_colors =

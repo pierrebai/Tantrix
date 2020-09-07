@@ -9,12 +9,14 @@ namespace dak::tantrix
 
    position_t position_t::rotate(std::int16_t rotation) const
    {
+      rotation %= 6u;
+
       std::int16_t factor_x_from_x;
       std::int16_t factor_x_from_y;
       std::int16_t factor_y_from_x;
       std::int16_t factor_y_from_y;
 
-      switch (rotation % 6)
+      switch (rotation)
       {
          default:
          case 0:
@@ -52,7 +54,7 @@ namespace dak::tantrix
       }
 
       return position_t(
-         my_x * factor_x_from_x + my_x * factor_x_from_y,
-         my_x * factor_y_from_x + my_x * factor_y_from_y);
+         my_x * factor_x_from_x + my_y * factor_x_from_y,
+         my_x * factor_y_from_x + my_y * factor_y_from_y);
    }
 }

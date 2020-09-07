@@ -37,6 +37,18 @@ namespace dak::tantrix
          return move(a_dir.delta_x(), a_dir.delta_y());
       }
 
+      position_t& operator+=(const position_t& an_other)
+      {
+         my_x += an_other.my_x;
+         my_y += an_other.my_y;
+      }
+
+      position_t& operator-=(const position_t& an_other)
+      {
+         my_x -= an_other.my_x;
+         my_y -= an_other.my_y;
+      }
+
       position_t rotate(std::int16_t rotation) const;
 
       std::optional<direction_t> relative(const position_t& a_pos) const

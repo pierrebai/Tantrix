@@ -3,7 +3,6 @@
 #include <thread>
 #include <future>
 
-
 namespace dak::tantrix
 {
    ////////////////////////////////////////////////////////////////////////////
@@ -22,20 +21,11 @@ namespace dak::tantrix
 
    static void add_solution(std::set<solution_t>& all_solutions, solution_t&& a_solution)
    {
+      a_solution.normalize();
       all_solutions.insert(a_solution);
    }
 
    static void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
-   {
-      all_solutions.insert(other_solutions.begin(), other_solutions.end());
-   }
-
-   static void add_solution(all_solutions_t& all_solutions, solution_t&& a_solution)
-   {
-      all_solutions.insert(a_solution);
-   }
-
-   static void add_solutions(all_solutions_t& all_solutions, all_solutions_t&& other_solutions)
    {
       all_solutions.insert(other_solutions.begin(), other_solutions.end());
    }
@@ -110,13 +100,19 @@ namespace dak::tantrix
 
       std::vector<std::future<all_solutions_t>> solutions_async;
 
+      all_solutions_t all_solutions;
+
+      //for (const auto& [tile, puzzle] : sub_puzzles)
+      //{
+      //   auto partial_solutions = solve_sub_puzzle(puzzle, tile);
+      //   add_solutions(all_solutions, std::move(partial_solutions));
+      //}
+
       for (const auto& [tile, puzzle] : sub_puzzles)
       {
          auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, tile);
          solutions_async.emplace_back(std::move(new_async));
       }
-
-      all_solutions_t all_solutions;
 
       for (auto& new_solutions_async : solutions_async)
       {

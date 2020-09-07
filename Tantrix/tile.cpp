@@ -16,7 +16,7 @@ namespace dak::tantrix
 
    static constexpr color_t tiles_colors[57][6] =
    {
-      { Y, Y, Y, Y, Y, Y },   //  0, invalid
+      { R, R, R, R, R, R },   //  0, invalid
       { Y, Y, B, R, B, R },   //  1
       { Y, Y, B, R, R, B },   //  2
       { Y, Y, R, R, B, B },   //  3
@@ -75,64 +75,11 @@ namespace dak::tantrix
       { B, B, Y, G, Y, G },   // 56
    };
 
-   const tile_t tiles[57] =
+   tile_t::tile_t(std::uint16_t a_number)
+   : my_number(a_number)
    {
-      tile_t( 0, tiles_colors[ 0]),
-      tile_t( 1, tiles_colors[ 1]),
-      tile_t( 2, tiles_colors[ 2]),
-      tile_t( 3, tiles_colors[ 3]),
-      tile_t( 4, tiles_colors[ 4]),
-      tile_t( 5, tiles_colors[ 5]),
-      tile_t( 6, tiles_colors[ 6]),
-      tile_t( 7, tiles_colors[ 7]),
-      tile_t( 8, tiles_colors[ 8]),
-      tile_t( 9, tiles_colors[ 9]),
-      tile_t(10, tiles_colors[10]),
-      tile_t(11, tiles_colors[11]),
-      tile_t(12, tiles_colors[12]),
-      tile_t(13, tiles_colors[13]),
-      tile_t(14, tiles_colors[14]),
-      tile_t(15, tiles_colors[15]),
-      tile_t(16, tiles_colors[16]),
-      tile_t(17, tiles_colors[17]),
-      tile_t(18, tiles_colors[18]),
-      tile_t(19, tiles_colors[19]),
-      tile_t(20, tiles_colors[20]),
-      tile_t(21, tiles_colors[21]),
-      tile_t(22, tiles_colors[22]),
-      tile_t(23, tiles_colors[23]),
-      tile_t(24, tiles_colors[24]),
-      tile_t(25, tiles_colors[25]),
-      tile_t(26, tiles_colors[26]),
-      tile_t(27, tiles_colors[27]),
-      tile_t(28, tiles_colors[28]),
-      tile_t(29, tiles_colors[29]),
-      tile_t(30, tiles_colors[30]),
-      tile_t(31, tiles_colors[31]),
-      tile_t(32, tiles_colors[32]),
-      tile_t(33, tiles_colors[33]),
-      tile_t(34, tiles_colors[34]),
-      tile_t(35, tiles_colors[35]),
-      tile_t(36, tiles_colors[36]),
-      tile_t(37, tiles_colors[37]),
-      tile_t(38, tiles_colors[38]),
-      tile_t(39, tiles_colors[39]),
-      tile_t(40, tiles_colors[40]),
-      tile_t(41, tiles_colors[41]),
-      tile_t(42, tiles_colors[42]),
-      tile_t(43, tiles_colors[43]),
-      tile_t(44, tiles_colors[44]),
-      tile_t(45, tiles_colors[45]),
-      tile_t(46, tiles_colors[46]),
-      tile_t(47, tiles_colors[47]),
-      tile_t(48, tiles_colors[48]),
-      tile_t(49, tiles_colors[49]),
-      tile_t(50, tiles_colors[50]),
-      tile_t(51, tiles_colors[51]),
-      tile_t(52, tiles_colors[52]),
-      tile_t(53, tiles_colors[53]),
-      tile_t(54, tiles_colors[54]),
-      tile_t(55, tiles_colors[55]),
-      tile_t(56, tiles_colors[56]),
-   };
+      if (a_number >= 1 && a_number <= 56)
+         for (int i = 0; i < 6; ++i)
+            my_sides[i] = tiles_colors[a_number][i];
+   }
 }

@@ -25,6 +25,8 @@ namespace dak::tantrix
    struct puzzle_t
    {
       using sub_puzzle = std::pair<tile_t, puzzle_t>;
+      using tiles_by_color_t = std::map<color_t, std::vector<tile_t>>;
+      using line_colors_t = std::vector<color_t>;
 
       puzzle_t();
       puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors);
@@ -34,11 +36,12 @@ namespace dak::tantrix
       bool has_more_sub_puzzles() const;
       bool is_solution_valid(const solution_t& a_solution) const;
 
-   private:
-      using tiles_by_color_t = std::map<color_t, std::vector<tile_t>>;
+      const tiles_by_color_t& tiles() const { return my_tiles; }
+      const line_colors_t& line_colors() const { return my_line_colors; }
 
-      std::vector<color_t> my_line_colors;
-      tiles_by_color_t     my_tiles;
+   private:
+      line_colors_t     my_line_colors;
+      tiles_by_color_t  my_tiles;
    };
 
 
@@ -47,7 +50,8 @@ namespace dak::tantrix
    // Solve the placement of all given tiles.
 
    //using all_solutions_t = std::vector<solution_t>;
-   using all_solutions_t = std::unordered_set<solution_t, solution_hash_t, solution_is_same_t>;
+   //using all_solutions_t = std::unordered_set<solution_t, solution_hash_t, solution_is_same_t>;
+   using all_solutions_t = std::set<solution_t>;
 
    all_solutions_t solve(const puzzle_t& a_puzzle);
    all_solutions_t solve_genius_puzzle();

@@ -165,6 +165,7 @@
     <ClInclude Include="puzzle.h" />
     <ClInclude Include="solution.h" />
     <ClInclude Include="tantrix.h" />
+    <ClInclude Include="tantrix_stream.h" />
     <ClInclude Include="tile.h" />
   </ItemGroup>
   <ItemGroup>
@@ -173,6 +174,7 @@
     <ClCompile Include="puzzle.cpp" />
     <ClCompile Include="solution.cpp" />
     <ClCompile Include="solve.cpp" />
+    <ClCompile Include="stream.cpp" />
     <ClCompile Include="tile.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

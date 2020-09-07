@@ -12,11 +12,11 @@ namespace dak::tantrix
 
    const direction_t directions[6] =
    {
-      direction_t::dir_0(),
-      direction_t::dir_1(),
-      direction_t::dir_2(),
-      direction_t::dir_3(),
-      direction_t::dir_4(),
-      direction_t::dir_5(),
+      direction_t(0),
+      direction_t(1),
+      direction_t(2),
+      direction_t(3),
+      direction_t(4),
+      direction_t(5),
    };
 }

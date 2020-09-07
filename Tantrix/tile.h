@@ -8,6 +8,8 @@
 #include "direction.h"
 #include "color.h"
 
+#include <algorithm>
+
 
 namespace dak::tantrix
 {
@@ -21,36 +23,47 @@ namespace dak::tantrix
    {
       tile_t() = default;
 
-      tile_t(std::uint16_t a_number, const color_t some_sides[6])
-         : my_number(a_number)
-      {
-         for (int i = 0; i < 6; ++i)
-            my_sides[i] = some_sides[i];
-      }
+      tile_t(std::uint16_t a_number);
 
       color_t color(const direction_t a_dir) const
       {
          return my_sides[a_dir.as_int()];
       }
 
-      std::uint16_t number() const { return my_number; }
-
-      bool has_color(const color_t& color) const
+      direction_t find_color(const color_t& a_color, direction_t a_from_dir) const
       {
          for (int i = 0; i < 6; ++i)
-            if (color == my_sides[i])
+         {
+            if (my_sides[a_from_dir.as_int()] == a_color)
+            {
+               return a_from_dir;
+            }
+            a_from_dir = a_from_dir.rotate(1);
+         }
+         return direction_t(0);
+      }
+
+      std::uint16_t number() const { return my_number; }
+
+      bool has_color(const color_t& a_color) const
+      {
+         for (int i = 0; i < 6; ++i)
+            if (a_color == my_sides[i])
                return true;
          return false;
       }
 
+      void rotate_in_place(int an_amount)
+      {
+         an_amount %= 6;
+         std::rotate(my_sides, my_sides + an_amount, my_sides + 6);
+      }
+
       tile_t rotate(int an_amount) const
       {
-         color_t new_sides[6];
-         for (int i = 0; i < 6; ++i)
-         {
-            new_sides[i] = my_sides[(i + an_amount) % 6];
-         }
-         return tile_t(my_number, new_sides);
+         tile_t new_tile(*this);
+         new_tile.rotate_in_place(an_amount);
+         return new_tile;
       }
 
       bool is_same(const tile_t& an_other) const
@@ -61,11 +74,9 @@ namespace dak::tantrix
       auto operator<=>(const tile_t& an_other) const = default;
 
    private:
-      std::uint16_t  my_number   = 0;
-      color_t        my_sides[6] = { color_t::red(), color_t::red(), color_t::red(), color_t::red(), color_t::red(), color_t::red() };
+      std::uint16_t  my_number = 0;
+      color_t        my_sides[6];
    };
-
-   extern const tile_t tiles[57];
 }
 
 #endif /* DAK_TANTRIX_TILE_H */
