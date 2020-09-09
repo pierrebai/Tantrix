@@ -85,8 +85,9 @@ namespace dak::tantrix
 
       solution_t rotated(*this);
 
-      for (auto& placed_tile : rotated.my_tiles)
+      for (size_t i = 0; i < my_tiles_count; ++i)
       {
+         placed_tile_t& placed_tile = rotated.my_tiles[i];
          placed_tile.pos.rotate_in_place(rotation);
          placed_tile.tile.rotate_in_place(rotation);
       }
@@ -232,26 +233,33 @@ namespace dak::tantrix
 
    bool solution_t::is_valid() const
    {
+      using counts_by_color_t = std::map<color_t, int>;
+      using colors_by_pos_t = std::map<position_t, counts_by_color_t>;
+
+      colors_by_pos_t colors_by_pos;
+
       for (size_t i = 0; i < my_tiles_count; ++i)
       {
          const placed_tile_t& placed_tile = my_tiles[i];
-
-         int count_by_colors[4] = { 0, 0, 0, 0 };
-         int neighbour_count = 0;
          for (direction_t dir : directions)
          {
             const auto new_pos = placed_tile.pos.move(dir);
-            const tile_t* neighbour_tile = internal_tile_at(new_pos);
-            if (!neighbour_tile)
+            if (is_occupied(new_pos))
                continue;
+            const auto color = placed_tile.tile.color(dir);
+            colors_by_pos[new_pos][color] += 1;
 
-            const auto color = neighbour_tile->color(dir.rotate(3));
-            count_by_colors[color.as_int()] += 1;
+            if (colors_by_pos[new_pos][color] > 2)
+               return false;
+         }
+      }
 
-            if (count_by_colors[color.as_int()] > 2)
-            return false;
-
-            neighbour_count += 1;
+      for (const auto& [pos, colors] : colors_by_pos)
+      {
+         int neighbour_count = 0;
+         for (const auto& [color, count] : colors)
+         {
+            neighbour_count += count;
             if (neighbour_count > 3)
                return false;
          }
