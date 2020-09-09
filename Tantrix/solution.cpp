@@ -18,29 +18,18 @@ namespace dak::tantrix
    //    - Check if vector of solutions already contains a solution.
    //    - Add a solution if it is not already known.
 
-   void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
-   {
-      my_tiles[a_pos] = a_tile;
-   }
-
-   bool solution_t::is_occupied(const position_t& a_pos) const
-   {
-      return my_tiles.find(a_pos) != my_tiles.end();
-   }
-
    bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
    {
-      const auto my_tiles_end = my_tiles.end();
-      if (my_tiles.find(a_pos) != my_tiles_end)
+      if (is_occupied(a_pos))
          return false;
 
       for (const auto dir : directions)
       {
-         const auto neighbour = a_pos.move(dir);
-         const auto iter = my_tiles.find(neighbour);
-         if (iter == my_tiles_end)
+         const auto neighbour_pos = a_pos.move(dir);
+         const auto& neighbour_tile = tile_at(neighbour_pos);
+         if (!neighbour_tile.is_valid())
             continue;
-         if (iter->second.color(dir.rotate(3)) != a_tile.color(dir))
+         if (neighbour_tile.color(dir.rotate(3)) != a_tile.color(dir))
          {
             return false;
          }
@@ -48,37 +37,30 @@ namespace dak::tantrix
       return true;
    }
 
-   bool solution_t::is_same_without_rotation(const solution_t& another_solution) const
+   void solution_t::rotate_in_place(int rotation, const position_t& new_center)
    {
-      if (my_tiles.size() == 0)
-         return another_solution.my_tiles.size() == 0;
+      rotation = rotation % 6;
 
-      const auto my_first_pos    = my_tiles.begin()->first;
-      const auto other_first_pos = another_solution.my_tiles.begin()->first;
+      solution_t new_solution;
 
-      const auto delta_x = other_first_pos.x() - my_first_pos.x();
-      const auto delta_y = other_first_pos.y() - my_first_pos.y();
-
-      for (const auto& [pos, tile] : my_tiles)
+      for (std::int8_t x = -15; x <= 15; ++x)
       {
-         const auto other_pos = pos.move(delta_x, delta_y);
-         const auto other_tile = another_solution.my_tiles.find(other_pos);
-         if (other_tile == another_solution.my_tiles.end())
-            return false;
+         for (std::int8_t y = -15; y <= 15; ++y)
+         {
+            const tile_t& tile = tile_at(x, y);
+            if (!tile.is_valid())
+               continue;
 
-         if (other_tile->second != tile)
-            return false;
+            const position_t new_pos(x - new_center.x(), y - new_center.y());
+            const position_t rot_pos = new_pos.rotate(rotation);
+            if (!rot_pos.is_valid())
+               continue;
+
+            new_solution.tile_at(rot_pos) = tile.rotate(rotation);
       }
-
-      return true;
    }
 
-   bool solution_t::is_same(const solution_t& another_solution) const
-   {
-      for (int rotation = 0; rotation < 6; ++rotation)
-         if (is_same_without_rotation(another_solution.rotate(rotation)))
-            return true;
-      return false;
+      *this = new_solution;
    }
 
    solution_t solution_t::rotate(int rotation) const
@@ -89,28 +71,42 @@ namespace dak::tantrix
 
       solution_t rotated;
 
-      for (const auto& [pos, tile] : my_tiles)
-         rotated.my_tiles[pos.rotate(rotation)] = tile.rotate(rotation);
+      for (std::int8_t x = -15; x <= 15; ++x)
+      {
+         for (std::int8_t y = -15; y <= 15; ++y)
+         {
+            const tile_t& tile = tile_at(x, y);
+            if (!tile.is_valid())
+               continue;
+
+            const position_t rot_pos = position_t(x, y).rotate(rotation);
+            if (!rot_pos.is_valid())
+               continue;
+
+            rotated.tile_at(rot_pos) = tile_at(x, y).rotate(rotation);
+         }
+      }
 
       return rotated;
    }
 
    void solution_t::normalize()
    {
-      if (my_tiles.size() <= 0)
-         return;
-
-      auto smallest_tile   = &my_tiles.begin()->second;
-      auto smallest_number = smallest_tile->number();
-      auto smallest_pos    = my_tiles.begin()->first;
-      for (auto& [pos, tile] : my_tiles)
+      position_t smallest_pos;
+      tile_t* smallest_tile = nullptr;
+      std::uint8_t smallest_number = 0;
+      for (std::int8_t x = -15; x <= 15; ++x)
       {
+         for (std::int8_t y = -15; y <= 15; ++y)
+      {
+            tile_t& tile = tile_at(x, y);
          auto tile_number = tile.number();
-         if (tile_number < smallest_number)
+            if (tile_number != 0 && (smallest_number == 0 || tile_number < smallest_number))
          {
             smallest_tile     = &tile;
             smallest_number   = tile_number;
-            smallest_pos      = pos;
+               smallest_pos = position_t(x, y);
+            }
          }
       }
 
@@ -118,38 +114,38 @@ namespace dak::tantrix
       tile_t target_tile(smallest_number);
       while (*smallest_tile != target_tile)
       {
-         rotation = (rotation + 5) % 6;
+         rotation += 5;
          target_tile.rotate_in_place(1);
       }
 
-      tiles_by_pos_t new_tiles;
-
-      for (auto& [pos, tile] : my_tiles)
-      {
-         const position_t new_pos(pos.x() - smallest_pos.x(), pos.y() - smallest_pos.y());
-         const position_t rot_pos = new_pos.rotate(rotation);
-         new_tiles[rot_pos] = tile.rotate(rotation);
-      }
-
-      my_tiles.swap(new_tiles);
+      rotate_in_place(rotation, smallest_pos);
    }
 
    std::vector<position_t> solution_t::get_borders(const color_t& a_color) const
    {
       std::vector<position_t> positions;
+      positions.reserve(32);
 
-      for (const auto& [pos, tile] : my_tiles)
+      for (std::int8_t x = -14; x <= 14; ++x)
       {
+         for (std::int8_t y = -14; y <= 14; ++y)
+      {
+            const position_t pos(x, y);
+            const tile_t& tile = tile_at(pos);
+            if (!tile.is_valid())
+               continue;
+
          for (const auto& dir : directions)
          {
             if (tile.color(dir) != a_color)
                continue;
 
-            const auto new_pos = pos.move(dir);
+               const position_t new_pos = pos.move(dir);
             if (is_occupied(new_pos))
                continue;
 
-            positions.push_back(new_pos);
+               positions.emplace_back(new_pos);
+            }
          }
       }
 
@@ -170,23 +166,29 @@ namespace dak::tantrix
       direction_t left_start_dir;
       direction_t right_start_dir;
       size_t expected_count = 0;
-      for (const auto& [pos, tile] : my_tiles)
+      for (std::int8_t x = -15; x <= 15; ++x)
       {
+         for (std::int8_t y = -15; y <= 15; ++y)
+      {
+            const auto& tile = tile_at(x, y);
+            if (!tile.is_valid())
+               continue;
+
          if (!tile.has_color(a_color))
             continue;
 
          if (!expected_count)
          {
-            start_pos = pos;
+               start_pos = position_t(x, y);
             left_start_dir = tile.find_color(a_color, 0);
             right_start_dir = tile.find_color(a_color, left_start_dir.rotate(1));
          }
 
          expected_count += 1;
       }
+      }
 
       // Now find how many tiles form a continuous line.
-      const auto my_tiles_end = my_tiles.end();
       size_t found_count = 1;
 
       // Follow the line toward the left.
@@ -201,8 +203,8 @@ namespace dak::tantrix
             return found_count == expected_count;
 
          // Check for line end.
-         const auto iter = my_tiles.find(pos);
-         if (iter == my_tiles_end)
+         const auto& tile = tile_at(pos);
+         if (!tile.is_valid())
             break;
 
          // Line is longer.
@@ -210,7 +212,6 @@ namespace dak::tantrix
 
          // Find second location of the color on the tile.
          // The connection point is at dir + 3, so search from dir + 4.
-         const tile_t& tile = iter->second;
          dir = tile.find_color(a_color, dir.rotate(4));
       }
 
@@ -226,8 +227,8 @@ namespace dak::tantrix
             return found_count == expected_count;
 
          // Check for line end.
-         const auto iter = my_tiles.find(pos);
-         if (iter == my_tiles_end)
+         const auto& tile = tile_at(pos);
+         if (!tile.is_valid())
             return found_count == expected_count;
 
          // Line is longer.
@@ -235,7 +236,6 @@ namespace dak::tantrix
 
          // Find second location of the color on the tile.
          // The connection point is at dir + 3, so search from dir + 4.
-         const tile_t& tile = iter->second;
          dir = tile.find_color(a_color, dir.rotate(4));
       }
 
@@ -243,35 +243,33 @@ namespace dak::tantrix
 
    bool solution_t::is_valid() const
    {
-      using counts_by_color_t = std::map<color_t, int>;
-      using colors_by_pos_t = std::map<position_t, counts_by_color_t>;
-
-      colors_by_pos_t colors_by_pos;
-
-      for (const auto& [pos, tile] : my_tiles)
+      for (std::int8_t x = -14; x <= 14; ++x)
       {
+         for (std::int8_t y = -14; y <= 14; ++y)
+         {
+            const position_t pos(x, y);
+            if (is_occupied(pos))
+               continue;
+
+            int count_by_colors[4] = { 0, 0, 0, 0 };
+            int neighbour_count = 0;
          for (direction_t dir : directions)
          {
             const auto new_pos = pos.move(dir);
-            if (is_occupied(new_pos))
+               if (!is_occupied(new_pos))
                continue;
-            const auto color = tile.color(dir);
-            colors_by_pos[new_pos][color] += 1;
 
-            if (colors_by_pos[new_pos][color] > 2)
+               const auto color = tile_at(new_pos).color(dir.rotate(3));
+               count_by_colors[color.as_int()] += 1;
+
+               if (count_by_colors[color.as_int()] > 2)
                return false;
-         }
-      }
 
-      for (const auto& [pos, colors] : colors_by_pos)
-      {
-         int neighbour_count = 0;
-         for (const auto& [color, count] : colors)
-         {
-            neighbour_count += count;
+               neighbour_count += 1;
             if (neighbour_count > 3)
                return false;
          }
+      }
       }
 
       return true;

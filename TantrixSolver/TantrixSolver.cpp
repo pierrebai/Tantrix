@@ -55,8 +55,8 @@ int main()
       color_t::yellow(),
    };
 
-   const auto solutions = solve(puzzle_t(genius_puzzle_tiles, blue_red_line_colors));
-   //const auto solutions = solve(puzzle_t(genius_puzzle_tiles, red_yellow_line_colors));
+   //const auto solutions = solve(puzzle_t(genius_puzzle_tiles, blue_red_line_colors));
+   const auto solutions = solve(puzzle_t(genius_puzzle_tiles, red_yellow_line_colors));
    //const auto solutions = solve(puzzle_t(genius_puzzle_yellow_tiles, yellow_line_colors));
 
    cout << solutions.size() << endl;
