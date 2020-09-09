@@ -29,10 +29,10 @@ namespace dak::tantrix
       }
 
       // Access the solution tiles.
-      const tile_t& tile_at(std::int8_t x, std::int8_t y) const { return my_tiles[x + 16][y + 16]; }
+      const tile_t& tile_at(int x, int y) const { return my_tiles[x + 16][y + 16]; }
       const tile_t& tile_at(const position_t& a_pos) const { return tile_at(a_pos.x(), a_pos.y()); }
 
-      tile_t& tile_at(std::int8_t x, std::int8_t y) { return my_tiles[x + 16][y + 16]; }
+      tile_t& tile_at(int x, int y) { return my_tiles[x + 16][y + 16]; }
       tile_t& tile_at(const position_t& a_pos) { return tile_at(a_pos.x(), a_pos.y()); }
 
       // Add a tile to the solution.
