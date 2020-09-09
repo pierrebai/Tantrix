@@ -13,13 +13,22 @@
 
 namespace dak::tantrix
 {
+   struct placed_tile_t
+   {
+      position_t  pos;
+      tile_t      tile;
+   
+      // Compare placed tiles.
+      auto operator<=>(const placed_tile_t&) const = default;
+   };
+
    ////////////////////////////////////////////////////////////////////////////
    //
    // Solution that places all the given tiles.
 
    struct solution_t
    {
-      using tiles_by_pos_t = tile_t[32][32];
+      using tiles_by_pos_t = placed_tile_t[16];
 
       // Create a new solution.
       solution_t() = default;
@@ -29,14 +38,17 @@ namespace dak::tantrix
       }
 
       // Access the solution tiles.
-      const tile_t& tile_at(int x, int y) const { return my_tiles[x + 16][y + 16]; }
-      const tile_t& tile_at(const position_t& a_pos) const { return tile_at(a_pos.x(), a_pos.y()); }
+      const placed_tile_t* tiles() const { return my_tiles; }
+      size_t tiles_count() const { return my_tiles_count; }
 
-      tile_t& tile_at(int x, int y) { return my_tiles[x + 16][y + 16]; }
-      tile_t& tile_at(const position_t& a_pos) { return tile_at(a_pos.x(), a_pos.y()); }
+      const tile_t& tile_at(int x, int y) const { return tile_at(position_t(x, y)); }
+      const tile_t& tile_at(const position_t& a_pos) const { return *internal_tile_at(a_pos); }
+
+      tile_t& tile_at(int x, int y) { return tile_at(position_t(x, y)); }
+      tile_t& tile_at(const position_t& a_pos) { return *internal_tile_at(a_pos); }
 
       // Add a tile to the solution.
-      void add_tile(const tile_t& a_tile, const position_t& a_pos) { tile_at(a_pos) = a_tile; }
+      void add_tile(const tile_t& a_tile, const position_t& a_pos) { my_tiles[my_tiles_count].pos = a_pos; my_tiles[my_tiles_count].tile = a_tile; my_tiles_count += 1; }
 
       // Get the positions outside the solution where they touch a color.
       std::vector<position_t> get_borders(const color_t& a_color) const;
@@ -45,14 +57,14 @@ namespace dak::tantrix
       solution_t rotate(int rotation) const;
 
       // Rotate this solution in place of a given amount (increment of sixth of a turn).
-      void rotate_in_place(int rotation, const position_t& new_center);
+      solution_t& rotate_in_place(int rotation, const position_t& new_center);
 
       // Normalize the solution so that any other identical solutions will
       // have the same set of positions and orientation.
       void normalize();
 
       // Check if a position is already occupied.
-      bool is_occupied(const position_t& a_pos) const { return tile_at(a_pos).is_valid(); }
+      bool is_occupied(const position_t& a_pos) const;
 
       // Check if a tile at a given position would be compatible with the solution.
       bool is_compatible(const tile_t& a_tile, const position_t a_pos) const;
@@ -69,6 +81,9 @@ namespace dak::tantrix
       auto operator<=>(const solution_t& another_solution) const = default;
 
    private:
+      tile_t* internal_tile_at(const position_t& a_pos) const;
+
+      size_t         my_tiles_count = 0;
       tiles_by_pos_t my_tiles;
    };
 }

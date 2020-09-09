@@ -7,9 +7,11 @@ namespace dak::tantrix
    //
    // Position of the tile in the hexagonal grid.
 
-   position_t position_t::rotate(int rotation) const
+   position_t& position_t::rotate_in_place(int rotation)
    {
       rotation %= 6;
+      if (!rotation)
+         return *this;
 
       int factor_x_from_x;
       int factor_x_from_y;
@@ -53,8 +55,12 @@ namespace dak::tantrix
             break;
       }
 
-      return position_t(
-         my_x * factor_x_from_x + my_y * factor_x_from_y,
-         my_x * factor_y_from_x + my_y * factor_y_from_y);
+      const auto old_x = my_x;
+      const auto old_y = my_y;
+      my_x = old_x * factor_x_from_x + old_y * factor_x_from_y;
+      my_y = old_x * factor_y_from_x + old_y * factor_y_from_y;
+
+      return *this;
    }
+
 }

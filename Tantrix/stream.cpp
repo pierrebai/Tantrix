@@ -47,16 +47,10 @@ namespace dak::tantrix
    std::ostream& operator<<(std::ostream& a_stream, const solution_t& a_solution)
    {
       a_stream << (a_solution.is_valid()   ? "valid:"   : "invalid:") << std::endl;
-      for (std::int8_t x = -15; x <= 15; ++x)
+      const placed_tile_t* tiles = a_solution.tiles();
+      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
       {
-         for (std::int8_t y = -15; y <= 15; ++y)
-         {
-            position_t pos(x, y);
-            if (a_solution.is_occupied(pos))
-      {
-               a_stream << pos << " : " << a_solution.tile_at(pos) << std::endl;
-            }
-         }
+         a_stream << tiles[i].pos << " : " << tiles[i].tile << std::endl;
       }
       return a_stream;
    }
@@ -115,16 +109,10 @@ namespace dak::tantrix
    std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution)
    {
       a_stream << (a_solution.is_valid() ? "valid:" : "invalid:") << std::endl;
-      for (std::int8_t x = -15; x <= 15; ++x)
+      const placed_tile_t* tiles = a_solution.tiles();
+      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
       {
-         for (std::int8_t y = -15; y <= 15; ++y)
-         {
-            position_t pos(x, y);
-            if (a_solution.is_occupied(pos))
-      {
-               a_stream << pos << " : " << a_solution.tile_at(pos) << std::endl;
-            }
-         }
+         a_stream << tiles[i].pos << " : " << tiles[i].tile << std::endl;
       }
       return a_stream;
    }

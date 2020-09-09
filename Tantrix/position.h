@@ -51,8 +51,11 @@ namespace dak::tantrix
          return *this;
       }
 
-      // Rotate by a multiple of sixth of a turn around the origin position.
-      position_t rotate(int rotation) const;
+      // Rotate in place by a multiple of sixth of a turn around the origin position.
+      position_t& rotate_in_place(int rotation);
+
+      // Create a copy rotated by a multiple of sixth of a turn around the origin position.
+      position_t rotate(int rotation) const { return position_t(*this).rotate_in_place(rotation); }
 
       // Get the direction, if any, where a position is adjacent relative to this position.
       std::optional<direction_t> relative(const position_t& a_pos) const
@@ -66,9 +69,6 @@ namespace dak::tantrix
       // The position coordinates.
       int x() const { return my_x; }
       int y() const { return my_y; }
-
-      // Checik if valid, between -15 and 15.
-      bool is_valid() const { return -15 <= my_x && my_x <= 15 && -15 <= my_y && my_y <= 15; }
 
       // Position comparison.
       auto operator<=>(const position_t& an_other) const = default;
