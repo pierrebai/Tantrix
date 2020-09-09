@@ -21,7 +21,7 @@ namespace dak::tantrix
    {
       // Create a tile.
       tile_t() = default;
-      tile_t(std::uint8_t a_number) : my_number(a_number), my_rotation(0) {}
+      tile_t(int a_number) : my_number(std::uint8_t(a_number)), my_rotation(0) {}
 
       // Get the color of the tile in the given direction.
       color_t color(const direction_t a_dir) const
@@ -45,7 +45,7 @@ namespace dak::tantrix
       }
 
       // Return the tile number.
-      std::uint8_t number() const { return my_number; }
+      int number() const { return my_number; }
 
       // Check if the tile has the given color.
       bool has_color(const color_t& a_color) const
@@ -57,14 +57,14 @@ namespace dak::tantrix
       }
 
       // Rotate the tile in place by a multiple of sixth of a turn.
-      tile_t& rotate_in_place(int8_t an_amount)
+      tile_t& rotate_in_place(int an_amount)
       {
-         my_rotation = (my_rotation + (60u - an_amount)) % 6u;
+         my_rotation = (my_rotation + (6000 - an_amount)) % 6;
          return *this;
       }
 
       // Rotate the tile by a multiple of sixth of a turn and return a new tile.
-      tile_t rotate(int8_t an_amount) const
+      tile_t rotate(int an_amount) const
       {
          return tile_t(*this).rotate_in_place(an_amount);
       }

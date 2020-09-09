@@ -34,8 +34,8 @@ int main()
       tile_t(10),
       tile_t(13),
       tile_t(16),
-      tile_t(48),
-      tile_t(49),
+      //tile_t(48),
+      //tile_t(49),
    };
 
    const std::vector<color_t> blue_red_line_colors =
@@ -55,9 +55,9 @@ int main()
       color_t::yellow(),
    };
 
-   const auto solutions = solve(puzzle_t(genius_puzzle_tiles, blue_red_line_colors));
+   //const auto solutions = solve(puzzle_t(genius_puzzle_tiles, blue_red_line_colors));
    //const auto solutions = solve(puzzle_t(genius_puzzle_tiles, red_yellow_line_colors));
-   //const auto solutions = solve(puzzle_t(genius_puzzle_yellow_tiles, yellow_line_colors));
+   const auto solutions = solve(puzzle_t(genius_puzzle_yellow_tiles, yellow_line_colors));
 
    cout << solutions.size() << endl;
 

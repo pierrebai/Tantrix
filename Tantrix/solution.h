@@ -32,11 +32,11 @@ namespace dak::tantrix
       const tiles_by_pos_t& tiles() const { return my_tiles; }
 
       // Access the solution tiles.
-      const tile_t& tile_at(std::int8_t x, std::int8_t y) const   { return tile_at(position_t(x, y)); }
-      const tile_t& tile_at(const position_t& a_pos) const        { return my_tiles.at(a_pos); }
+      const tile_t& tile_at(int x, int y) const             { return tile_at(position_t(x, y)); }
+      const tile_t& tile_at(const position_t& a_pos) const  { return my_tiles.at(a_pos); }
 
-      tile_t& tile_at(std::int8_t x, std::int8_t y)   { return tile_at(position_t(x, y)); }
-      tile_t& tile_at(const position_t& a_pos)        { return my_tiles.at(a_pos); }
+      tile_t& tile_at(int x, int y)             { return tile_at(position_t(x, y)); }
+      tile_t& tile_at(const position_t& a_pos)  { return my_tiles.at(a_pos); }
 
       // Add a tile to the solution.
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
