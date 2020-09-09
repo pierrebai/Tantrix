@@ -35,7 +35,7 @@ namespace dak::tantrix
       // This is how the puzzle control the solver.
       // TODO: better document what the puzzle solver control do.
       std::vector<sub_puzzle> sub_puzzles() const;
-      std::vector<position_t> get_next_positions(const solution_t& partial_solution, const tile_t& a_tile) const;
+      std::vector<position_t> get_next_positions(const solution_t& partial_solution, const position_t& a_last_add_pos, const tile_t& a_tile) const;
       bool has_more_sub_puzzles() const;
       bool is_solution_valid(const solution_t& a_solution) const;
 

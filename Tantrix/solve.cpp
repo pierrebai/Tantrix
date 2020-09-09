@@ -39,7 +39,7 @@ namespace dak::tantrix
    //
    // Solve the placement of all given tiles.
 
-   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle);
+   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle);
 
    static void solve_recursion(
       all_solutions_t& solutions,
@@ -52,7 +52,7 @@ namespace dak::tantrix
 
       if (a_sub_puzzle.has_more_sub_puzzles())
       {
-         solve_partial(solutions, new_partial, a_sub_puzzle);
+         solve_partial(solutions, new_partial, new_pos, a_sub_puzzle);
       }
       else if (a_sub_puzzle.is_solution_valid(new_partial))
       {
@@ -60,11 +60,11 @@ namespace dak::tantrix
       }
    }
 
-   static all_solutions_t solve_sub_puzzle_with_tile(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const tile_t& a_tile)
+   static all_solutions_t solve_sub_puzzle_with_tile(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile)
    {
       all_solutions_t solutions;
 
-      const auto next_positions = a_sub_puzzle.get_next_positions(partial_solution, a_tile);
+      const auto next_positions = a_sub_puzzle.get_next_positions(partial_solution, a_last_add_pos, a_tile);
       for (const auto new_pos : next_positions)
       {
          for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
@@ -80,7 +80,7 @@ namespace dak::tantrix
       return solutions;
    }
 
-   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle)
+   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle)
    {
       std::vector<std::future<all_solutions_t>> solutions_async;
 
@@ -89,12 +89,12 @@ namespace dak::tantrix
       {
          if (a_sub_puzzle.depth() < 2)
          {
-            auto new_async = std::async(std::launch::async, solve_sub_puzzle_with_tile, partial_solution, sub_sub_puzzle, tile);
+            auto new_async = std::async(std::launch::async, solve_sub_puzzle_with_tile, partial_solution, sub_sub_puzzle, a_last_add_pos, tile);
             solutions_async.emplace_back(std::move(new_async));
          }
          else
          {
-            auto partial_solutions = solve_sub_puzzle_with_tile(partial_solution, sub_sub_puzzle, tile);
+            auto partial_solutions = solve_sub_puzzle_with_tile(partial_solution, sub_sub_puzzle, a_last_add_pos, tile);
             add_solutions(solutions, std::move(partial_solutions));
          }
       }
@@ -106,12 +106,12 @@ namespace dak::tantrix
       }
    }
 
-   static all_solutions_t solve_sub_puzzle(const puzzle_t& a_sub_puzzle, const tile_t& a_tile)
+   static all_solutions_t solve_sub_puzzle(const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile)
    {
       all_solutions_t solutions;
 
       solution_t partial_solution(a_tile, position_t(0, 0));
-      solve_partial(solutions, partial_solution, a_sub_puzzle);
+      solve_partial(solutions, partial_solution, a_last_add_pos, a_sub_puzzle);
 
       return solutions;
    }
@@ -135,7 +135,7 @@ namespace dak::tantrix
 
       for (const auto& [tile, puzzle] : sub_puzzles)
       {
-         auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, tile);
+         auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, position_t(0, 0), tile);
          solutions_async.emplace_back(std::move(new_async));
       }
 

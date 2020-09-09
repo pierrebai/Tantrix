@@ -31,11 +31,15 @@ namespace dak::tantrix
       // Access the solution tiles.
       const tiles_by_pos_t& tiles() const { return my_tiles; }
 
+      // Access the solution tiles.
+      const tile_t& tile_at(std::int8_t x, std::int8_t y) const   { return tile_at(position_t(x, y)); }
+      const tile_t& tile_at(const position_t& a_pos) const        { return my_tiles.at(a_pos); }
+
+      tile_t& tile_at(std::int8_t x, std::int8_t y)   { return tile_at(position_t(x, y)); }
+      tile_t& tile_at(const position_t& a_pos)        { return my_tiles.at(a_pos); }
+
       // Add a tile to the solution.
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
-
-      // Get the position where the last tile was added.
-      position_t last_add_pos() const { return my_last_pos; }
 
       // Get the positions outside the solution where they touch a color.
       std::vector<position_t> get_borders(const color_t& a_color) const;
@@ -65,9 +69,6 @@ namespace dak::tantrix
       // (Hole with more than 3 sides or having more than two of the same color.)
       bool is_valid() const;
 
-      // Check if it got rotated by normalization.
-      bool is_rotated() const { return my_rotated; }
-
       // Check if the solution has a contiuous line of the given color.
       // (Including a loop.)
       bool has_line(const color_t& a_color) const;
@@ -90,18 +91,6 @@ namespace dak::tantrix
 
    private:
       tiles_by_pos_t my_tiles;
-      position_t my_last_pos;
-      bool my_rotated = false;
-   };
-
-   struct solution_hash_t
-   {
-      std::size_t operator()(const solution_t& a_solution) const;
-   };
-
-   struct solution_is_same_t
-   {
-      bool operator()(const solution_t& lhs, const solution_t& rhs) const;
    };
 
 }

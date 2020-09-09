@@ -21,10 +21,10 @@ namespace dak::tantrix
    {
       // Create a position.
       position_t() = default;
-      position_t(std::int16_t a_x, std::int16_t a_y) : my_x(a_x), my_y(a_y) {}
+      position_t(std::int8_t a_x, std::int8_t a_y) : my_x(a_x), my_y(a_y) {}
 
       // Move by an integer amount in the hexagonal grid.
-      position_t move(std::int16_t delta_x, std::int16_t delta_y) const
+      position_t move(std::int8_t delta_x, std::int8_t delta_y) const
       {
          return position_t(my_x + delta_x, my_y + delta_y);
       }
@@ -52,7 +52,7 @@ namespace dak::tantrix
       }
 
       // Rotate by a multiple of sixth of a turn around the origin position.
-      position_t rotate(std::int16_t rotation) const;
+      position_t rotate(std::int8_t rotation) const;
 
       // Get the direction, if any, where a position is adjacent relative to this position.
       std::optional<direction_t> relative(const position_t& a_pos) const
@@ -64,15 +64,18 @@ namespace dak::tantrix
       }
 
       // The position coordinates.
-      std::int16_t x() const { return my_x; }
-      std::int16_t y() const { return my_y; }
+      std::int8_t x() const { return my_x; }
+      std::int8_t y() const { return my_y; }
+
+      // Checik if valid, between -15 and 15.
+      bool is_valid() const { return -15 <= my_x && my_x <= 15 && -15 <= my_y && my_y <= 15; }
 
       // Position comparison.
       auto operator<=>(const position_t& an_other) const = default;
 
    private:
-      std::int16_t my_x = 0;
-      std::int16_t my_y = 0;
+      std::int8_t my_x = 0;
+      std::int8_t my_y = 0;
    };
 
 }

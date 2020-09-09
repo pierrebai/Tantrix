@@ -47,7 +47,6 @@ namespace dak::tantrix
    std::ostream& operator<<(std::ostream& a_stream, const solution_t& a_solution)
    {
       a_stream << (a_solution.is_valid()   ? "valid:"   : "invalid:") << std::endl;
-      a_stream << (a_solution.is_rotated() ? "rotated:" : "normal:") << std::endl;
       for (const auto& [pos, tile] : a_solution.tiles())
       {
          a_stream << pos << " : " << tile << std::endl;
@@ -109,7 +108,6 @@ namespace dak::tantrix
    std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution)
    {
       a_stream << (a_solution.is_valid() ? "valid:" : "invalid:") << std::endl;
-      a_stream << (a_solution.is_rotated() ? "rotated:" : "normal:") << std::endl;
       for (const auto& [pos, tile] : a_solution.tiles())
       {
          a_stream << pos << " : " << tile << std::endl;

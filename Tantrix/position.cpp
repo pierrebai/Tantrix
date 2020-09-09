@@ -7,14 +7,14 @@ namespace dak::tantrix
    //
    // Position of the tile in the hexagonal grid.
 
-   position_t position_t::rotate(std::int16_t rotation) const
+   position_t position_t::rotate(std::int8_t rotation) const
    {
       rotation %= 6u;
 
-      std::int16_t factor_x_from_x;
-      std::int16_t factor_x_from_y;
-      std::int16_t factor_y_from_x;
-      std::int16_t factor_y_from_y;
+      std::int8_t factor_x_from_x;
+      std::int8_t factor_x_from_y;
+      std::int8_t factor_y_from_x;
+      std::int8_t factor_y_from_y;
 
       switch (rotation)
       {

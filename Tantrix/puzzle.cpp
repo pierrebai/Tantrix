@@ -76,18 +76,17 @@ namespace dak::tantrix
       return subs;
    }
 
-   std::vector<position_t> puzzle_t::get_next_positions(const solution_t& partial_solution, const tile_t& a_tile) const
+   std::vector<position_t> puzzle_t::get_next_positions(const solution_t& partial_solution, const position_t& a_last_add_pos, const tile_t& a_tile) const
    {
       std::vector<position_t> next_positions;
 
       const auto first_color = my_line_colors[0];
       if (a_tile.has_color(first_color))
       {
-         const auto last_pos = partial_solution.last_add_pos();
-         const tile_t& last_tile = partial_solution.tiles().find(last_pos)->second;
+         const tile_t& last_tile = partial_solution.tile_at(a_last_add_pos);
          for (const direction_t& dir : directions)
          {
-            const auto new_pos = last_pos.move(dir);
+            const auto new_pos = a_last_add_pos.move(dir);
             if (last_tile.color(dir) != first_color)
                continue;
             if (partial_solution.is_occupied(new_pos))

@@ -21,7 +21,6 @@ namespace dak::tantrix
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
    {
       my_tiles[a_pos] = a_tile;
-      my_last_pos     = a_pos;
    }
 
    bool solution_t::is_occupied(const position_t& a_pos) const
@@ -98,7 +97,6 @@ namespace dak::tantrix
 
    void solution_t::normalize()
    {
-      my_last_pos = position_t();
       if (my_tiles.size() <= 0)
          return;
 
@@ -123,8 +121,6 @@ namespace dak::tantrix
          rotation = (rotation + 5) % 6;
          target_tile.rotate_in_place(1);
       }
-
-      my_rotated = (rotation != 0);
 
       tiles_by_pos_t new_tiles;
 
@@ -279,24 +275,5 @@ namespace dak::tantrix
       }
 
       return true;
-   }
-
-
-   std::size_t solution_hash_t::operator()(const solution_t& a_solution) const
-   {
-      std::size_t hash = 0;
-
-      for (const auto& [pos, tile] : a_solution.tiles())
-      {
-         hash += (tile.number() * 2) * (pos.x() + 371) * 1483;
-         hash += pos.y() * 78653;
-      }
-
-      return hash;
-   }
-
-   bool solution_is_same_t::operator()(const solution_t& lhs, const solution_t& rhs) const
-   {
-      return lhs.is_same(rhs);
    }
 }

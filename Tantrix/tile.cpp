@@ -14,7 +14,7 @@ namespace dak::tantrix
    static constexpr color_t B = color_t::blue();
    static constexpr color_t Y = color_t::yellow();
 
-   static constexpr color_t tiles_colors[57][6] =
+   color_t tile_t::tiles_colors[57][6] =
    {
       { R, R, R, R, R, R },   //  0, invalid
       { Y, Y, B, R, B, R },   //  1
@@ -75,11 +75,4 @@ namespace dak::tantrix
       { B, B, Y, G, Y, G },   // 56
    };
 
-   tile_t::tile_t(std::uint16_t a_number)
-   : my_number(a_number)
-   {
-      if (a_number >= 1 && a_number <= 56)
-         for (int i = 0; i < 6; ++i)
-            my_sides[i] = tiles_colors[a_number][i];
-   }
 }

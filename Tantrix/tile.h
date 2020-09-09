@@ -21,12 +21,12 @@ namespace dak::tantrix
    {
       // Create a tile.
       tile_t() = default;
-      tile_t(std::uint16_t a_number);
+      tile_t(std::uint8_t a_number) : my_number(a_number), my_rotation(0) {}
 
       // Get the color of the tile in the given direction.
       color_t color(const direction_t a_dir) const
       {
-         return my_sides[a_dir.as_int()];
+         return tiles_colors[my_number][(a_dir.as_int() + my_rotation) % 6u];
       }
 
       // Find in which direction a color is found.
@@ -35,7 +35,7 @@ namespace dak::tantrix
       {
          for (int i = 0; i < 6; ++i)
          {
-            if (my_sides[a_from_dir.as_int()] == a_color)
+            if (color(a_from_dir) == a_color)
             {
                return a_from_dir;
             }
@@ -45,36 +45,28 @@ namespace dak::tantrix
       }
 
       // Return the tile number.
-      std::uint16_t number() const { return my_number; }
+      std::uint8_t number() const { return my_number; }
 
       // Check if the tile has the given color.
       bool has_color(const color_t& a_color) const
       {
          for (int i = 0; i < 6; ++i)
-            if (a_color == my_sides[i])
+            if (a_color == tiles_colors[my_number][i])
                return true;
          return false;
       }
 
       // Rotate the tile in place by a multiple of sixth of a turn.
-      void rotate_in_place(int an_amount)
+      tile_t& rotate_in_place(int8_t an_amount)
       {
-         an_amount %= 6;
-         // Note: we want to rotate clockwise, that is for a rotation of 1,
-         //       the color that was in direction 0 will now be in direction 1.
-         //
-         //       We need to apply the STL rotate algorithm in reverse 
-         //       because in STL, a rotation of 1 brings the object at 1 to 0.
-         an_amount = 6 - an_amount;
-         std::rotate(my_sides, my_sides + an_amount, my_sides + 6);
+         my_rotation = (my_rotation + (60u - an_amount)) % 6u;
+         return *this;
       }
 
       // Rotate the tile by a multiple of sixth of a turn and return a new tile.
-      tile_t rotate(int an_amount) const
+      tile_t rotate(int8_t an_amount) const
       {
-         tile_t new_tile(*this);
-         new_tile.rotate_in_place(an_amount);
-         return new_tile;
+         return tile_t(*this).rotate_in_place(an_amount);
       }
 
       // Check if the tile are the same tile, ignoring orientation.
@@ -83,12 +75,17 @@ namespace dak::tantrix
          return my_number == an_other.my_number;
       }
 
+      // Check if the tile is valid.
+      bool is_valid() const { return my_number != 0; }
+
       // Tile comparison. The same tile with different orientations will be different.
       auto operator<=>(const tile_t& an_other) const = default;
 
    private:
-      std::uint16_t  my_number = 0;
-      color_t        my_sides[6];
+      static color_t tiles_colors[57][6];
+
+      std::uint8_t  my_number = 0;
+      std::uint8_t  my_rotation = 0;
    };
 }
 
