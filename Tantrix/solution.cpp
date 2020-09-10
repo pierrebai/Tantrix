@@ -43,8 +43,68 @@ namespace dak::tantrix
 
    bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
    {
-      if (is_occupied(a_pos))
-         return false;
+      #define NEW_IS_COMPATIBLE
+      #ifdef NEW_IS_COMPATIBLE
+
+      for (size_t i = 0; i < my_tiles_count; ++i)
+      {
+         const placed_tile_t& placed_tile = my_tiles[i];
+         switch (a_pos.x() - placed_tile.pos.x())
+         {
+            case -1:
+               switch (a_pos.y() - placed_tile.pos.y())
+               {
+                  case -1:
+                     // Not a neighbour.
+                     break;
+                  case 0:
+                     if (placed_tile.tile.color(0) != a_tile.color(direction_t(3)))
+                        return false;
+                     break;
+                  case 1:
+                     if (placed_tile.tile.color(5) != a_tile.color(direction_t(2)))
+                        return false;
+                     break;
+               }
+               break;
+            case 0:
+               switch (a_pos.y() - placed_tile.pos.y())
+               {
+                  case -1:
+                     if (placed_tile.tile.color(1) != a_tile.color(direction_t(4)))
+                        return false;
+                     break;
+                  case 0:
+                     // Same location, always incompatible!
+                     return false;
+                  case 1:
+                     if (placed_tile.tile.color(4) != a_tile.color(direction_t(1)))
+                        return false;
+                     break;
+               }
+               break;
+            case 1:
+               switch (a_pos.y() - placed_tile.pos.y())
+               {
+                  case -1:
+                     if (placed_tile.tile.color(2) != a_tile.color(direction_t(5)))
+                        return false;
+                     break;
+                  case 0:
+                     if (placed_tile.tile.color(3) != a_tile.color(direction_t(0)))
+                        return false;
+                     break;
+                  case 1:
+                     // Not a neighbour.
+                     break;
+               }
+               break;
+         }
+      }
+
+      return true;
+
+      #else
 
       for (const auto dir : directions)
       {
@@ -58,6 +118,8 @@ namespace dak::tantrix
          }
       }
       return true;
+
+      #endif
    }
 
    solution_t& solution_t::rotate_in_place(int rotation, const position_t& new_center)
@@ -152,6 +214,60 @@ namespace dak::tantrix
 
    bool solution_t::has_line(const color_t& a_color) const
    {
+      #define NEW_HAS_LINE
+      #ifdef NEW_HAS_LINE
+
+      // The idea for the algorithm is to expand the grid
+      // and to record the junctions between tiles are grid point
+      // instead of the tiles. Then we record the position of the
+      // junctions with the tile position + direction of the junction.
+      //
+      // For a simple one-dimensional example, for the tile at
+      // X coordinate 2 and 3, the coordinates become 4 and 6,
+      // and the right of 4 is 5 and the left of 6 is 5. So 5
+      // is recorded twice. When we have a pair, we know the line
+      // is continuous there.
+      //
+      // We then simply have to count the number of discontinuities.
+      // If more than 2, we have more than two ends, so more than 1 line.
+      position_t ends[32];
+      size_t ends_count = 0;
+
+      for (size_t i = 0; i < my_tiles_count; ++i)
+      {
+         const placed_tile_t& placed_tile = my_tiles[i];
+
+         for (auto dir : directions)
+         {
+            if (placed_tile.tile.color(dir) != a_color)
+               continue;
+
+            ends[ends_count++] = position_t(
+               placed_tile.pos.x() * 2 + dir.delta_x(),
+               placed_tile.pos.y() * 2 + dir.delta_y());
+         }
+      }
+
+      // No color at all.
+      if (ends_count <= 0)
+         return false;
+
+      // This is the unfortunate expensive bit. 33% of the running time is spent here!
+      std::sort(ends, ends + ends_count);
+
+      size_t line_end_count = ends_count;
+      for (size_t i = 1; i < ends_count; ++i)
+      {
+         if (ends[i - 1] == ends[i])
+         {
+            line_end_count -= 2;
+         }
+      }
+
+      return line_end_count <= 2;
+
+      #else
+
       // Find a starting tile containg the color and the two directions where
       // the color are found on the tile.
       //
@@ -229,6 +345,7 @@ namespace dak::tantrix
          dir = tile->find_color(a_color, dir.rotate(4));
       }
 
+      #endif
    }
 
    bool solution_t::is_valid() const
