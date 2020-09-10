@@ -183,6 +183,7 @@ namespace dak::tantrix
       }
 
       rotate_in_place(rotation, smallest_pos);
+      std::sort(my_tiles, my_tiles + my_tiles_count);
    }
 
    std::vector<position_t> solution_t::get_borders(const color_t& a_color) const
