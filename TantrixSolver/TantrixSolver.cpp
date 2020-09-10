@@ -2,6 +2,7 @@
 #include "tantrix_stream.h"
 
 #include <iostream>
+#include <chrono>
 
 using namespace std;
 using namespace dak::tantrix;
@@ -55,9 +56,15 @@ int main()
       color_t::yellow(),
    };
 
+   using clock = chrono::steady_clock;
+   auto begin_time = clock::now();
+
    //const auto solutions = solve(puzzle_t(genius_puzzle_tiles, blue_red_line_colors));
    //const auto solutions = solve(puzzle_t(genius_puzzle_tiles, red_yellow_line_colors));
    const auto solutions = solve(puzzle_t(genius_puzzle_yellow_tiles, yellow_line_colors));
+
+   auto end_time = clock::now();
+   cout << "time: " << chrono::duration_cast<chrono::milliseconds>(end_time - begin_time).count() / 1000.0 << "s" << endl;
 
    cout << solutions.size() << endl;
 
