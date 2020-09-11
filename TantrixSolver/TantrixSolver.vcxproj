@@ -154,6 +154,11 @@
       <Project>{964f13d7-14f7-4d4a-b618-4ac6f7849764}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="Genius Puzzle Red Blue.txt" />
+    <Text Include="Genius Puzzle Red Yellow.txt" />
+    <Text Include="Genius Puzzle Yellow Tiles.txt" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

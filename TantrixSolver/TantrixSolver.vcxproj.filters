@@ -19,4 +19,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="Genius Puzzle Red Blue.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="Genius Puzzle Red Yellow.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+    <Text Include="Genius Puzzle Yellow Tiles.txt">
+      <Filter>Source Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

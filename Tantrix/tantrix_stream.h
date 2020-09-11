@@ -19,19 +19,30 @@ namespace dak::tantrix
    //
    // Write various classes to an output stream.
 
-   std::ostream& operator<<(std::ostream& a_stream, const color_t& a_color);
-   std::ostream& operator<<(std::ostream& a_stream, const direction_t& a_direction);
-   std::ostream& operator<<(std::ostream& a_stream, const position_t& a_position);
-   std::ostream& operator<<(std::ostream& a_stream, const tile_t& a_tile);
-   std::ostream& operator<<(std::ostream& a_stream, const solution_t& a_solution);
-   std::ostream& operator<<(std::ostream& a_stream, const puzzle_t& a_puzzle);
-
+   std::ostream&  operator<<(std::ostream&  a_stream, const color_t& a_color);
    std::wostream& operator<<(std::wostream& a_stream, const color_t& a_color);
+   std::istream&  operator>>(std::istream&  a_stream,       color_t& a_color);
+   std::wistream& operator>>(std::wistream& a_stream,       color_t& a_color);
+
+   std::ostream&  operator<<(std::ostream&  a_stream, const direction_t& a_direction);
    std::wostream& operator<<(std::wostream& a_stream, const direction_t& a_direction);
+
+   std::ostream&  operator<<(std::ostream&  a_stream, const position_t& a_position);
    std::wostream& operator<<(std::wostream& a_stream, const position_t& a_position);
+
+   std::ostream&  operator<<(std::ostream&  a_stream, const tile_t& a_tile);
    std::wostream& operator<<(std::wostream& a_stream, const tile_t& a_tile);
+   std::istream&  operator>>(std::istream&  a_stream,       tile_t& a_tile);
+   std::wistream& operator>>(std::wistream& a_stream,       tile_t& a_tile);
+
+   std::ostream&  operator<<(std::ostream&  a_stream, const solution_t& a_solution);
    std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution);
+
+   std::ostream&  operator<<(std::ostream&  a_stream, const puzzle_t& a_puzzle);
    std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle);
+   std::istream&  operator>>(std::istream&  a_stream,       puzzle_t& a_puzzle);
+   std::wistream& operator>>(std::wistream& a_stream,       puzzle_t& a_puzzle);
+
 }
 
 #endif /* DAK_TANTRIX_STREAM_H */

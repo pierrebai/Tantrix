@@ -124,10 +124,6 @@ namespace dak::tantrix
 
    solution_t& solution_t::rotate_in_place(int rotation, const position_t& new_center)
    {
-      rotation = rotation % 6;
-      if (!rotation)
-         return *this;
-
       for (size_t i = 0; i < my_tiles_count; ++i)
       {
          placed_tile_t& placed_tile = my_tiles[i];
