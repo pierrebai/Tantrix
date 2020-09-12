@@ -3,22 +3,72 @@
 
 namespace dak::utility
 {
-   void multi_thread_progress_t::progress(size_t a_done_count)
+   void per_thread_progress_t::set_estimated_total_count(size_t a_count)
    {
-      const size_t pre_count = my_total_count_so_far.fetch_add(a_done_count);
-      const size_t post_count = pre_count + a_done_count;
-      static constexpr size_t once_every = 1000 * 1000;
-      if ((pre_count / once_every) != (post_count / once_every))
-         update_progress(post_count);
+      if (!my_mt_progress)
+         return;
+
+      my_mt_progress->set_estimated_total_count(a_count);
    }
 
-   void multi_thread_progress_t::update_progress(size_t a_done_count)
+   void per_thread_progress_t::progress(size_t a_done_count)
    {
-      if (!my_mono_thread_progress)
+      if (!my_mt_progress)
+         return;
+
+      my_count_since_last_report += a_done_count;
+
+      if (my_count_since_last_report > my_report_every)
+      {
+         my_mt_progress->update_progress_from_thread(my_count_since_last_report);
+         my_count_since_last_report = 0;
+      }
+   }
+
+   per_thread_progress_t::~per_thread_progress_t()
+   {
+      if (!my_mt_progress)
+         return;
+
+      my_mt_progress->update_progress_from_thread(my_count_since_last_report);
+      my_count_since_last_report = 0;
+   }
+
+   multi_thread_progress_t::~multi_thread_progress_t()
+   {
+      if (!my_non_thread_safe_progress)
+         return;
+
+      report_to_non_thread_safe_progress(my_total_count_so_far);
+   }
+
+   void multi_thread_progress_t::set_estimated_total_count(size_t a_count)
+   {
+      if (!my_non_thread_safe_progress)
          return;
 
       std::lock_guard lock(my_mutex);
-      my_mono_thread_progress->update_progress(a_done_count);
+      my_non_thread_safe_progress->set_estimated_total_count(a_count);
+   }
+
+   void multi_thread_progress_t::update_progress_from_thread(size_t a_count_from_thread)
+   {
+      if (!my_non_thread_safe_progress)
+         return;
+
+      const size_t pre_count = my_total_count_so_far.fetch_add(a_count_from_thread);
+      const size_t post_count = pre_count + a_count_from_thread;
+
+      if ((pre_count / my_report_every) != (post_count / my_report_every))
+      {
+         report_to_non_thread_safe_progress(post_count);
+      }
+   }
+
+   void multi_thread_progress_t::report_to_non_thread_safe_progress(size_t a_count)
+   {
+      std::lock_guard lock(my_mutex);
+      my_non_thread_safe_progress->update_progress(a_count);
    }
 }
 

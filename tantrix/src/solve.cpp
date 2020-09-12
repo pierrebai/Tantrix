@@ -8,6 +8,9 @@
 
 namespace dak::tantrix
 {
+   using multi_thread_progress_t = dak::utility::multi_thread_progress_t;
+   using per_thread_progress_t = dak::utility::per_thread_progress_t;
+
 
    ////////////////////////////////////////////////////////////////////////////
    //
@@ -31,21 +34,21 @@ namespace dak::tantrix
    //
    // Solve the placement of all given tiles.
 
-   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle, utility::multi_thread_progress_t* a_progress);
+   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, per_thread_progress_t* a_progress);
 
    static void solve_recursion(
       all_solutions_t& solutions,
       const solution_t& partial_solution,
       const puzzle_t& a_sub_puzzle,
       const tile_t& new_tile, position_t new_pos,
-      utility::multi_thread_progress_t* a_progress)
+      per_thread_progress_t* a_progress)
    {
       solution_t new_partial = partial_solution;
       new_partial.add_tile(new_tile, new_pos);
 
       if (a_sub_puzzle.has_more_sub_puzzles())
       {
-         solve_partial(solutions, new_partial, new_pos, a_sub_puzzle, a_progress);
+         solve_partial(solutions, new_partial, a_sub_puzzle, new_pos, a_progress);
       }
       else if (a_sub_puzzle.is_solution_valid(new_partial))
       {
@@ -53,7 +56,7 @@ namespace dak::tantrix
       }
    }
 
-   static all_solutions_t solve_sub_puzzle_with_tile(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, utility::multi_thread_progress_t* a_progress)
+   static all_solutions_t solve_sub_puzzle_with_tile(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, per_thread_progress_t* a_progress)
    {
       all_solutions_t solutions;
       a_progress->progress(1);
@@ -74,7 +77,12 @@ namespace dak::tantrix
       return solutions;
    }
 
-   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle, utility::multi_thread_progress_t* a_progress)
+   static all_solutions_t solve_sub_puzzle_with_tile_async(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, per_thread_progress_t a_progress)
+   {
+      return solve_sub_puzzle_with_tile(partial_solution, a_sub_puzzle, a_last_add_pos, a_tile, &a_progress);
+   }
+
+   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, per_thread_progress_t* a_progress)
    {
       std::vector<std::future<all_solutions_t>> solutions_async;
 
@@ -83,7 +91,7 @@ namespace dak::tantrix
       {
          if (a_sub_puzzle.depth() < 2)
          {
-            auto new_async = std::async(std::launch::async, solve_sub_puzzle_with_tile, partial_solution, sub_sub_puzzle, a_last_add_pos, tile, a_progress);
+            auto new_async = std::async(std::launch::async, solve_sub_puzzle_with_tile_async, partial_solution, sub_sub_puzzle, a_last_add_pos, tile, *a_progress);
             solutions_async.emplace_back(std::move(new_async));
          }
          else
@@ -100,12 +108,11 @@ namespace dak::tantrix
       }
    }
 
-   static all_solutions_t solve_sub_puzzle(const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, utility::multi_thread_progress_t* a_progress)
+   static all_solutions_t solve_sub_puzzle(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, per_thread_progress_t a_progress)
    {
       all_solutions_t solutions;
 
-      solution_t partial_solution(a_tile, position_t(0, 0));
-      solve_partial(solutions, partial_solution, a_last_add_pos, a_sub_puzzle, a_progress);
+      solve_partial(solutions, partial_solution, a_sub_puzzle, a_last_add_pos, &a_progress);
 
       return solutions;
    }
@@ -123,7 +130,7 @@ namespace dak::tantrix
 
       all_solutions_t all_solutions;
 
-      utility::multi_thread_progress_t mt_progress(a_progress);
+      multi_thread_progress_t mt_progress(a_progress);
 
       //for (const auto& [tile, puzzle] : sub_puzzles)
       //{
@@ -133,7 +140,8 @@ namespace dak::tantrix
 
       for (const auto& [tile, puzzle] : sub_puzzles)
       {
-         auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, position_t(0, 0), tile, &mt_progress);
+         solution_t partial_solution(tile, position_t(0, 0));
+         auto new_async = std::async(std::launch::async, solve_sub_puzzle, partial_solution, puzzle, position_t(0, 0), per_thread_progress_t(mt_progress));
          solutions_async.emplace_back(std::move(new_async));
       }
 

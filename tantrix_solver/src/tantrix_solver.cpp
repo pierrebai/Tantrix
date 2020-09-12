@@ -34,7 +34,7 @@ int main(int arg_count, char** arg_values)
          cout << puzzle << endl;
 
          auto begin_time = clock::now();
-         stream_progress progress;
+         stream_progress_t progress(cout);
          const auto solutions = solve(puzzle, progress);
          auto end_time = clock::now();
 

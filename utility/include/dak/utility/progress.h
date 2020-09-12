@@ -1,7 +1,7 @@
 #pragma once
 
-#ifndef DAK_TANTRIX_PROGRESS_H
-#define DAK_TANTRIX_PROGRESS_H
+#ifndef DAK_UTILITY_PROGRESS_H
+#define DAK_UTILITY_PROGRESS_H
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
@@ -12,24 +12,40 @@ namespace dak::utility
    ////////////////////////////////////////////////////////////////////////////
    //
    // Report progress of work.
+   //
+   // Not thread safe. Wrap in a multi_thread_progress_t if needed.
 
    struct progress_t
    {
+      static constexpr size_t my_default_report_every = 1000 * 1000;
+
+      // Create a progress reporter.
+      progress_t() = default;
+      progress_t(size_t a_report_every) : my_report_every(a_report_every) {}
+
+      // Force to report the progress tally.
+      void flush_progress();
+
+      // Set the estimated total count we expect when progress finishes.
       void set_estimated_total_count(size_t a_count) { my_estimated_total_count = a_count; }
+
+      // Update the progress with an additional count.
       void progress(size_t a_done_count);
 
       size_t estimated_total_count() const { return my_estimated_total_count; }
       size_t total_count_so_far() const { return my_total_count_so_far; }
 
    protected:
+      // Update the toal progress so far to the actual implementation.
       virtual void update_progress(size_t a_total_count_so_far) = 0;
 
    private:
       size_t my_estimated_total_count = 0;
+      size_t my_report_every = my_default_report_every;
       size_t my_total_count_so_far = 0;
 
       friend struct multi_thread_progress_t;
    };
 }
 
-#endif /* DAK_TANTRIX_PROGRESS_H */
+#endif /* DAK_UTILITY_PROGRESS_H */
