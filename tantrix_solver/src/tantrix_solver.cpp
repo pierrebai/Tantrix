@@ -1,5 +1,6 @@
 #include "dak/tantrix/tantrix.h"
 #include "dak/tantrix/stream.h"
+#include "dak/utility/stream_progress.h"
 
 #include <iostream>
 #include <fstream>
@@ -10,19 +11,7 @@
 
 using namespace std;
 using namespace dak::tantrix;
-
-struct stream_progress : progress_t
-{
-   void update_progress(size_t a_total_count_so_far) override
-   {
-      my_mutex.lock();
-      cout << a_total_count_so_far << " / " << estimated_total_count() << "\r";
-      my_mutex.unlock();
-   }
-
-private:
-   mutex my_mutex;
-};
+using namespace dak::utility;
 
 int main(int arg_count, char** arg_values)
 {
@@ -55,12 +44,9 @@ int main(int arg_count, char** arg_values)
 
          path solution_filename(filename);
          solution_filename.replace_extension("solutions.txt");
-         ofstream solution_stream(solution_filename);
 
-         for (const auto& sol : solutions)
-         {
-            solution_stream << sol << "\n";
-         }
+         ofstream solution_stream(solution_filename);
+         solution_stream << solutions << endl;
       }
       catch (exception& ex)
       {

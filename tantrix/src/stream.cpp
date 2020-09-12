@@ -216,6 +216,24 @@ namespace dak::tantrix
       return a_stream;
    }
 
+   std::ostream& operator<<(std::ostream& a_stream, const all_solutions_t& some_solutions)
+   {
+      a_stream << "solutions: " << some_solutions.size() << "\n";
+      for (const auto& sol : some_solutions)
+         a_stream << sol << "\n";
+
+      return a_stream;
+   }
+
+   std::wostream& operator<<(std::wostream& a_stream, const all_solutions_t& some_solutions)
+   {
+      a_stream << L"solutions: " << some_solutions.size() << L"\n";
+      for (const auto& sol : some_solutions)
+         a_stream << sol << L"\n";
+
+      return a_stream;
+   }
+
    std::ostream& operator<<(std::ostream& a_stream, const puzzle_t& a_puzzle)
    {
       a_stream << "tiles:";

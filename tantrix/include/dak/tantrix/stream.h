@@ -5,6 +5,8 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
+#include <dak/tantrix/solve.h>
+
 #include <iostream>
 
 namespace dak::tantrix
@@ -41,6 +43,9 @@ namespace dak::tantrix
    std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution);
    std::istream&  operator>>(std::istream& a_stream,        solution_t& a_solution);
    std::wistream& operator>>(std::wistream& a_stream,       solution_t& a_solution);
+
+   std::ostream&  operator<<(std::ostream&  a_stream, const all_solutions_t& some_solutions);
+   std::wostream& operator<<(std::wostream& a_stream, const all_solutions_t& some_solutions);
 
    std::ostream&  operator<<(std::ostream&  a_stream, const puzzle_t& a_puzzle);
    std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle);

@@ -1,46 +1,27 @@
 #include "dak/tantrix/puzzle.h"
 #include "dak/tantrix/solve.h"
+#include "dak/utility/progress.h"
+#include "dak/utility/multi_thread_progress.h"
 
 #include <thread>
 #include <future>
 
 namespace dak::tantrix
 {
-   void progress_t::progress(size_t a_done_count)
-   {
-      const size_t pre_count = my_total_count_so_far.fetch_add(a_done_count);
-      const size_t post_count = pre_count + a_done_count;
-      static constexpr size_t once_every = 1000 * 1000;
-      if ((pre_count / once_every) != (post_count / once_every))
-         update_progress(post_count);
-   }
-
 
    ////////////////////////////////////////////////////////////////////////////
    //
    // Keeper of all solutions.
 
-   // Add a solution, *even* if it is a duplicate.
-   static void add_solution(std::vector<solution_t>& all_solutions, solution_t&& a_solution)
-   {
-      all_solutions.emplace_back(a_solution);
-   }
-
-   // Add many solutions, *even* if they are duplicates.
-   static void add_solutions(std::vector<solution_t>& all_solutions, all_solutions_t&& other_solutions)
-   {
-      all_solutions.insert(all_solutions.end(), other_solutions.begin(), other_solutions.end());
-   }
-
    // Normalize and add a solution if it is not already known.
-   static void add_solution(std::set<solution_t>& all_solutions, solution_t&& a_solution)
+   static void add_solution(all_solutions_t& all_solutions, solution_t&& a_solution)
    {
       a_solution.normalize();
       all_solutions.insert(a_solution);
    }
 
    // Add many solutions, we assume they have been already normalized.
-   static void add_solutions(std::set<solution_t>& all_solutions, all_solutions_t&& other_solutions)
+   static void add_solutions(all_solutions_t& all_solutions, all_solutions_t&& other_solutions)
    {
       all_solutions.merge(other_solutions);
    }
@@ -50,14 +31,14 @@ namespace dak::tantrix
    //
    // Solve the placement of all given tiles.
 
-   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle, progress_t* a_progress);
+   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle, utility::multi_thread_progress_t* a_progress);
 
    static void solve_recursion(
       all_solutions_t& solutions,
       const solution_t& partial_solution,
       const puzzle_t& a_sub_puzzle,
       const tile_t& new_tile, position_t new_pos,
-      progress_t* a_progress)
+      utility::multi_thread_progress_t* a_progress)
    {
       solution_t new_partial = partial_solution;
       new_partial.add_tile(new_tile, new_pos);
@@ -72,7 +53,7 @@ namespace dak::tantrix
       }
    }
 
-   static all_solutions_t solve_sub_puzzle_with_tile(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, progress_t* a_progress)
+   static all_solutions_t solve_sub_puzzle_with_tile(const solution_t& partial_solution, const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, utility::multi_thread_progress_t* a_progress)
    {
       all_solutions_t solutions;
       a_progress->progress(1);
@@ -93,7 +74,7 @@ namespace dak::tantrix
       return solutions;
    }
 
-   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle, progress_t* a_progress)
+   static void solve_partial(all_solutions_t& solutions, const solution_t& partial_solution, const position_t& a_last_add_pos, const puzzle_t& a_sub_puzzle, utility::multi_thread_progress_t* a_progress)
    {
       std::vector<std::future<all_solutions_t>> solutions_async;
 
@@ -119,7 +100,7 @@ namespace dak::tantrix
       }
    }
 
-   static all_solutions_t solve_sub_puzzle(const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, progress_t* a_progress)
+   static all_solutions_t solve_sub_puzzle(const puzzle_t& a_sub_puzzle, const position_t& a_last_add_pos, const tile_t& a_tile, utility::multi_thread_progress_t* a_progress)
    {
       all_solutions_t solutions;
 
@@ -142,6 +123,8 @@ namespace dak::tantrix
 
       all_solutions_t all_solutions;
 
+      utility::multi_thread_progress_t mt_progress(a_progress);
+
       //for (const auto& [tile, puzzle] : sub_puzzles)
       //{
       //   auto partial_solutions = solve_sub_puzzle(puzzle, position_t(0, 0), tile, a_progress);
@@ -150,7 +133,7 @@ namespace dak::tantrix
 
       for (const auto& [tile, puzzle] : sub_puzzles)
       {
-         auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, position_t(0, 0), tile, &a_progress);
+         auto new_async = std::async(std::launch::async, solve_sub_puzzle, puzzle, position_t(0, 0), tile, &mt_progress);
          solutions_async.emplace_back(std::move(new_async));
       }
 

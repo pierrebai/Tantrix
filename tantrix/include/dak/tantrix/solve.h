@@ -9,31 +9,16 @@
 
 #include <set>
 #include <vector>
-#include <atomic>
+
+namespace dak::utility
+{
+   struct progress_t;
+}
 
 namespace dak::tantrix
 {
    struct puzzle_t;
-
-   ////////////////////////////////////////////////////////////////////////////
-   //
-   // Report progress on the solution.
-
-   struct progress_t
-   {
-      void set_estimated_total_count(size_t a_count) { my_estimated_total_count = a_count; }
-      void progress(size_t a_done_count);
-
-      size_t estimated_total_count() const { return my_estimated_total_count; }
-      size_t total_count_so_far() const { return my_total_count_so_far; }
-
-   protected:
-      virtual void update_progress(size_t a_total_count_so_far) = 0;
-
-   private:
-      size_t my_estimated_total_count = 0;
-      std::atomic<size_t> my_total_count_so_far = 0;
-   };
+   using progress_t = dak::utility::progress_t;
 
    ////////////////////////////////////////////////////////////////////////////
    //
