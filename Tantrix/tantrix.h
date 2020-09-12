@@ -11,5 +11,6 @@
 #include "tile.h"
 #include "solution.h"
 #include "puzzle.h"
+#include "solve.h"
 
 #endif /* DAK_TANTRIX_TANTRIX_H */

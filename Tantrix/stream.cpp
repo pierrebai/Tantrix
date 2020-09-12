@@ -24,25 +24,43 @@ namespace dak::tantrix
    {
       switch (a_direction.as_int())
       {
-         case 0:  return a_stream << L"left";
-         case 1:  return a_stream << L"top-left";
-         case 2:  return a_stream << L"top-right";
-         case 3:  return a_stream << L"right";
-         case 4:  return a_stream << L"bottom-right";
-         case 5:  return a_stream << L"bottom-left";
+         case 0:  return a_stream << "left";
+         case 1:  return a_stream << "top-left";
+         case 2:  return a_stream << "top-right";
+         case 3:  return a_stream << "right";
+         case 4:  return a_stream << "bottom-right";
+         case 5:  return a_stream << "bottom-left";
          default: return a_stream;
       }
    }
 
    std::ostream& operator<<(std::ostream& a_stream, const position_t& a_position)
    {
-      a_stream << a_position.x() << " / " << a_position.y();
+      a_stream << a_position.x() << "/" << a_position.y();
       return a_stream;
    }
 
    std::wostream& operator<<(std::wostream& a_stream, const position_t& a_position)
    {
-      a_stream << a_position.x() << L" / " << a_position.y();
+      a_stream << a_position.x() << "/" << a_position.y();
+      return a_stream;
+   }
+
+   std::istream& operator>>(std::istream& a_stream, position_t& a_position)
+   {
+      int x = 0, y = 0;
+      char slash = 0;
+      a_stream >> x >> slash >> y;
+      a_position = position_t(x, y);
+      return a_stream;
+   }
+
+   std::wistream& operator>>(std::wistream& a_stream, position_t& a_position)
+   {
+      int x = 0, y = 0;
+      wchar_t slash = 0;
+      a_stream >> x >> slash >> y;
+      a_position = position_t(x, y);
       return a_stream;
    }
 
@@ -62,10 +80,10 @@ namespace dak::tantrix
    {
       switch (a_color.as_int())
       {
-         case 0:  return a_stream << L'R';
-         case 1:  return a_stream << L'G';
-         case 2:  return a_stream << L'B';
-         case 3:  return a_stream << L'Y';
+         case 0:  return a_stream << 'R';
+         case 1:  return a_stream << 'G';
+         case 2:  return a_stream << 'B';
+         case 3:  return a_stream << 'Y';
          default: return a_stream;
       }
    }
@@ -95,10 +113,10 @@ namespace dak::tantrix
 
       switch (color)
       {
-         case L'R': a_color = color_t::red(); break;
-         case L'G': a_color = color_t::green(); break;
-         case L'B': a_color = color_t::blue(); break;
-         case L'Y': a_color = color_t::yellow(); break;
+         case 'R': a_color = color_t::red(); break;
+         case 'G': a_color = color_t::green(); break;
+         case 'B': a_color = color_t::blue(); break;
+         case 'Y': a_color = color_t::yellow(); break;
       }
 
       return a_stream;
@@ -106,17 +124,17 @@ namespace dak::tantrix
 
    std::ostream& operator<<(std::ostream& a_stream, const tile_t& a_tile)
    {
-      a_stream << a_tile.number();
+      a_stream << a_tile.number() << ' ';
       for (const direction_t& dir : directions)
-         a_stream << ' ' << a_tile.color(dir);
+         a_stream << a_tile.color(dir);
       return a_stream;
    }
 
    std::wostream& operator<<(std::wostream& a_stream, const tile_t& a_tile)
    {
-      a_stream << a_tile.number();
+      a_stream << a_tile.number() << ' ';
       for (const direction_t& dir : directions)
-         a_stream << L' ' << a_tile.color(dir);
+         a_stream << a_tile.color(dir);
       return a_stream;
    }
 
@@ -140,12 +158,61 @@ namespace dak::tantrix
 
    std::ostream& operator<<(std::ostream& a_stream, const solution_t& a_solution)
    {
-      a_stream << (a_solution.is_valid()   ? "valid:"   : "invalid:") << std::endl;
+      a_stream << (a_solution.is_valid()   ? "valid\n"   : "invalid\n");
       const placed_tile_t* tiles = a_solution.tiles();
       for (size_t i = 0; i < a_solution.tiles_count(); ++i)
       {
-         a_stream << tiles[i].pos << " : " << tiles[i].tile << std::endl;
+         a_stream << tiles[i].pos << ": " << tiles[i].tile << "\n";
       }
+      return a_stream;
+   }
+
+   std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution)
+   {
+      a_stream << (a_solution.is_valid() ? "valid\n" : "invalid\n");
+      const placed_tile_t* tiles = a_solution.tiles();
+      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
+      {
+         a_stream << tiles[i].pos << ": " << tiles[i].tile << "\n";
+      }
+      return a_stream;
+   }
+
+   std::istream& operator>>(std::istream& a_stream, solution_t& a_solution)
+   {
+      std::string validity;
+      a_stream >> validity;
+      a_solution = solution_t();
+      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
+      {
+         position_t pos;
+         a_stream >> pos;
+         std::string column;
+         a_stream >> column;
+         tile_t tile;
+         a_stream >> tile;
+         a_solution.add_tile(tile, pos);
+      }
+
+      return a_stream;
+   }
+
+   std::wistream& operator>>(std::wistream& a_stream, solution_t& a_solution)
+   {
+      std::wstring validity;
+      a_stream >> validity;
+      a_solution = solution_t();
+      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
+      {
+         position_t pos;
+         a_stream >> pos;
+         std::wstring column;
+         a_stream >> column;
+         tile_t tile;
+         a_stream >> tile;
+         a_solution.add_tile(tile, pos);
+      }
+
       return a_stream;
    }
 
@@ -155,8 +222,7 @@ namespace dak::tantrix
       for (const auto& [color, tiles] : a_puzzle.tiles())
          for (const auto& tile : tiles)
             a_stream << ' ' << tile.number();
-      a_stream << std::endl;
-      a_stream << "lines:";
+      a_stream << (a_puzzle.must_be_loops() ? "\n" "loops:" : "\n" "lines:");
       for (const auto& color : a_puzzle.line_colors())
          a_stream << ' ' << color;
       return a_stream;
@@ -164,12 +230,11 @@ namespace dak::tantrix
 
    std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle)
    {
-      a_stream << L"tiles:";
+      a_stream << "tiles:";
       for (const auto& [color, tiles] : a_puzzle.tiles())
          for (const auto& tile : tiles)
             a_stream << ' ' << tile.number();
-      a_stream << std::endl;
-      a_stream << L"lines:";
+      a_stream << (a_puzzle.must_be_loops() ? "\n" "loops:" : "\n" "lines:");
       for (const auto& color : a_puzzle.line_colors())
          a_stream << ' ' << color;
       return a_stream;
@@ -177,7 +242,8 @@ namespace dak::tantrix
 
    std::istream& operator>>(std::istream& a_stream, puzzle_t& a_puzzle)
    {
-      enum { none, reading_tiles, reading_lines } state = none;
+      enum { none, reading_tiles, reading_lines, reading_loops } state = none;
+      bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
@@ -188,7 +254,9 @@ namespace dak::tantrix
          if (word == "tiles:")
             state = reading_tiles;
          else if (word == "lines:")
-            state = reading_lines;
+            state = reading_lines, must_be_loops = false;
+         else if (word == "loops:")
+            state = reading_lines, must_be_loops = true;
          else if (state == reading_tiles)
          {
             tile_t tile;
@@ -203,14 +271,15 @@ namespace dak::tantrix
          }
       }
 
-      a_puzzle = puzzle_t(tiles, lines);
+      a_puzzle = puzzle_t(tiles, lines, must_be_loops);
 
       return a_stream;
    }
 
    std::wistream& operator>>(std::wistream& a_stream, puzzle_t& a_puzzle)
    {
-      enum { none, reading_tiles, reading_lines } state = none;
+      enum { none, reading_tiles, reading_lines, reading_loops } state = none;
+      bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
@@ -221,7 +290,9 @@ namespace dak::tantrix
          if (word == L"tiles:")
             state = reading_tiles;
          else if (word == L"lines:")
-            state = reading_lines;
+            state = reading_lines, must_be_loops = false;
+         else if (word == L"loops:")
+            state = reading_lines, must_be_loops = true;
          else if (state == reading_tiles)
          {
             tile_t tile;
@@ -236,20 +307,10 @@ namespace dak::tantrix
          }
       }
 
-      a_puzzle = puzzle_t(tiles, lines);
+      a_puzzle = puzzle_t(tiles, lines, must_be_loops);
 
       return a_stream;
    }
 
-   std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution)
-   {
-      a_stream << (a_solution.is_valid() ? "valid:" : "invalid:") << std::endl;
-      const placed_tile_t* tiles = a_solution.tiles();
-      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
-      {
-         a_stream << tiles[i].pos << " : " << tiles[i].tile << std::endl;
-      }
-      return a_stream;
-   }
 
 }

@@ -17,7 +17,7 @@ namespace dak::tantrix
 
    ////////////////////////////////////////////////////////////////////////////
    //
-   // Write various classes to an output stream.
+   // Write or read various classes to an output stream or input stream.
 
    std::ostream&  operator<<(std::ostream&  a_stream, const color_t& a_color);
    std::wostream& operator<<(std::wostream& a_stream, const color_t& a_color);
@@ -29,6 +29,8 @@ namespace dak::tantrix
 
    std::ostream&  operator<<(std::ostream&  a_stream, const position_t& a_position);
    std::wostream& operator<<(std::wostream& a_stream, const position_t& a_position);
+   std::istream&  operator>>(std::istream&  a_stream,       position_t& a_position);
+   std::wistream& operator>>(std::wistream& a_stream,       position_t& a_position);
 
    std::ostream&  operator<<(std::ostream&  a_stream, const tile_t& a_tile);
    std::wostream& operator<<(std::wostream& a_stream, const tile_t& a_tile);
@@ -37,6 +39,8 @@ namespace dak::tantrix
 
    std::ostream&  operator<<(std::ostream&  a_stream, const solution_t& a_solution);
    std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution);
+   std::istream&  operator>>(std::istream& a_stream,        solution_t& a_solution);
+   std::wistream& operator>>(std::wistream& a_stream,       solution_t& a_solution);
 
    std::ostream&  operator<<(std::ostream&  a_stream, const puzzle_t& a_puzzle);
    std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle);

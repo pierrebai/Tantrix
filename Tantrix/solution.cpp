@@ -43,9 +43,6 @@ namespace dak::tantrix
 
    bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
    {
-      #define NEW_IS_COMPATIBLE
-      #ifdef NEW_IS_COMPATIBLE
-
       for (size_t i = 0; i < my_tiles_count; ++i)
       {
          const placed_tile_t& placed_tile = my_tiles[i];
@@ -103,23 +100,6 @@ namespace dak::tantrix
       }
 
       return true;
-
-      #else
-
-      for (const auto dir : directions)
-      {
-         const auto neighbour_pos = a_pos.move(dir);
-         const tile_t* neighbour_tile = internal_tile_at(neighbour_pos);
-         if (!neighbour_tile)
-            continue;
-         if (neighbour_tile->color(dir.rotate(3)) != a_tile.color(dir))
-         {
-            return false;
-         }
-      }
-      return true;
-
-      #endif
    }
 
    solution_t& solution_t::rotate_in_place(int rotation, const position_t& new_center)
@@ -209,11 +189,8 @@ namespace dak::tantrix
       return positions;
    }
 
-   bool solution_t::has_line(const color_t& a_color) const
+   bool solution_t::has_line(const color_t& a_color, bool must_be_loop) const
    {
-      #define NEW_HAS_LINE
-      #ifdef NEW_HAS_LINE
-
       // The idea for the algorithm is to expand the grid
       // and to record the junctions between tiles are grid point
       // instead of the tiles. Then we record the position of the
@@ -261,88 +238,7 @@ namespace dak::tantrix
          }
       }
 
-      return line_end_count <= 2;
-
-      #else
-
-      // Find a starting tile containg the color and the two directions where
-      // the color are found on the tile.
-      //
-      // Also count the number of tiles with the color to be compared later.
-
-      position_t start_pos;
-      direction_t left_start_dir;
-      direction_t right_start_dir;
-      size_t expected_count = 0;
-      for (size_t i = 0; i < my_tiles_count; ++i)
-      {
-         const placed_tile_t& placed_tile = my_tiles[i];
-
-         if (!placed_tile.tile.has_color(a_color))
-            continue;
-
-         if (!expected_count)
-         {
-            start_pos = placed_tile.pos;
-            left_start_dir = placed_tile.tile.find_color(a_color, 0);
-            right_start_dir = placed_tile.tile.find_color(a_color, left_start_dir.rotate(1));
-         }
-
-         expected_count += 1;
-      }
-
-      // Now find how many tiles form a continuous line.
-      size_t found_count = 1;
-
-      // Follow the line toward the left.
-      position_t pos = start_pos;
-      direction_t dir = left_start_dir;
-      while (true)
-      {
-         pos = pos.move(dir);
-
-         // Check for loops.
-         if (pos == start_pos)
-            return found_count == expected_count;
-
-         // Check for line end.
-         const tile_t* tile = internal_tile_at(pos);
-         if (!tile)
-            break;
-
-         // Line is longer.
-         found_count += 1;
-
-         // Find second location of the color on the tile.
-         // The connection point is at dir + 3, so search from dir + 4.
-         dir = tile->find_color(a_color, dir.rotate(4));
-      }
-
-      // Follow the line toward the right.
-      pos = start_pos;
-      dir = right_start_dir;
-      while (true)
-      {
-         pos = pos.move(dir);
-
-         // Check for loops.
-         if (pos == start_pos)
-            return found_count == expected_count;
-
-         // Check for line end.
-         const tile_t* tile = internal_tile_at(pos);
-         if (!tile)
-            return found_count == expected_count;
-
-         // Line is longer.
-         found_count += 1;
-
-         // Find second location of the color on the tile.
-         // The connection point is at dir + 3, so search from dir + 4.
-         dir = tile->find_color(a_color, dir.rotate(4));
-      }
-
-      #endif
+      return line_end_count <= (must_be_loop ? 0 : 2);
    }
 
    bool solution_t::is_valid() const

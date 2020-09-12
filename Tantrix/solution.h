@@ -75,7 +75,7 @@ namespace dak::tantrix
 
       // Check if the solution has a contiuous line of the given color.
       // (Including a loop.)
-      bool has_line(const color_t& a_color) const;
+      bool has_line(const color_t& a_color, bool must_be_loop) const;
 
       // Compare solutions.
       auto operator<=>(const solution_t& another_solution) const = default;

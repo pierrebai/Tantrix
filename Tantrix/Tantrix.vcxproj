@@ -164,6 +164,7 @@
     <ClInclude Include="position.h" />
     <ClInclude Include="puzzle.h" />
     <ClInclude Include="solution.h" />
+    <ClInclude Include="solve.h" />
     <ClInclude Include="tantrix.h" />
     <ClInclude Include="tantrix_stream.h" />
     <ClInclude Include="tile.h" />

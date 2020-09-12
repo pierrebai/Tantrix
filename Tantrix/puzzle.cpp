@@ -1,4 +1,5 @@
 #include "puzzle.h"
+#include "solution.h"
 
 
 namespace dak::tantrix
@@ -13,8 +14,8 @@ namespace dak::tantrix
    {
    }
 
-   puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors)
-      : my_line_colors(some_line_colors)
+   puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors, bool must_be_loops)
+      : my_line_colors(some_line_colors), my_must_be_loops(must_be_loops)
    {
       if (!some_line_colors.size())
          throw std::exception("invalid puzzle: no required line colors provided");
@@ -37,6 +38,28 @@ namespace dak::tantrix
       }
    }
 
+   size_t puzzle_t::estimated_total_count() const
+   {
+      size_t count = 1;
+      for (const auto& [color, tiles] : my_tiles)
+      {
+         const size_t tiles_count = tiles.size();
+         if (1 == count)
+         {
+            for (size_t i = 1; i < tiles_count; ++i)
+               count *= i * 2;
+         }
+         else
+         {
+            for (size_t i = 1; i < tiles_count; ++i)
+               count *= i * 6;
+
+         }
+      }
+
+      return count;
+   }
+
    bool puzzle_t::has_more_sub_puzzles() const
    {
       for (const auto& [color, tiles] : my_tiles)
@@ -48,7 +71,7 @@ namespace dak::tantrix
    bool puzzle_t::is_solution_valid(const solution_t& a_solution) const
    {
       for (const auto& color : my_line_colors)
-         if (!a_solution.has_line(color))
+         if (!a_solution.has_line(color, my_must_be_loops))
             return false;
       return true;
    }

@@ -176,16 +176,20 @@ namespace dak::tantrix::tests
 				sol.add_tile(tile_t( 4), position_t(1, 0));
 				sol.add_tile(tile_t(13), position_t(1, 1));
 
-				Assert::IsTrue( sol.has_line(color_t::red()));
-				Assert::IsFalse(sol.has_line(color_t::blue()));
-				Assert::IsFalse(sol.has_line(color_t::yellow()));
+				Assert::IsTrue( sol.has_line(color_t::red(), false));
+				Assert::IsFalse(sol.has_line(color_t::blue(), false));
+				Assert::IsFalse(sol.has_line(color_t::yellow(), false));
+
+				Assert::IsFalse(sol.has_line(color_t::red(), true));
+				Assert::IsFalse(sol.has_line(color_t::blue(), true));
+				Assert::IsFalse(sol.has_line(color_t::yellow(), true));
 
 				// Add a tile the will not link red.
 				sol.add_tile(tile_t(9), position_t(-1, 0));
 
-				Assert::IsFalse(sol.has_line(color_t::red()));
-				Assert::IsFalse(sol.has_line(color_t::blue()));
-				Assert::IsFalse(sol.has_line(color_t::yellow()));
+				Assert::IsFalse(sol.has_line(color_t::red(), false));
+				Assert::IsFalse(sol.has_line(color_t::blue(), false));
+				Assert::IsFalse(sol.has_line(color_t::yellow(), false));
 			}
 		}
 	};
