@@ -144,9 +144,13 @@ namespace dak::tantrix
       if (a_stream >> tile_number)
          a_tile = tile_t(tile_number);
 
+      std::string colors_buffer;
+      a_stream >> colors_buffer;
+
+      std::istringstream colors_stream(colors_buffer);
       color_t colors[6];
-      for (auto& color : colors)
-         a_stream >> color;
+      for (int i = 0; i < 6; ++i)
+         colors_stream >> colors[i];
 
       for (int i = 0; i < 6; ++i)
       {
@@ -165,9 +169,14 @@ namespace dak::tantrix
       if (a_stream >> tile_number)
          a_tile = tile_t(tile_number);
 
+      std::wstring colors_buffer;
+      a_stream >> colors_buffer;
+
+      std::wistringstream colors_stream(colors_buffer);
       color_t colors[6];
-      for (auto& color : colors)
-         a_stream >> color;
+      for (int i = 0; i < 6; ++i)
+         colors_stream >> colors[i];
+
 
       for (int i = 0; i < 6; ++i)
       {
@@ -262,6 +271,8 @@ namespace dak::tantrix
 
    std::istream& operator>>(std::istream& a_stream, all_solutions_t& some_solutions)
    {
+      some_solutions.clear();
+
       enum { none, found_validity } state = none;
 
       std::string solution_buffer;
@@ -301,6 +312,8 @@ namespace dak::tantrix
 
    std::wistream& operator>>(std::wistream& a_stream, all_solutions_t& some_solutions)
    {
+      some_solutions.clear();
+
       enum { none, found_validity } state = none;
 
       std::wstring solution_buffer;

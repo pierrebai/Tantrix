@@ -19,6 +19,8 @@ add_executable(tantrix_solver_app WIN32
    "${PROJECT_SOURCE_DIR}/README.md"
 )
 
+set_target_properties(tantrix_solver_app PROPERTIES OUTPUT_NAME "Tantrix Solver")
+
 target_link_libraries(tantrix_solver_app PUBLIC
    tantrix
    utility
@@ -52,20 +54,25 @@ install(
 )
 
 set(CPACK_GENERATOR NSIS)
-set(CPACK_PACKAGE_NAME "TantrixSolverApp")
+set(CPACK_PACKAGE_NAME "TantrixSolver")
 set(CPACK_PACKAGE_VENDOR "Pierre Baillargeon")
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tantrix Solver App - An application to solve Tantrix(tm) puzzles.")
-set(CPACK_PACKAGE_VERSION "1.0.0")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tantrix Solver - An application to solve Tantrix(tm) puzzles.")
+set(CPACK_PACKAGE_VERSION "1.0.1")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
 set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
-set(CPACK_PACKAGE_INSTALL_DIRECTORY "Tantrix Solver App")
-# set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VERSION_PATCH "1")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "Tantrix Solver")
+set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 
 set(CPACK_NSIS_MUI_ICON "${PROJECT_SOURCE_DIR}/tantrix_solver_app/resources/icon.ico")
 set(CPACK_NSIS_MUI_UNIICON "${PROJECT_SOURCE_DIR}/tantrix_solver_app/resources/icon.ico")
-set(CPACK_NSIS_INSTALLED_ICON_NAME "tantrix_solver_app.exe")
-set(CPACK_NSIS_DISPLAY_NAME "Tantrix Solver App")
-
+set(CPACK_NSIS_INSTALLED_ICON_NAME "Tantrix Solver.exe")
+set(CPACK_NSIS_DISPLAY_NAME "Tantrix Solver")
+set(CPACK_NSIS_CREATE_ICONS_EXTRA
+    "CreateShortCut '$SMPROGRAMS\\\\$STARTMENU_FOLDER\\\\Tantrix Solver.lnk' '$INSTDIR\\\\Tantrix Solver.exe'"
+)
+set(CPACK_NSIS_DELETE_ICONS_EXTRA
+    "Delete '$SMPROGRAMS\\\\$START_MENU\\\\Tantrix Solver.lnk'"
+)
 INCLUDE(CPack)
 
