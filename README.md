@@ -4,7 +4,17 @@ A Windows application to solve Tantrix(tm) puzzles, like the genius puzzle.
 # Description
 The Tantrix solver can read a description of a puzzle from a text file and then solve it. It will display the solutions. The solutions can be saved and reloaded later.
 
-Some example puzzle description text files are provided in the tantrix_solver/puzzles folder.
+Some example puzzle description text files are provided in the tantrix_solver/puzzles folder. The format for the puzzle description is two lines:
+
+   * A line with the list of tiles, in this format: tiles: 3 6 17 34
+   * A line with the list of lines or loops, in this format: lines: Y R or loops: G B
+
+For example, see the junior puzzle file:
+
+   ```
+   tiles: 3 5 8 12 14 43 46 50 52 54
+   loops: B
+   ```
 
 ![User Interface](https://github.com/pierrebai/Tantrix/blob/master/App.png "User Interface")
 

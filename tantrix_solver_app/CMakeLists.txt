@@ -14,6 +14,9 @@ add_executable(tantrix_solver_app WIN32
    src/main_window.cpp                  include/main_window.h
 
    resources/resource.rc                resources/resource.h
+
+   "${PROJECT_SOURCE_DIR}/LICENSE"
+   "${PROJECT_SOURCE_DIR}/README.md"
 )
 
 target_link_libraries(tantrix_solver_app PUBLIC
