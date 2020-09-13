@@ -32,12 +32,6 @@ namespace dak::tantrix_solver_app
 
    /////////////////////////////////////////////////////////////////////////
    //
-   // Progress reporter for the main window.
-
-   struct main_window_progress_t;
-
-   /////////////////////////////////////////////////////////////////////////
-   //
    // Main window of the tantrix solver app.
 
    class main_window_t : public QMainWindow, private utility::progress_t
@@ -100,7 +94,6 @@ namespace dak::tantrix_solver_app
       // Data.
       puzzle_t                                  my_puzzle;
       all_solutions_t                           my_solutions;
-      std::shared_ptr<main_window_progress_t>   my_progress;
 
       std::future<all_solutions_t>              my_async_solving;
       std::atomic<bool>                         my_stop_solving = false;

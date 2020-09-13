@@ -1,6 +1,7 @@
 
 add_library(tantrix
    include/dak/tantrix/tantrix.h
+   include/dak/tantrix/color.h
    include/dak/tantrix/direction.h              src/direction.cpp
    include/dak/tantrix/position.h               src/position.cpp
    include/dak/tantrix/puzzle.h                 src/puzzle.cpp
