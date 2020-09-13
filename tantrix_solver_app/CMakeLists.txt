@@ -18,6 +18,7 @@ add_executable(tantrix_solver_app WIN32
 
 target_link_libraries(tantrix_solver_app PUBLIC
    tantrix
+   utility
    QtAdditions
    Qt5::Widgets Qt5::Gui Qt5::Core Qt5::WinExtras
 )

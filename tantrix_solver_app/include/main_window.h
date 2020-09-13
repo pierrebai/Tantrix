@@ -20,6 +20,7 @@ class QTreeView;
 class QDockWidget;
 class QTimer;
 class QLineEdit;
+class QLabel;
 class QPushButton;
 class QGraphicsView;
 
@@ -61,17 +62,22 @@ namespace dak::tantrix_solver_app
 
       // Puzzle.
       void load_puzzle();
-      void update_puzzle();
 
+      // Asynchornous puzzle solving.
       void solve_puzzle();
       void verify_async_puzzle_solving();
       bool is_async_filtering_ready();
       void stop_puzzle();
 
-      void update_solutions();
-      void draw_selected_solution();
-
+      // Asynchornous puzzle solving update.
       void update_progress(size_t a_total_count_so_far) override;
+
+      // UI updates from data.
+      void update_puzzle();
+      void update_solutions();
+      void update_toolbar();
+      void update_solving_attempts();
+      void draw_selected_solution();
 
       // Toolbar buttons.
       QAction*       my_load_puzzle_action = nullptr;
@@ -87,6 +93,7 @@ namespace dak::tantrix_solver_app
       QGraphicsView*    my_solution_canvas = nullptr;
       QListWidget*      my_puzzle_list = nullptr;
       QListWidget*      my_solutions_list = nullptr;
+      QLabel*           my_solving_attempts_label = nullptr;
 
       QTimer*           my_solve_puzzle_timer = nullptr;
 
@@ -96,6 +103,8 @@ namespace dak::tantrix_solver_app
       std::shared_ptr<main_window_progress_t>   my_progress;
 
       std::future<all_solutions_t>              my_async_solving;
+      std::atomic<bool>                         my_stop_solving = false;
+      std::atomic<size_t>                       my_solving_attempts = 0;
 
       Q_OBJECT;
    };

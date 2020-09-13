@@ -8,7 +8,14 @@ namespace dak::utility
 
    stream_progress_t::~stream_progress_t()
    {
-      flush_progress();
+      try
+      {
+         flush_progress();
+      }
+      catch (std::exception&)
+      {
+         // Dont'let exceptions out of the destructor.
+      }
    }
 
    void stream_progress_t::update_progress(size_t a_total_count_so_far)

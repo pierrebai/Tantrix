@@ -27,19 +27,33 @@ namespace dak::utility
 
    per_thread_progress_t::~per_thread_progress_t()
    {
-      if (!my_mt_progress)
+      try
+      {
+         if (!my_mt_progress)
          return;
 
-      my_mt_progress->update_progress_from_thread(my_count_since_last_report);
+         my_mt_progress->update_progress_from_thread(my_count_since_last_report);
+      }
+      catch (std::exception&)
+      {
+         // Dont'let exceptions out of the destructor.
+      }
       my_count_since_last_report = 0;
    }
 
    multi_thread_progress_t::~multi_thread_progress_t()
    {
-      if (!my_non_thread_safe_progress)
+      try
+      {
+         if (!my_non_thread_safe_progress)
          return;
 
-      report_to_non_thread_safe_progress(my_total_count_so_far);
+         report_to_non_thread_safe_progress(my_total_count_so_far);
+      }
+      catch (std::exception&)
+      {
+         // Dont'let exceptions out of the destructor.
+      }
    }
 
    void multi_thread_progress_t::set_estimated_total_count(size_t a_count)
