@@ -9,6 +9,8 @@ add_definitions(-D_UNICODE)
 
 add_subdirectory(tantrix)
 add_subdirectory(utility)
+add_subdirectory(QtAdditions)
 add_subdirectory(tantrix_solver)
+add_subdirectory(tantrix_solver_app)
 add_subdirectory(tantrix_tests)
 
