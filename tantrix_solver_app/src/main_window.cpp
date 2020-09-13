@@ -1,6 +1,10 @@
-#include "main_window.h"
+#include <main_window.h>
 
-#include "dak/QtAdditions/QtUtilities.h"
+#include <resource.h>
+
+#include <dak/QtAdditions/QtUtilities.h>
+
+#include <dak/tantrix/stream.h>
 
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qerrormessage.h>
@@ -10,8 +14,7 @@
 #include <QtWidgets/qtoolbutton.h>
 #include <QtWidgets/qlineedit.h>
 #include <QtWidgets/qpushbutton.h>
-#include <QtWidgets/qmdiarea.h>
-#include <QtWidgets/qmdisubwindow.h>
+#include <QtWidgets/qgraphicsview.h>
 
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>
@@ -20,6 +23,9 @@
 
 #include <QtCore/qstandardpaths.h>
 #include <QtCore/qtimer.h>
+
+#include <fstream>
+#include <sstream>
 
 namespace dak::tantrix_solver_app
 {
@@ -48,10 +54,13 @@ namespace dak::tantrix_solver_app
       setCorner(Qt::Corner::TopRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
       setCorner(Qt::Corner::BottomRightCorner, Qt::DockWidgetArea::RightDockWidgetArea);
 
+      my_solve_puzzle_timer = new QTimer(this);
+      my_solve_puzzle_timer->setSingleShot(true);
+
       build_toolbar_ui();
       build_puzzle_ui();
       build_solutions_ui();
-      build_tabbed_ui();
+      build_solution_canvas();
    }
 
    void main_window_t::build_toolbar_ui()
@@ -60,15 +69,15 @@ namespace dak::tantrix_solver_app
       toolbar->setObjectName("Main Toolbar");
       toolbar->setIconSize(QSize(32, 32));
 
-      my_load_puzzle_action = CreateAction(tr("Load Puzzle"), 0, QKeySequence(QKeySequence::StandardKey::Open));
+      my_load_puzzle_action = CreateAction(tr("Load Puzzle"), IDB_OPEN_PUZZLE, QKeySequence(QKeySequence::StandardKey::Open));
       my_load_puzzle_button = CreateToolButton(my_load_puzzle_action);
       toolbar->addWidget(my_load_puzzle_button);
 
-      my_solve_puzzle_action = CreateAction(tr("Solve Puzzle"), 0, QKeySequence(QKeySequence::StandardKey::Save));
+      my_solve_puzzle_action = CreateAction(tr("Solve Puzzle"), IDB_SOLVE_PUZZLE, QKeySequence(QKeySequence::StandardKey::Save));
       my_solve_puzzle_button = CreateToolButton(my_solve_puzzle_action);
       toolbar->addWidget(my_solve_puzzle_button);
 
-      my_stop_puzzle_action = CreateAction(tr("Stop Puzzle"), 0, QKeySequence(QKeySequence::StandardKey::Save));
+      my_stop_puzzle_action = CreateAction(tr("Stop Puzzle"), IDB_STOP_PUZZLE, QKeySequence(QKeySequence::StandardKey::Save));
       my_stop_puzzle_button = CreateToolButton(my_stop_puzzle_action);
       toolbar->addWidget(my_stop_puzzle_button);
 
@@ -109,17 +118,14 @@ namespace dak::tantrix_solver_app
       addDockWidget(Qt::DockWidgetArea::LeftDockWidgetArea, solutions_dock);
    }
 
-   void main_window_t::build_tabbed_ui()
+   void main_window_t::build_solution_canvas()
    {
       auto main_container = new QWidget;
       auto main_layout = new QVBoxLayout(main_container);
 
-      my_tabs = new QMdiArea;
-      my_tabs->setViewMode(QMdiArea::ViewMode::TabbedView);
-      my_tabs->setDocumentMode(true);
-      my_tabs->setTabsClosable(true);
+      my_solution_canvas = new QGraphicsView;
 
-      main_layout->addWidget(my_tabs);
+      main_layout->addWidget(my_solution_canvas);
 
       setCentralWidget(main_container);
    }
@@ -130,6 +136,13 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::connect_ui()
    {
+      // Asynchronous solving.
+
+      my_solve_puzzle_timer->connect(my_solve_puzzle_timer, &QTimer::timeout, [self = this]()
+      {
+         self->verify_async_puzzle_solving();
+      });
+
       // Toolbar.
 
       my_load_puzzle_action->connect(my_load_puzzle_action, &QAction::triggered, [self = this]()
@@ -147,12 +160,6 @@ namespace dak::tantrix_solver_app
          self->stop_puzzle();
       });
 
-      // Tabs.
-
-      my_tabs->connect(my_tabs, &QMdiArea::subWindowActivated, [self = this](QMdiSubWindow* sub)
-      {
-         self->update_active_tab();
-      });
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -169,10 +176,78 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::load_puzzle()
    {
+      static constexpr char puzzle_file_types[] = "Puzzle Text files (*.txt);;All files (*.*)";
 
+      try
+      {
+         filesystem::path path = AskOpen(tr("Load Puzzle"), tr(puzzle_file_types), this);
+         std::ifstream puzzle_stream(path);
+         puzzle_stream >> my_puzzle;
+         update_puzzle();
+      }
+      catch (const std::exception&)
+      {
+         // TODO: exception handling.
+      }
+   }
+
+   void main_window_t::update_puzzle()
+   {
+      my_puzzle_list->clear();
+
+      for (const auto& [color, tiles] : my_puzzle.tiles())
+      {
+         for (const auto& tile : tiles)
+         {
+            std::ostringstream stream;
+            stream << tile;
+            my_puzzle_list->addItem(stream.str().c_str());
+         }
+      }
+
+      for (const auto& color : my_puzzle.line_colors())
+      {
+         std::ostringstream stream;
+         stream << color;
+         my_puzzle_list->addItem(stream.str().c_str());
+      }
    }
 
    void main_window_t::solve_puzzle()
+   {
+      //my_async_solving = std::async(std::launch::async, [&this->my_puzzle]()
+      //{
+      //   tantrix::solve(my_puzzle, *this);
+      //});
+      my_solve_puzzle_timer->start(10);
+   }
+
+   void main_window_t::update_progress(size_t a_total_count_so_far)
+   {
+
+   }
+
+   bool main_window_t::is_async_filtering_ready()
+   {
+      if (!my_async_solving.valid())
+         return false;
+
+      if (my_async_solving.wait_for(1us) != future_status::ready)
+         return false;
+
+      return true;
+   }
+
+   void main_window_t::verify_async_puzzle_solving()
+   {
+      if (!is_async_filtering_ready())
+         my_solve_puzzle_timer->start(10);
+
+      my_solutions = my_async_solving.get();
+      update_solutions();
+   }
+
+   void main_window_t::update_solutions()
    {
 
    }
@@ -181,7 +256,8 @@ namespace dak::tantrix_solver_app
    {
 
    }
-   void main_window_t::update_active_tab()
+
+   void main_window_t::draw_selected_solution()
    {
    }
 }

@@ -6,6 +6,14 @@
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
 
+#include <dak/tantrix/puzzle.h>
+#include <dak/tantrix/solution.h>
+#include <dak/tantrix/solve.h>
+
+#include <dak/utility/progress.h>
+
+#include <future>
+
 class QToolButton;
 class QAction;
 class QTreeView;
@@ -13,15 +21,25 @@ class QDockWidget;
 class QTimer;
 class QLineEdit;
 class QPushButton;
-class QMdiArea;
+class QGraphicsView;
 
 namespace dak::tantrix_solver_app
 {
+   using dak::tantrix::puzzle_t;
+   using dak::tantrix::solution_t;
+   using dak::tantrix::all_solutions_t;
+
+   /////////////////////////////////////////////////////////////////////////
+   //
+   // Progress reporter for the main window.
+
+   struct main_window_progress_t;
+
    /////////////////////////////////////////////////////////////////////////
    //
    // Main window of the tantrix solver app.
 
-   class main_window_t : public QMainWindow
+   class main_window_t : public QMainWindow, private utility::progress_t
    {
    public:
       // Create the main window.
@@ -33,7 +51,7 @@ namespace dak::tantrix_solver_app
       void build_toolbar_ui();
       void build_puzzle_ui();
       void build_solutions_ui();
-      void build_tabbed_ui();
+      void build_solution_canvas();
 
       // Connect the signals of the UI elements.
       void connect_ui();
@@ -43,9 +61,17 @@ namespace dak::tantrix_solver_app
 
       // Puzzle.
       void load_puzzle();
+      void update_puzzle();
+
       void solve_puzzle();
+      void verify_async_puzzle_solving();
+      bool is_async_filtering_ready();
       void stop_puzzle();
-      void update_active_tab();
+
+      void update_solutions();
+      void draw_selected_solution();
+
+      void update_progress(size_t a_total_count_so_far) override;
 
       // Toolbar buttons.
       QAction*       my_load_puzzle_action = nullptr;
@@ -58,9 +84,20 @@ namespace dak::tantrix_solver_app
       QToolButton*   my_stop_puzzle_button = nullptr;
 
       // UI elements.
-      QMdiArea*         my_tabs = nullptr;
+      QGraphicsView*    my_solution_canvas = nullptr;
       QListWidget*      my_puzzle_list = nullptr;
       QListWidget*      my_solutions_list = nullptr;
+
+      QTimer*           my_solve_puzzle_timer = nullptr;
+
+      // Data.
+      puzzle_t                                  my_puzzle;
+      all_solutions_t                           my_solutions;
+      std::shared_ptr<main_window_progress_t>   my_progress;
+
+      std::future<all_solutions_t>              my_async_solving;
+
+      Q_OBJECT;
    };
 }
 
