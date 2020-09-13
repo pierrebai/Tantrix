@@ -56,6 +56,15 @@ namespace dak::tantrix
          return false;
       }
 
+      // Check if the tile has the given colors.
+      bool has_colors(const color_t some_colors[6], int a_count = 6) const
+      {
+         for (int i = 0; i < 6 && i < a_count; ++i)
+            if (some_colors[i] != tiles_colors[my_number][i])
+               return false;
+         return true;
+      }
+
       // Rotate the tile in place by a multiple of sixth of a turn.
       tile_t& rotate_in_place(int an_amount)
       {

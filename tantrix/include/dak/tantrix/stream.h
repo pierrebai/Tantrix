@@ -46,6 +46,8 @@ namespace dak::tantrix
 
    std::ostream&  operator<<(std::ostream&  a_stream, const all_solutions_t& some_solutions);
    std::wostream& operator<<(std::wostream& a_stream, const all_solutions_t& some_solutions);
+   std::istream&  operator>>(std::istream&  a_stream,       all_solutions_t& some_solutions);
+   std::wistream& operator>>(std::wistream& a_stream,       all_solutions_t& some_solutions);
 
    std::ostream&  operator<<(std::ostream&  a_stream, const puzzle_t& a_puzzle);
    std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle);

@@ -56,6 +56,8 @@ namespace dak::tantrix_solver_app
 
       // Puzzle.
       void load_puzzle();
+      void save_solutions();
+      void load_solutions();
 
       // Asynchornous puzzle solving.
       void solve_puzzle();
@@ -82,6 +84,12 @@ namespace dak::tantrix_solver_app
 
       QAction*       my_stop_puzzle_action = nullptr;
       QToolButton*   my_stop_puzzle_button = nullptr;
+
+      QAction*       my_save_solutions_action = nullptr;
+      QToolButton*   my_save_solutions_button = nullptr;
+
+      QAction*       my_load_solutions_action = nullptr;
+      QToolButton*   my_load_solutions_button = nullptr;
 
       // UI elements.
       QGraphicsView*    my_solution_canvas = nullptr;

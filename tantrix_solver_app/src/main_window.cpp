@@ -78,6 +78,14 @@ namespace dak::tantrix_solver_app
       my_load_puzzle_button = CreateToolButton(my_load_puzzle_action);
       toolbar->addWidget(my_load_puzzle_button);
 
+      my_load_solutions_action = CreateAction(tr("Load Solutions"), IDB_LOAD_SOLUTIONS, QKeySequence(QKeySequence::StandardKey::Open));
+      my_load_solutions_button = CreateToolButton(my_load_solutions_action);
+      toolbar->addWidget(my_load_solutions_button);
+
+      my_save_solutions_action = CreateAction(tr("Save Solutions"), IDB_SAVE_SOLUTIONS, QKeySequence(QKeySequence::StandardKey::Open));
+      my_save_solutions_button = CreateToolButton(my_save_solutions_action);
+      toolbar->addWidget(my_save_solutions_button);
+
       my_solve_puzzle_action = CreateAction(tr("Solve Puzzle"), IDB_SOLVE_PUZZLE, QKeySequence(QKeySequence::StandardKey::Save));
       my_solve_puzzle_button = CreateToolButton(my_solve_puzzle_action);
       toolbar->addWidget(my_solve_puzzle_button);
@@ -135,6 +143,7 @@ namespace dak::tantrix_solver_app
       auto main_layout = new QVBoxLayout(main_container);
 
       my_solution_canvas = new QGraphicsView;
+      my_solution_canvas->setRenderHints(QPainter::Antialiasing | QPainter::SmoothPixmapTransform);
 
       main_layout->addWidget(my_solution_canvas);
 
@@ -166,6 +175,18 @@ namespace dak::tantrix_solver_app
       my_load_puzzle_action->connect(my_load_puzzle_action, &QAction::triggered, [self = this]()
       {
          self->load_puzzle();
+         self->update_toolbar();
+      });
+
+      my_save_solutions_action->connect(my_save_solutions_action, &QAction::triggered, [self = this]()
+      {
+         self->save_solutions();
+         self->update_toolbar();
+      });
+
+      my_load_solutions_action->connect(my_load_solutions_action, &QAction::triggered, [self = this]()
+      {
+         self->load_solutions();
          self->update_toolbar();
       });
 
@@ -217,6 +238,51 @@ namespace dak::tantrix_solver_app
       catch (const std::exception&)
       {
          // TODO: exception handling when loading a puzzle.
+      }
+   }
+
+   void main_window_t::save_solutions()
+   {
+      static constexpr char solutions_file_types[] = "Solutions Text files (*.solutions.txt);;All files (*.*)";
+
+      try
+      {
+         // We must stop on load because otherwise the threads are preventing the dialog from opening!
+         stop_puzzle();
+
+         filesystem::path path = AskSave(tr("Save Solutions"), tr(solutions_file_types), "", this);
+         if (path.empty())
+            return;
+
+         std::ofstream solutions_stream(path);
+         solutions_stream << my_solutions;
+      }
+      catch (const std::exception&)
+      {
+         // TODO: exception handling when loading a solutions.
+      }
+   }
+
+   void main_window_t::load_solutions()
+   {
+      static constexpr char solutions_file_types[] = "Solutions Text files (*.solutions.txt);;All files (*.*)";
+
+      try
+      {
+         // We must stop on load because otherwise the threads are preventing the dialog from opening!
+         stop_puzzle();
+
+         filesystem::path path = AskOpen(tr("Save Solutions"), tr(solutions_file_types), this);
+         if (path.empty())
+            return;
+
+         std::ifstream solutions_stream(path);
+         solutions_stream >> my_solutions;
+         update_solutions();
+      }
+      catch (const std::exception&)
+      {
+         // TODO: exception handling when loading a solutions.
       }
    }
 
@@ -306,6 +372,8 @@ namespace dak::tantrix_solver_app
    void main_window_t::update_toolbar()
    {
       my_load_puzzle_action->setEnabled(true);
+      my_save_solutions_action->setEnabled(my_solutions.size() > 0);
+      my_load_solutions_action->setEnabled(true);
       my_solve_puzzle_action->setEnabled(my_puzzle.line_colors().size() > 0);
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
@@ -362,7 +430,8 @@ namespace dak::tantrix_solver_app
 
       // TODO: drawing a solution in the graphics view.
       const double tile_radius = 50;
-      QPen tile_pen(QColor(0, 0, 0));
+      QPen tile_pen(QColor(50, 50, 50, 128));
+      QBrush tile_brush(QColor(0, 0, 0));
       tile_pen.setWidth(3);
 
       std::map<tantrix::color_t, QColor> colors =
@@ -383,6 +452,7 @@ namespace dak::tantrix_solver_app
 
          auto hex = new QGraphicsPolygonItem(polygon);
          hex->setPen(tile_pen);
+         hex->setBrush(tile_brush);
          scene->addItem(hex);
 
          for (const auto& [tc, qc] : colors)
@@ -393,10 +463,19 @@ namespace dak::tantrix_solver_app
             auto dir1 = placed_tile.tile.find_color(tc, 0);
             auto dir2 = placed_tile.tile.find_color(tc, dir1.rotate(1));
 
+            auto pos1 = convert_tile_side(placed_tile.pos, dir1, tile_radius);
+            auto pos2 = convert_tile_side(placed_tile.pos, dir2, tile_radius);
+
+            auto pos_between_1_center = tile_center * 0.1 + pos1 * 0.9;
+            auto pos_between_2_center = tile_center * 0.1 + pos2 * 0.9;
+            auto pos_between_1_2 = tile_center * 0.2 + pos_between_1_center * 0.4 + pos_between_2_center * 0.4;
+
             QPainterPath path;
 
-            path.moveTo(convert_tile_side(placed_tile.pos, dir1, tile_radius));
-            path.cubicTo(tile_center, tile_center, convert_tile_side(placed_tile.pos, dir2, tile_radius));
+            path.moveTo(pos1);
+            path.lineTo(pos_between_1_center);
+            path.cubicTo(pos_between_1_2, pos_between_1_2, pos_between_2_center);
+            path.lineTo(pos2);
 
             auto line = new QGraphicsPathItem(path);
             QPen line_pen(qc);

@@ -144,6 +144,18 @@ namespace dak::tantrix
       if (a_stream >> tile_number)
          a_tile = tile_t(tile_number);
 
+      color_t colors[6];
+      for (auto& color : colors)
+         a_stream >> color;
+
+      for (int i = 0; i < 6; ++i)
+      {
+         if (a_tile.has_colors(colors))
+            break;
+
+         a_tile.rotate_in_place(1);
+      }
+
       return a_stream;
    }
 
@@ -152,6 +164,18 @@ namespace dak::tantrix
       int tile_number = 0;
       if (a_stream >> tile_number)
          a_tile = tile_t(tile_number);
+
+      color_t colors[6];
+      for (auto& color : colors)
+         a_stream >> color;
+
+      for (int i = 0; i < 6; ++i)
+      {
+         if (a_tile.has_colors(colors))
+            break;
+
+         a_tile.rotate_in_place(1);
+      }
 
       return a_stream;
    }
@@ -183,7 +207,7 @@ namespace dak::tantrix
       std::string validity;
       a_stream >> validity;
       a_solution = solution_t();
-      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
+      while (a_stream)
       {
          position_t pos;
          a_stream >> pos;
@@ -191,7 +215,8 @@ namespace dak::tantrix
          a_stream >> column;
          tile_t tile;
          a_stream >> tile;
-         a_solution.add_tile(tile, pos);
+         if (tile.is_valid())
+            a_solution.add_tile(tile, pos);
       }
 
       return a_stream;
@@ -202,7 +227,7 @@ namespace dak::tantrix
       std::wstring validity;
       a_stream >> validity;
       a_solution = solution_t();
-      for (size_t i = 0; i < a_solution.tiles_count(); ++i)
+      while (a_stream)
       {
          position_t pos;
          a_stream >> pos;
@@ -210,7 +235,8 @@ namespace dak::tantrix
          a_stream >> column;
          tile_t tile;
          a_stream >> tile;
-         a_solution.add_tile(tile, pos);
+         if (tile.is_valid())
+            a_solution.add_tile(tile, pos);
       }
 
       return a_stream;
@@ -230,6 +256,84 @@ namespace dak::tantrix
       a_stream << L"solutions: " << some_solutions.size() << L"\n";
       for (const auto& sol : some_solutions)
          a_stream << sol << L"\n";
+
+      return a_stream;
+   }
+
+   std::istream& operator>>(std::istream& a_stream, all_solutions_t& some_solutions)
+   {
+      enum { none, found_validity } state = none;
+
+      std::string solution_buffer;
+      char line_buffer[256] = { 0 };
+
+      while (a_stream.getline(line_buffer, sizeof(line_buffer) - 1))
+      {
+         std::string line(line_buffer);
+         solution_buffer.append(line);
+
+         if (line.find_first_of("\r\n") == std::string::npos)
+            solution_buffer.append("\n");
+
+         if (state == none)
+         {
+            if (line.find("valid") != std::string::npos)
+               state = found_validity;
+            else
+               solution_buffer.clear();
+         }
+         else if (state == found_validity)
+         {
+            if (line.find_first_not_of(" \t\r\n") == std::string::npos)
+            {
+               std::istringstream sol_stream(solution_buffer);
+               solution_t solution;
+               sol_stream >> solution;
+               some_solutions.emplace(std::move(solution));
+               solution_buffer.clear();
+               state = none;
+            }
+         }
+      }
+
+      return a_stream;
+   }
+
+   std::wistream& operator>>(std::wistream& a_stream, all_solutions_t& some_solutions)
+   {
+      enum { none, found_validity } state = none;
+
+      std::wstring solution_buffer;
+      wchar_t line_buffer[256] = { 0 };
+
+      while (a_stream.getline(line_buffer, sizeof(line_buffer) - 1))
+      {
+         std::wstring line(line_buffer);
+         solution_buffer.append(line);
+
+         if (line.find_first_of(L"\r\n") == std::wstring::npos)
+            solution_buffer.append(L"\n");
+
+         if (state == none)
+         {
+            if (line.find(L"valid") != std::wstring::npos)
+               state = found_validity;
+            else
+               solution_buffer.clear();
+         }
+         else if (state == found_validity)
+         {
+            if (line.find_first_not_of(L" \t\r\n") == std::wstring::npos)
+            {
+               std::wistringstream sol_stream(solution_buffer);
+               solution_t solution;
+               sol_stream >> solution;
+               some_solutions.emplace(std::move(solution));
+               solution_buffer.clear();
+               state = none;
+            }
+         }
+      }
 
       return a_stream;
    }
