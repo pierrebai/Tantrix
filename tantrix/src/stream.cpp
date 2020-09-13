@@ -381,9 +381,13 @@ namespace dak::tantrix
             state = reading_lines, must_be_loops = true;
          else if (state == reading_tiles)
          {
-            tile_t tile;
-            if (std::istringstream(word) >> tile)
-               tiles.push_back(tile);
+            int number;
+            if (std::istringstream(word) >> number)
+            {
+               tile_t tile(number);
+               if (tile.is_valid())
+                  tiles.push_back(tile);
+            }
          }
          else if (state == reading_lines)
          {
@@ -417,9 +421,13 @@ namespace dak::tantrix
             state = reading_lines, must_be_loops = true;
          else if (state == reading_tiles)
          {
-            tile_t tile;
-            if (std::wistringstream(word) >> tile)
-               tiles.push_back(tile);
+            int number;
+            if (std::wistringstream(word) >> number)
+            {
+               tile_t tile(number);
+               if (tile.is_valid())
+                  tiles.push_back(tile);
+            }
          }
          else if (state == reading_lines)
          {
