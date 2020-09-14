@@ -104,7 +104,11 @@ namespace dak::tantrix_solver_app
       puzzle_dock->setObjectName("Puzzle");
       puzzle_dock->setFeatures(QDockWidget::DockWidgetFeature::DockWidgetFloatable | QDockWidget::DockWidgetFeature::DockWidgetMovable);
       auto puzzle_container = new QWidget();
-      auto puzzle_layout = new QHBoxLayout(puzzle_container);
+      auto puzzle_layout = new QVBoxLayout(puzzle_container);
+
+      my_puzzle_label = new QLabel;
+      my_puzzle_label->hide();
+      puzzle_layout->addWidget(my_puzzle_label);
 
       my_puzzle_list = new QListWidget();
       my_puzzle_list->setMinimumWidth(200);
@@ -123,9 +127,19 @@ namespace dak::tantrix_solver_app
       auto solutions_container = new QWidget();
       auto solutions_layout = new QVBoxLayout(solutions_container);
 
-      my_solving_attempts_label = new QLabel();
+      auto info_container = new QWidget();
+      auto info_layout = new QHBoxLayout(info_container);
+      info_layout->setMargin(0);
+
+      my_solving_time_label = new QLabel;
+      my_solving_time_label->hide();
+      info_layout->addWidget(my_solving_time_label);
+
+      my_solving_attempts_label = new QLabel;
       my_solving_attempts_label->hide();
-      solutions_layout->addWidget(my_solving_attempts_label);
+      info_layout->addWidget(my_solving_attempts_label);
+
+      solutions_layout->addWidget(info_container);
 
       my_solutions_list = new QListWidget();
       my_solutions_list->setMinimumWidth(200);
@@ -234,7 +248,7 @@ namespace dak::tantrix_solver_app
 
          std::ifstream puzzle_stream(path);
          puzzle_stream >> my_puzzle;
-         update_puzzle();
+         update_puzzle(path.filename().string().c_str());
       }
       catch (const std::exception&)
       {
@@ -291,8 +305,18 @@ namespace dak::tantrix_solver_app
    //
    // UI updates from data.
 
-   void main_window_t::update_puzzle()
+   void main_window_t::update_puzzle(const char* filename)
    {
+      if (filename && filename[0])
+      {
+         my_puzzle_label->setText(filename);
+         my_puzzle_label->show();
+      }
+      else
+      {
+         my_puzzle_label->hide();
+      }
+
       my_puzzle_list->clear();
 
       for (const auto& [color, tiles] : my_puzzle.tiles())
@@ -323,9 +347,11 @@ namespace dak::tantrix_solver_app
       }
 
       my_solving_attempts = 0;
+      my_solving_begin_time = clock_t::time_point();
       my_stop_solving = true;
 
       update_solving_attempts();
+      update_solving_time();
       update_toolbar();
    }
 
@@ -353,12 +379,37 @@ namespace dak::tantrix_solver_app
       update_toolbar();
    }
 
+   void main_window_t::update_solving_time()
+   {
+      if (my_solving_attempts)
+      {
+         my_solving_end_time = clock_t::now();
+         auto tenth = std::chrono::duration_cast<chrono::milliseconds>(my_solving_end_time - my_solving_begin_time).count() / 100;
+         auto seconds = tenth / 10;
+         tenth %= 10;
+
+
+         ostringstream stream;
+         stream << "Time:" << seconds << '.' << tenth << "s";
+         my_solving_time_label->setText(stream.str().c_str());
+
+         if (!my_solving_time_label->isVisible())
+            my_solving_time_label->show();
+      }
+      else
+      {
+         if (my_solving_time_label->isVisible())
+            my_solving_time_label->hide();
+      }
+   }
+
    void main_window_t::update_solving_attempts()
    {
       if (my_solving_attempts)
       {
          ostringstream stream;
          stream << "Attempts: " << my_solving_attempts;
+                
          my_solving_attempts_label->setText(stream.str().c_str());
          if (!my_solving_attempts_label->isVisible())
             my_solving_attempts_label->show();
@@ -510,6 +561,7 @@ namespace dak::tantrix_solver_app
    {
       my_stop_solving = false;
       my_solving_attempts = 0;
+      my_solving_begin_time = clock_t::now();
       my_async_solving = std::async(std::launch::async, [self = this, puzzle = my_puzzle]()
       {
          try
@@ -538,6 +590,7 @@ namespace dak::tantrix_solver_app
    void main_window_t::verify_async_puzzle_solving()
    {
       update_solving_attempts();
+      update_solving_time();
 
       if (!is_async_filtering_ready())
       {

@@ -12,6 +12,7 @@
 
 #include <dak/utility/progress.h>
 
+#include <chrono>
 #include <future>
 
 class QToolButton;
@@ -69,10 +70,11 @@ namespace dak::tantrix_solver_app
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
-      void update_puzzle();
+      void update_puzzle(const char* filename);
       void update_solutions();
       void update_toolbar();
       void update_solving_attempts();
+      void update_solving_time();
       void draw_selected_solution();
 
       // Toolbar buttons.
@@ -93,9 +95,13 @@ namespace dak::tantrix_solver_app
 
       // UI elements.
       QGraphicsView*    my_solution_canvas = nullptr;
+
       QListWidget*      my_puzzle_list = nullptr;
+      QLabel*           my_puzzle_label = nullptr;
+
       QListWidget*      my_solutions_list = nullptr;
       QLabel*           my_solving_attempts_label = nullptr;
+      QLabel*           my_solving_time_label = nullptr;
 
       QTimer*           my_solve_puzzle_timer = nullptr;
 
@@ -106,6 +112,10 @@ namespace dak::tantrix_solver_app
       std::future<all_solutions_t>              my_async_solving;
       std::atomic<bool>                         my_stop_solving = false;
       std::atomic<size_t>                       my_solving_attempts = 0;
+      
+      using clock_t = std::chrono::steady_clock;
+      clock_t::time_point                       my_solving_begin_time;
+      clock_t::time_point                       my_solving_end_time;
 
       Q_OBJECT;
    };
