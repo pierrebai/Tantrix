@@ -135,30 +135,6 @@ namespace dak::tantrix
 
    void solution_t::normalize()
    {
-      position_t smallest_pos;
-      tile_t* smallest_tile = nullptr;
-      std::uint8_t smallest_number = 0;
-      for (size_t i = 0; i < my_tiles_count; ++i)
-      {
-         placed_tile_t& placed_tile = my_tiles[i];
-         auto tile_number = placed_tile.tile.number();
-         if (smallest_number == 0 || tile_number < smallest_number)
-         {
-            smallest_tile     = &placed_tile.tile;
-            smallest_number   = tile_number;
-            smallest_pos      = placed_tile.pos;
-         }
-      }
-
-      int rotation = 0;
-      tile_t target_tile(smallest_number);
-      while (*smallest_tile != target_tile)
-      {
-         rotation += 5;
-         target_tile.rotate_in_place(1);
-      }
-
-      rotate_in_place(rotation, smallest_pos);
       std::sort(my_tiles, my_tiles + my_tiles_count);
    }
 

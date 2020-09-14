@@ -359,7 +359,6 @@ namespace dak::tantrix_solver_app
       my_solutions_list->clear();
 
       size_t solution_index = 0;
-      //for (const auto& solution : my_solutions)
       for (const auto& [solution, count] : my_solutions)
       {
          std::ostringstream stream;
