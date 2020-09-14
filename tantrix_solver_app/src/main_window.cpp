@@ -66,6 +66,8 @@ namespace dak::tantrix_solver_app
       build_puzzle_ui();
       build_solutions_ui();
       build_solution_canvas();
+
+      setWindowIcon(QIcon(QtWin::fromHICON((HICON)::LoadImage(GetModuleHandle(0), MAKEINTRESOURCE(IDI_APP_ICON), IMAGE_ICON, 256, 256, 0))));
    }
 
    void main_window_t::build_toolbar_ui()
