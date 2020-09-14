@@ -1,5 +1,4 @@
 #include <main_window.h>
-#include <main_window.h>
 
 #include <resource.h>
 
@@ -359,11 +358,20 @@ namespace dak::tantrix_solver_app
    {
       my_solutions_list->clear();
 
-      size_t solution_index = 1;
-      for (const auto& solution : my_solutions)
+      size_t solution_index = 0;
+      //for (const auto& solution : my_solutions)
+      for (const auto& [solution, count] : my_solutions)
       {
          std::ostringstream stream;
-         stream << "Solution #" << solution_index++ << ":\n";
+
+         if (solution_index == 1000)
+         {
+            stream << "And " << my_solutions.size() - solution_index << " other solutions";
+            my_solutions_list->addItem(stream.str().c_str());
+            break;
+         }
+
+         stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
          for (size_t i = 0; i < solution.tiles_count(); ++i)
          {
             const auto& placed_tile = solution.tiles()[i];
@@ -390,7 +398,12 @@ namespace dak::tantrix_solver_app
 
 
          ostringstream stream;
-         stream << "Time:" << seconds << '.' << tenth << "s";
+
+         if (seconds < 2 * 60)
+            stream << "Time: " << seconds << '.' << tenth << "s";
+         else
+            stream << "Time: " << (seconds / 60) << "min " << (seconds % 60) << "s";
+
          my_solving_time_label->setText(stream.str().c_str());
 
          if (!my_solving_time_label->isVisible())
@@ -408,8 +421,13 @@ namespace dak::tantrix_solver_app
       if (my_solving_attempts)
       {
          ostringstream stream;
-         stream << "Attempts: " << my_solving_attempts;
-                
+         if (my_solving_attempts < 2 * 1000)
+            stream << "Attempts: " << my_solving_attempts;
+         else if (my_solving_attempts < 2 * 1000 * 1000)
+            stream << "Attempts: " << (my_solving_attempts / 1000) << " thousands";
+         else
+            stream << "Attempts: " << (my_solving_attempts / (1000 * 1000)) << " millions";
+
          my_solving_attempts_label->setText(stream.str().c_str());
          if (!my_solving_attempts_label->isVisible())
             my_solving_attempts_label->show();
@@ -430,14 +448,21 @@ namespace dak::tantrix_solver_app
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
 
+   static constexpr double two_pi = 2 * 3.14159265;
+
+   static double dir_to_angle(const tantrix::direction_t& dir)
+   {
+      double angle = two_pi * dir.as_int() / 6.;
+      return angle;
+   }
+
    static QPolygonF create_hexagon(const double tile_radius)
    {
       QPolygonF hexagon;
 
-      for (int i = 0; i < 6; ++i)
+      for (const auto& dir : tantrix::directions)
       {
-         const double two_pi = 2 * 3.14159265;
-         double angle = (two_pi / 12.) + (two_pi * i / 6.);
+         double angle = two_pi / 12. + dir_to_angle(dir);
          QPointF point(std::cos(angle) * tile_radius, std::sin(angle) * tile_radius);
          hexagon << point;
       }
@@ -465,6 +490,68 @@ namespace dak::tantrix_solver_app
       return QPointF(center1.x() * 0.6 + center2.x() * 0.4, center1.y() * 0.6 + center2.y() * 0.4);
    }
 
+   static QPainterPath convert_tile_line(const tantrix::placed_tile_t& a_placed_tile, const QPointF& a_tile_center, double a_tile_radius, const tantrix::color_t& a_color, const QColor& a_qt_color)
+   {
+      auto dir1 = a_placed_tile.tile.find_color(a_color, 0);
+      auto dir2 = a_placed_tile.tile.find_color(a_color, dir1.rotate(1));
+
+      auto pos1 = convert_tile_side(a_placed_tile.pos, dir1, a_tile_radius);
+      auto pos2 = convert_tile_side(a_placed_tile.pos, dir2, a_tile_radius);
+
+      QPainterPath path;
+
+      const int dir_delta = std::abs(dir1.as_int() - dir2.as_int());
+      switch (dir_delta)
+      {
+         case 1:
+         case 5:
+         {
+            auto pos_between_1_center = a_tile_center * 0.02 + pos1 * 0.98;
+            auto pos_between_2_center = a_tile_center * 0.02 + pos2 * 0.98;
+
+            auto pos_between_1_2 = a_tile_center * 0.3 + pos_between_1_center * 0.35 + pos_between_2_center * 0.35;
+
+            path.moveTo(pos1);
+            path.lineTo(pos_between_1_center);
+            path.cubicTo(pos_between_1_2, pos_between_1_2, pos_between_2_center);
+            path.lineTo(pos2);
+
+            break;
+         }
+
+         case 3:
+         {
+            path.moveTo(pos1);
+            path.lineTo(pos2);
+
+            break;
+         }
+
+         case 2:
+         case 4:
+         {
+            auto pos_between_1_center = a_tile_center * 0.02 + pos1 * 0.98;
+            auto pos_between_2_center = a_tile_center * 0.02 + pos2 * 0.98;
+
+            auto pos3 = convert_tile_side(a_placed_tile.pos, dir1.rotate(3), a_tile_radius);
+            auto pos4 = convert_tile_side(a_placed_tile.pos, dir2.rotate(3), a_tile_radius);
+            auto pos_between_3_center = a_tile_center * 0.7 + pos3 * 0.3;
+            auto pos_between_4_center = a_tile_center * 0.7 + pos4 * 0.3;
+            auto pos_between_1_2 = pos3 * 0.5 + pos4 * 0.5;
+
+
+            path.moveTo(pos1);
+            path.lineTo(pos_between_1_center);
+            path.cubicTo(a_tile_center, a_tile_center, pos_between_2_center);
+            path.lineTo(pos2);
+
+            break;
+         }
+      }
+
+      return path;
+   }
+
    void main_window_t::draw_selected_solution()
    {
       auto scene = new QGraphicsScene;
@@ -480,7 +567,6 @@ namespace dak::tantrix_solver_app
       auto solution = my_solutions.begin();
       std::advance(solution, index);
 
-      // TODO: drawing a solution in the graphics view.
       const double tile_radius = 50;
       QPen tile_pen(QColor(50, 50, 50, 128));
       QBrush tile_brush(QColor(0, 0, 0));
@@ -494,9 +580,9 @@ namespace dak::tantrix_solver_app
          { tantrix::color_t::yellow(), QColor(240, 240, 0) },
       };
 
-      for (size_t i = 0; i < solution->tiles_count(); ++i)
+      for (size_t i = 0; i < solution->first.tiles_count(); ++i)
       {
-         const auto& placed_tile = solution->tiles()[i];
+         const auto& placed_tile = solution->first.tiles()[i];
          QPolygonF polygon = create_hexagon(tile_radius);
 
          const QPointF tile_center = convert_tile_pos(placed_tile.pos, tile_radius);
@@ -512,24 +598,7 @@ namespace dak::tantrix_solver_app
             if (!placed_tile.tile.has_color(tc))
                continue;
 
-            auto dir1 = placed_tile.tile.find_color(tc, 0);
-            auto dir2 = placed_tile.tile.find_color(tc, dir1.rotate(1));
-
-            auto pos1 = convert_tile_side(placed_tile.pos, dir1, tile_radius);
-            auto pos2 = convert_tile_side(placed_tile.pos, dir2, tile_radius);
-
-            auto pos_between_1_center = tile_center * 0.1 + pos1 * 0.9;
-            auto pos_between_2_center = tile_center * 0.1 + pos2 * 0.9;
-            auto pos_between_1_2 = tile_center * 0.2 + pos_between_1_center * 0.4 + pos_between_2_center * 0.4;
-
-            QPainterPath path;
-
-            path.moveTo(pos1);
-            path.lineTo(pos_between_1_center);
-            path.cubicTo(pos_between_1_2, pos_between_1_2, pos_between_2_center);
-            path.lineTo(pos2);
-
-            auto line = new QGraphicsPathItem(path);
+            auto line = new QGraphicsPathItem(convert_tile_line(placed_tile, tile_center, tile_radius, tc, qc));
             QPen line_pen(qc);
             line_pen.setWidth(tile_radius / 5);
             line->setPen(line_pen);

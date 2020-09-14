@@ -83,6 +83,9 @@ namespace dak::tantrix
    private:
       tile_t* internal_tile_at(const position_t& a_pos) const;
 
+      bool internal_fast_has_line(const color_t& a_color, bool must_be_loop) const;
+      bool internal_slow_has_line(const color_t& a_color, bool must_be_loop) const;
+
       size_t         my_tiles_count = 0;
       tiles_by_pos_t my_tiles;
    };

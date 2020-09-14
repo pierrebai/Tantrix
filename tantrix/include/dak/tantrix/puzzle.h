@@ -34,6 +34,7 @@ namespace dak::tantrix
 
       // This is how the puzzle control the solver.
       // TODO: better document what the puzzle solver control do.
+      sub_puzzle create_initial_sub_puzzle(int a_right_sub_puzzles_count) const;
       std::vector<sub_puzzle> sub_puzzles() const;
       std::vector<position_t> get_next_positions(const solution_t& partial_solution, const position_t& a_last_add_pos, const tile_t& a_tile) const;
       bool has_more_sub_puzzles() const;
@@ -41,7 +42,9 @@ namespace dak::tantrix
 
       // The description of the puzzle.
       const tiles_by_color_t& tiles() const { return my_tiles; }
+      size_t tiles_count() const;
       const line_colors_t& line_colors() const { return my_line_colors; }
+
       size_t depth() const { return my_depth; }
       bool must_be_loops() const { return my_must_be_loops; }
       size_t estimated_total_count() const;
@@ -50,6 +53,7 @@ namespace dak::tantrix
       line_colors_t     my_line_colors;
       tiles_by_color_t  my_tiles;
       size_t            my_depth = 0;
+      int               my_right_sub_puzzles_count = 0;
       bool              my_must_be_loops = false;
    };
 

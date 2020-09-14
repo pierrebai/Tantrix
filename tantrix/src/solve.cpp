@@ -20,13 +20,14 @@ namespace dak::tantrix
    static void add_solution(all_solutions_t& all_solutions, solution_t&& a_solution)
    {
       a_solution.normalize();
-      all_solutions.insert(a_solution);
+      all_solutions[a_solution] += 1;
    }
 
    // Add many solutions, we assume they have been already normalized.
    static void add_solutions(all_solutions_t& all_solutions, all_solutions_t&& other_solutions)
    {
-      all_solutions.merge(other_solutions);
+      for (auto& [solution, count] : other_solutions)
+         all_solutions[solution] += count;
    }
 
 
@@ -127,30 +128,31 @@ namespace dak::tantrix
 
    all_solutions_t solve(const puzzle_t& a_puzzle, progress_t& a_progress)
    {
+      all_solutions_t all_solutions;
+
       a_progress.set_estimated_total_count(a_puzzle.estimated_total_count());
+
+      // Multi-thread the solution.
+      std::vector<std::future<all_solutions_t>> solutions_async;
+
+      // Protect the normal non-thread-safe progress against multi-threading.
+      multi_thread_progress_t mt_progress(a_progress);
 
       // The first tile can be chosen arbitrarily and placed.
       // This will force the orientation of the solution, so
       // we won't have to compare with rotations or translations.
-      const auto sub_puzzles = a_puzzle.sub_puzzles();
 
-      std::vector<std::future<all_solutions_t>> solutions_async;
-
-      all_solutions_t all_solutions;
-
-      multi_thread_progress_t mt_progress(a_progress);
-
-      //for (const auto& [tile, puzzle] : sub_puzzles)
-      //{
-      //   auto partial_solutions = solve_sub_puzzle(puzzle, position_t(0, 0), tile, a_progress);
-      //   add_solutions(all_solutions, std::move(partial_solutions));
-      //}
-
-      for (const auto& [tile, puzzle] : sub_puzzles)
+      for (int i = 0; i < int(a_puzzle.tiles_count()); ++i)
       {
-         solution_t partial_solution(tile, position_t(0, 0));
-         auto new_async = std::async(std::launch::async, solve_sub_puzzle_async, partial_solution, puzzle, position_t(0, 0), per_thread_progress_t(mt_progress));
+         auto [initial_tile, initial_puzzle] = a_puzzle.create_initial_sub_puzzle(i);
+         solution_t initial_partial_solution(initial_tile, position_t(0, 0));
+         auto new_async = std::async(std::launch::async, solve_sub_puzzle_async, initial_partial_solution, initial_puzzle, position_t(0, 0), per_thread_progress_t(mt_progress));
          solutions_async.emplace_back(std::move(new_async));
+
+         // For loops, the line will use all tiles and starting from any tile is equivalent,
+         // so we don't need to try all different first tiles!
+         if (a_puzzle.must_be_loops())
+            break;
       }
 
       for (auto& new_solutions_async : solutions_async)

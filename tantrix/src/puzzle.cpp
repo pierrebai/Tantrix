@@ -38,6 +38,16 @@ namespace dak::tantrix
       }
    }
 
+   size_t puzzle_t::tiles_count() const
+   {
+      size_t count = 0;
+
+      for (const auto& [color, tiles] : my_tiles)
+         count += tiles.size();
+
+      return count;
+   }
+
    size_t puzzle_t::estimated_total_count() const
    {
       size_t count = 1;
@@ -76,6 +86,26 @@ namespace dak::tantrix
       return true;
    }
 
+   puzzle_t::sub_puzzle puzzle_t::create_initial_sub_puzzle(int a_right_sub_puzzles_count) const
+   {
+      if (my_line_colors.size() <= 0)
+         return sub_puzzle();
+
+      if (my_tiles.size() <= 0)
+         return sub_puzzle();
+
+      puzzle_t sub_puzzle(*this);
+
+      const auto color = sub_puzzle.my_line_colors.front();
+      const tile_t tile = sub_puzzle.my_tiles[color].back();
+
+      sub_puzzle.my_tiles[color].pop_back();
+      sub_puzzle.my_depth = my_depth + 1;
+      sub_puzzle.my_right_sub_puzzles_count = a_right_sub_puzzles_count;
+
+      return std::make_pair(tile, sub_puzzle);
+   }
+
    std::vector<puzzle_t::sub_puzzle> puzzle_t::sub_puzzles() const
    {
       std::vector<sub_puzzle> subs;
@@ -90,6 +120,7 @@ namespace dak::tantrix
                puzzle_t sub_puzzle(*this);
                sub_puzzle.my_tiles[color].erase(sub_puzzle.my_tiles[color].begin() + i);
                sub_puzzle.my_depth = my_depth + 1;
+               sub_puzzle.my_right_sub_puzzles_count -= 1;
                subs.emplace_back(tiles[i], sub_puzzle);
             }
             break;
@@ -103,18 +134,35 @@ namespace dak::tantrix
    {
       std::vector<position_t> next_positions;
 
+      // The idea is that the first line is built linearly.
+      //
+      // The other lines must try all connections points afterward since that may
+      // reconnect the separate line segment created while building the first line.
       const auto first_color = my_line_colors[0];
       if (a_tile.has_color(first_color))
       {
-         const tile_t& last_tile = partial_solution.tile_at(a_last_add_pos);
-         for (const direction_t& dir : directions)
+         const bool is_zero = (my_right_sub_puzzles_count == 0);
+         const size_t tile_index = is_zero ? 0 : (partial_solution.tiles_count() - 1);
+
+         const placed_tile_t& last_tile = partial_solution.tiles()[tile_index];
+         for (int i = 0; i < 6; ++i)
          {
-            const auto new_pos = a_last_add_pos.move(dir);
-            if (last_tile.color(dir) != first_color)
+            // When the starting initial puzzle wants to have zero right tiles
+            // we need to search direction in the reverse direction.
+            //
+            // (When we go to zero after placing tiles, it doesn't matter that
+            // we go in reverse direction too since there will be only one connection
+            // withthe desired color anyway, so we don't have to detect that case.)
+            const auto dir = direction_t(is_zero ? 5 - i : i);
+            const auto new_pos = last_tile.pos.move(dir);
+            if (last_tile.tile.color(dir) != first_color)
                continue;
             if (partial_solution.is_occupied(new_pos))
                continue;
+
             next_positions.emplace_back(new_pos);
+
+            break;
          }
       }
       else
@@ -123,7 +171,22 @@ namespace dak::tantrix
          {
             const auto color = my_line_colors[i];
             if (a_tile.has_color(color))
-               return partial_solution.get_borders(color);
+            {
+               auto border_positions = partial_solution.get_borders(color);
+
+               // If there are more ends to connect around the border that the
+               // number of tiles can plug plus the number of ends we must have
+               // at the end, then there is no point in going further: we will
+               // never be able to connect them all.
+               const size_t desired_ends_count = my_must_be_loops ? 0 : 2;
+               const auto& tiles = const_cast<tiles_by_color_t&>(my_tiles)[color];
+               if (border_positions.size() > (tiles.size() + 1) * 2 + desired_ends_count)
+               {
+                  return {};
+               }
+
+               return border_positions;
+            }
          }
       }
 
