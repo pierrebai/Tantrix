@@ -48,7 +48,7 @@ namespace dak::tantrix
       tile_t& tile_at(const position_t& a_pos) { return *internal_tile_at(a_pos); }
 
       // Add a tile to the solution.
-      void add_tile(const tile_t& a_tile, const position_t& a_pos) { my_tiles[my_tiles_count].pos = a_pos; my_tiles[my_tiles_count].tile = a_tile; my_tiles_count += 1; }
+      void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
       // Get the positions outside the solution where they touch a color.
       std::vector<position_t> get_borders(const color_t& a_color) const;

@@ -377,11 +377,12 @@ namespace dak::tantrix
 
    std::istream& operator>>(std::istream& a_stream, puzzle_t& a_puzzle)
    {
-      enum { none, reading_tiles, reading_lines, reading_loops } state = none;
+      enum { none, reading_tiles, reading_lines, reading_loops, reading_shape } state = none;
       bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
+      puzzle_t::shape_t shape = puzzle_t::shape_t::any;
 
       std::string word;
       while (a_stream >> word)
@@ -392,6 +393,8 @@ namespace dak::tantrix
             state = reading_lines, must_be_loops = false;
          else if (word == "loops:")
             state = reading_lines, must_be_loops = true;
+         else if (word == "shape:")
+            state = reading_shape;
          else if (state == reading_tiles)
          {
             int number;
@@ -408,20 +411,28 @@ namespace dak::tantrix
             if (std::istringstream(word) >> color)
                lines.push_back(color);
          }
+         else if (state == reading_shape)
+         {
+            if (word == "triangle")
+               shape = puzzle_t::shape_t::triangle;
+            else if (word == "any")
+               shape = puzzle_t::shape_t::any;
+         }
       }
 
-      a_puzzle = puzzle_t(tiles, lines, must_be_loops);
+      a_puzzle = puzzle_t(tiles, lines, must_be_loops, shape);
 
       return a_stream;
    }
 
    std::wistream& operator>>(std::wistream& a_stream, puzzle_t& a_puzzle)
    {
-      enum { none, reading_tiles, reading_lines, reading_loops } state = none;
+      enum { none, reading_tiles, reading_lines, reading_loops, reading_shape } state = none;
       bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
+      puzzle_t::shape_t shape = puzzle_t::shape_t::any;
 
       std::wstring word;
       while (a_stream >> word)
@@ -432,6 +443,8 @@ namespace dak::tantrix
             state = reading_lines, must_be_loops = false;
          else if (word == L"loops:")
             state = reading_lines, must_be_loops = true;
+         else if (word == L"shape:")
+            state = reading_shape;
          else if (state == reading_tiles)
          {
             int number;
@@ -448,9 +461,16 @@ namespace dak::tantrix
             if (std::wistringstream(word) >> color)
                lines.push_back(color);
          }
+         else if (state == reading_shape)
+         {
+            if (word == L"triangle")
+               shape = puzzle_t::shape_t::triangle;
+            else if (word == L"any")
+               shape = puzzle_t::shape_t::any;
+         }
       }
 
-      a_puzzle = puzzle_t(tiles, lines, must_be_loops);
+      a_puzzle = puzzle_t(tiles, lines, must_be_loops, shape);
 
       return a_stream;
    }

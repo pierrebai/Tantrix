@@ -347,6 +347,9 @@ namespace dak::tantrix_solver_app
          my_puzzle_list->addItem(stream.str().c_str());
       }
 
+      if (my_puzzle.shape() == puzzle_t::shape_t::triangle)
+         my_puzzle_list->addItem("Must be a triangle");
+
       my_solving_attempts = 0;
       my_solving_begin_time = clock_t::time_point();
       my_stop_solving = true;
@@ -393,17 +396,16 @@ namespace dak::tantrix_solver_app
       if (my_solving_attempts)
       {
          my_solving_end_time = clock_t::now();
-         auto tenth = std::chrono::duration_cast<chrono::milliseconds>(my_solving_end_time - my_solving_begin_time).count() / 100;
-         auto seconds = tenth / 10;
-         tenth %= 10;
-
+         auto seconds = std::chrono::duration_cast<chrono::milliseconds>(my_solving_end_time - my_solving_begin_time).count() / 1000;
 
          ostringstream stream;
 
          if (seconds < 2 * 60)
-            stream << "Time: " << seconds << '.' << tenth << "s";
-         else
+            stream << "Time: " << seconds << "s";
+         else if (seconds < 60 * 60)
             stream << "Time: " << (seconds / 60) << "min " << (seconds % 60) << "s";
+         else
+            stream << "Time: " << (seconds / 3600) << "h " << ((seconds / 60) % 60) << "min " << (seconds % 60) << "s";
 
          my_solving_time_label->setText(stream.str().c_str());
 
@@ -534,16 +536,12 @@ namespace dak::tantrix_solver_app
             auto pos_between_1_center = a_tile_center * 0.02 + pos1 * 0.98;
             auto pos_between_2_center = a_tile_center * 0.02 + pos2 * 0.98;
 
-            auto pos3 = convert_tile_side(a_placed_tile.pos, dir1.rotate(3), a_tile_radius);
-            auto pos4 = convert_tile_side(a_placed_tile.pos, dir2.rotate(3), a_tile_radius);
-            auto pos_between_3_center = a_tile_center * 0.7 + pos3 * 0.3;
-            auto pos_between_4_center = a_tile_center * 0.7 + pos4 * 0.3;
-            auto pos_between_1_2 = pos3 * 0.5 + pos4 * 0.5;
+            auto pos_between_1_2 = a_tile_center * 0.6 + pos_between_1_center * 0.2 + pos_between_2_center * 0.2;
 
 
             path.moveTo(pos1);
             path.lineTo(pos_between_1_center);
-            path.cubicTo(a_tile_center, a_tile_center, pos_between_2_center);
+            path.cubicTo(pos_between_1_2, pos_between_1_2, pos_between_2_center);
             path.lineTo(pos2);
 
             break;
@@ -575,10 +573,10 @@ namespace dak::tantrix_solver_app
 
       std::map<tantrix::color_t, QColor> colors =
       {
-         { tantrix::color_t::red(),    QColor(240, 0, 0) },
-         { tantrix::color_t::green(),  QColor(0, 240, 0) },
-         { tantrix::color_t::blue(),   QColor(0, 0, 240) },
-         { tantrix::color_t::yellow(), QColor(240, 240, 0) },
+         { tantrix::color_t::red(),    QColor(220, 0, 0) },
+         { tantrix::color_t::green(),  QColor(0, 220, 0) },
+         { tantrix::color_t::blue(),   QColor(10, 10, 240) },
+         { tantrix::color_t::yellow(), QColor(220, 220, 0) },
       };
 
       for (size_t i = 0; i < solution->first.tiles_count(); ++i)
@@ -643,7 +641,7 @@ namespace dak::tantrix_solver_app
             return all_solutions_t();
          }
       });
-      my_solve_puzzle_timer->start(100);
+      my_solve_puzzle_timer->start(500);
    }
 
    bool main_window_t::is_async_filtering_ready()
@@ -664,7 +662,7 @@ namespace dak::tantrix_solver_app
 
       if (!is_async_filtering_ready())
       {
-         my_solve_puzzle_timer->start(100);
+         my_solve_puzzle_timer->start(500);
          return;
       }
 

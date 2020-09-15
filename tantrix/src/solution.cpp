@@ -18,6 +18,13 @@ namespace dak::tantrix
    //    - Check if vector of solutions already contains a solution.
    //    - Add a solution if it is not already known.
 
+   void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
+   {
+      my_tiles[my_tiles_count].pos = a_pos;
+      my_tiles[my_tiles_count].tile = a_tile;
+      my_tiles_count += 1;
+   }
+
    tile_t* solution_t::internal_tile_at(const position_t& a_pos) const
    {
       for (size_t i = 0; i < my_tiles_count; ++i)

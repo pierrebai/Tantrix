@@ -14,8 +14,9 @@ namespace dak::tantrix
    {
    }
 
-   puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors, bool must_be_loops)
-      : my_line_colors(some_line_colors), my_must_be_loops(must_be_loops)
+   puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors,
+                      bool must_be_loops, shape_t a_shape)
+      : my_line_colors(some_line_colors), my_must_be_loops(must_be_loops), my_shape(a_shape)
    {
       if (!some_line_colors.size())
          throw std::exception("invalid puzzle: no required line colors provided");
@@ -70,20 +71,81 @@ namespace dak::tantrix
       return count;
    }
 
-   bool puzzle_t::has_more_sub_puzzles() const
-   {
-      for (const auto& [color, tiles] : my_tiles)
-         if (tiles.size() > 0)
-            return true;
-      return false;
-   }
+   ////////////////////////////////////////////////////////////////////////////
+   //
+   // SOlution validation.
 
    bool puzzle_t::is_solution_valid(const solution_t& a_solution) const
    {
       for (const auto& color : my_line_colors)
          if (!a_solution.has_line(color, my_must_be_loops))
             return false;
-      return true;
+      return is_solution_correctly_shaped(a_solution);
+   }
+
+   bool puzzle_t::is_solution_correctly_shaped(const solution_t& a_solution) const
+   {
+      if (my_shape == shape_t::any)
+         return true;
+
+      const size_t tiles_count = a_solution.tiles_count();
+
+      position_t low_pos;
+      for (int i = 0; i < tiles_count; ++i)
+      {
+         const auto& pos = a_solution.tiles()[i].pos;
+         if (pos <= low_pos)
+            low_pos = pos;
+      }
+
+      int pyramid_width = 0;
+      if (tiles_count <= 3)
+         pyramid_width = 2;
+      else if (tiles_count <= 6)
+         pyramid_width = 3;
+      else if (tiles_count <= 10)
+         pyramid_width = 4;
+      else if (tiles_count <= 15)
+         pyramid_width = 5;
+      else if (tiles_count <= 21)
+         pyramid_width = 6;
+      else if (tiles_count <= 28)
+         pyramid_width = 7;
+      else if (tiles_count <= 36)
+         pyramid_width = 8;
+      else if (tiles_count <= 45)
+         pyramid_width = 9;
+      else
+         pyramid_width = 10;
+
+
+      bool up_pyramid = true;
+      bool down_pyramid = true;
+      for (int delta_y = 0; delta_y < pyramid_width; ++delta_y)
+      {
+         for (int delta_x = 0; delta_x < pyramid_width - delta_y; ++delta_x)
+         {
+            if (!a_solution.is_occupied(low_pos.move(delta_x, delta_y)))
+               down_pyramid = false;
+            if (!a_solution.is_occupied(low_pos.move(delta_x + delta_y, -delta_y)))
+               up_pyramid = false;
+         }
+      }
+
+      return up_pyramid | down_pyramid;
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   //
+   // This is how the puzzle control the solver.
+   // TODO: better document what the puzzle solver control do.
+
+   bool puzzle_t::has_more_sub_puzzles() const
+   {
+      for (const auto& [color, tiles] : my_tiles)
+         if (tiles.size() > 0)
+            return true;
+      return false;
    }
 
    puzzle_t::sub_puzzle puzzle_t::create_initial_sub_puzzle(int a_right_sub_puzzles_count) const

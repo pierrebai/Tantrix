@@ -28,9 +28,17 @@ namespace dak::tantrix
       using tiles_by_color_t = std::map<color_t, std::vector<tile_t>>;
       using line_colors_t = std::vector<color_t>;
 
+      // The shape the solution of the puzzle must have.
+      enum class shape_t
+      {
+         any,
+         triangle
+      };
+
       // Create a puzzle.
       puzzle_t();
-      puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors, bool must_be_loops);
+      puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors,
+               bool must_be_loops, shape_t a_shape = shape_t::any);
 
       // This is how the puzzle control the solver.
       // TODO: better document what the puzzle solver control do.
@@ -44,17 +52,21 @@ namespace dak::tantrix
       const tiles_by_color_t& tiles() const { return my_tiles; }
       size_t tiles_count() const;
       const line_colors_t& line_colors() const { return my_line_colors; }
+      bool must_be_loops() const { return my_must_be_loops; }
+      shape_t shape() const { return my_shape; }
 
       size_t depth() const { return my_depth; }
-      bool must_be_loops() const { return my_must_be_loops; }
       size_t estimated_total_count() const;
 
    private:
+      bool is_solution_correctly_shaped(const solution_t& a_solution) const;
+
       line_colors_t     my_line_colors;
       tiles_by_color_t  my_tiles;
       size_t            my_depth = 0;
       int               my_right_sub_puzzles_count = 0;
       bool              my_must_be_loops = false;
+      shape_t           my_shape = shape_t::any;
    };
 
 }
