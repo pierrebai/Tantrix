@@ -53,6 +53,13 @@ install(
    PATTERN "*.ilk" EXCLUDE 
 )
 
+install(
+   DIRECTORY
+   "${PROJECT_SOURCE_DIR}/tantrix_solver/puzzles"
+   DESTINATION .
+   COMPONENT application
+)
+
 set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_NAME "TantrixSolver")
 set(CPACK_PACKAGE_VENDOR "Pierre Baillargeon")
