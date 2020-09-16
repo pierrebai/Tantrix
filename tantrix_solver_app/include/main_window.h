@@ -14,6 +14,7 @@
 
 #include <chrono>
 #include <future>
+#include <memory>
 
 class QToolButton;
 class QAction;
@@ -106,7 +107,7 @@ namespace dak::tantrix_solver_app
       QTimer*           my_solve_puzzle_timer = nullptr;
 
       // Data.
-      puzzle_t                                  my_puzzle;
+      std::shared_ptr<puzzle_t>                 my_puzzle;
       all_solutions_t                           my_solutions;
 
       std::future<all_solutions_t>              my_async_solving;

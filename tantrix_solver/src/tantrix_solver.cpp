@@ -25,17 +25,23 @@ int main(int arg_count, char** arg_values)
          const path filename(arg_values[arg_index]);
          cout << "solving puzzle: " << filename.filename() << endl;
 
-         puzzle_t puzzle;
+         std::shared_ptr<puzzle_t> puzzle;
          {
             ifstream puzzle_stream(filename);
             puzzle_stream >> puzzle;
+         }
+
+         if (!puzzle)
+         {
+            cout << "Invalid puzzle file: " << filename.filename() << endl;
+            continue;
          }
 
          cout << puzzle << endl;
 
          auto begin_time = clock::now();
          stream_progress_t progress(cout);
-         const auto solutions = solve(puzzle, progress);
+         const auto solutions = solve(*puzzle, progress);
          auto end_time = clock::now();
 
          cout << "\n";

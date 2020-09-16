@@ -351,36 +351,52 @@ namespace dak::tantrix
       return a_stream;
    }
 
-   std::ostream& operator<<(std::ostream& a_stream, const puzzle_t& a_puzzle)
+   std::ostream& operator<<(std::ostream& a_stream, const std::shared_ptr<puzzle_t>& a_puzzle)
    {
+      if (!a_puzzle)
+         return a_stream;
+
       a_stream << "tiles:";
-      for (const auto& tile : a_puzzle.initial_tiles())
+      for (const auto& tile : a_puzzle->initial_tiles())
          a_stream << ' ' << tile.number();
-      a_stream << (a_puzzle.must_be_loops() ? "\n" "loops:" : "\n" "lines:");
-      for (const auto& color : a_puzzle.line_colors())
+
+      a_stream << (a_puzzle->must_be_loops() ? "\n" "loops:" : "\n" "lines:");
+      for (const auto& color : a_puzzle->line_colors())
          a_stream << ' ' << color;
+
+      if (std::dynamic_pointer_cast<triangle_puzzle_t>(a_puzzle))
+         a_stream << "triangle";
+
       return a_stream;
    }
 
-   std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle)
+   std::wostream& operator<<(std::wostream& a_stream, const std::shared_ptr<puzzle_t>& a_puzzle)
    {
+      if (!a_puzzle)
+         return a_stream;
+
       a_stream << "tiles:";
-      for (const auto& tile : a_puzzle.initial_tiles())
+      for (const auto& tile : a_puzzle->initial_tiles())
          a_stream << ' ' << tile.number();
-      a_stream << (a_puzzle.must_be_loops() ? "\n" "loops:" : "\n" "lines:");
-      for (const auto& color : a_puzzle.line_colors())
+
+      a_stream << (a_puzzle->must_be_loops() ? "\n" "loops:" : "\n" "lines:");
+      for (const auto& color : a_puzzle->line_colors())
          a_stream << ' ' << color;
+
+      if (std::dynamic_pointer_cast<triangle_puzzle_t>(a_puzzle))
+         a_stream << "triangle";
+
       return a_stream;
    }
 
-   std::istream& operator>>(std::istream& a_stream, puzzle_t& a_puzzle)
+   std::istream& operator>>(std::istream& a_stream, std::shared_ptr<puzzle_t>& a_puzzle)
    {
       enum { none, reading_tiles, reading_lines, reading_loops, reading_shape } state = none;
       bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
-      puzzle_t::shape_t shape = puzzle_t::shape_t::any;
+      bool is_triangle = false;
 
       std::string word;
       while (a_stream >> word)
@@ -412,25 +428,28 @@ namespace dak::tantrix
          else if (state == reading_shape)
          {
             if (word == "triangle")
-               shape = puzzle_t::shape_t::triangle;
+               is_triangle = true;
             else if (word == "any")
-               shape = puzzle_t::shape_t::any;
+               is_triangle = false;
          }
       }
 
-      a_puzzle = puzzle_t(tiles, lines, must_be_loops, shape);
+      if (is_triangle)
+         a_puzzle.reset(new triangle_puzzle_t(tiles, lines, must_be_loops));
+      else
+         a_puzzle.reset(new any_shape_puzzle_t(tiles, lines, must_be_loops));
 
       return a_stream;
    }
 
-   std::wistream& operator>>(std::wistream& a_stream, puzzle_t& a_puzzle)
+   std::wistream& operator>>(std::wistream& a_stream, std::shared_ptr<puzzle_t>& a_puzzle)
    {
       enum { none, reading_tiles, reading_lines, reading_loops, reading_shape } state = none;
       bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
-      puzzle_t::shape_t shape = puzzle_t::shape_t::any;
+      bool is_triangle = false;
 
       std::wstring word;
       while (a_stream >> word)
@@ -462,16 +481,18 @@ namespace dak::tantrix
          else if (state == reading_shape)
          {
             if (word == L"triangle")
-               shape = puzzle_t::shape_t::triangle;
+               is_triangle = true;
             else if (word == L"any")
-               shape = puzzle_t::shape_t::any;
+               is_triangle = false;
          }
       }
 
-      a_puzzle = puzzle_t(tiles, lines, must_be_loops, shape);
+      if (is_triangle)
+         a_puzzle.reset(new triangle_puzzle_t(tiles, lines, must_be_loops));
+      else
+         a_puzzle.reset(new any_shape_puzzle_t(tiles, lines, must_be_loops));
 
       return a_stream;
    }
-
 
 }

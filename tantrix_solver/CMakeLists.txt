@@ -6,7 +6,6 @@ add_executable(tantrix_solver
    "puzzles/Master Puzzle.txt"
    "puzzles/Genius Puzzle Red Blue.txt"
    "puzzles/Genius Puzzle Red Yellow.txt"
-   "puzzles/Genius Puzzle Yellow Tiles.txt"
 )
 
 target_link_libraries(tantrix_solver PUBLIC

@@ -5,6 +5,7 @@
 #include <dak/QtAdditions/QtUtilities.h>
 
 #include <dak/tantrix/stream.h>
+#include <dak/tantrix/triangle_puzzle.h>
 
 #include <QtWidgets/qboxlayout.h>
 #include <QtWidgets/qerrormessage.h>
@@ -308,6 +309,9 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::update_puzzle(const char* filename)
    {
+      if (!my_puzzle)
+         return;
+
       if (filename && filename[0])
       {
          my_puzzle_label->setText(filename);
@@ -320,7 +324,7 @@ namespace dak::tantrix_solver_app
 
       my_puzzle_list->clear();
 
-      for (const auto& tile : my_puzzle.initial_tiles())
+      for (const auto& tile : my_puzzle->initial_tiles())
       {
          std::ostringstream stream;
          stream << "Tile #" << tile;
@@ -335,16 +339,16 @@ namespace dak::tantrix_solver_app
          { tantrix::color_t::yellow(), "Yellow" },
       };
 
-      const char* const line_type = (my_puzzle.must_be_loops() ? "Loop" : "Line");
+      const char* const line_type = (my_puzzle->must_be_loops() ? "Loop" : "Line");
 
-      for (const auto& color : my_puzzle.line_colors())
+      for (const auto& color : my_puzzle->line_colors())
       {
          std::ostringstream stream;
          stream << color_names[color] << " " << line_type;
          my_puzzle_list->addItem(stream.str().c_str());
       }
 
-      if (my_puzzle.shape() == puzzle_t::shape_t::triangle)
+      if (std::dynamic_pointer_cast<tantrix::triangle_puzzle_t>(my_puzzle))
          my_puzzle_list->addItem("Must be a triangle");
 
       my_solving_attempts = 0;
@@ -444,7 +448,7 @@ namespace dak::tantrix_solver_app
       my_load_puzzle_action->setEnabled(true);
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
-      my_solve_puzzle_action->setEnabled(my_puzzle.line_colors().size() > 0);
+      my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->line_colors().size() > 0);
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
 
@@ -624,6 +628,9 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::solve_puzzle()
    {
+      if (!my_puzzle)
+         return;
+
       my_stop_solving = false;
       my_solving_attempts = 0;
       my_solving_begin_time = clock_t::now();
@@ -631,7 +638,7 @@ namespace dak::tantrix_solver_app
       {
          try
          {
-            return tantrix::solve(puzzle, *self);
+            return tantrix::solve(*puzzle, *self);
          }
          catch (const std::exception&)
          {

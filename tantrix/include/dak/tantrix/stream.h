@@ -8,6 +8,7 @@
 #include <dak/tantrix/solve.h>
 
 #include <iostream>
+#include <memory>
 
 namespace dak::tantrix
 {
@@ -49,10 +50,10 @@ namespace dak::tantrix
    std::istream&  operator>>(std::istream&  a_stream,       all_solutions_t& some_solutions);
    std::wistream& operator>>(std::wistream& a_stream,       all_solutions_t& some_solutions);
 
-   std::ostream&  operator<<(std::ostream&  a_stream, const puzzle_t& a_puzzle);
-   std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle);
-   std::istream&  operator>>(std::istream&  a_stream,       puzzle_t& a_puzzle);
-   std::wistream& operator>>(std::wistream& a_stream,       puzzle_t& a_puzzle);
+   std::ostream&  operator<<(std::ostream&  a_stream, const std::shared_ptr<puzzle_t>& a_puzzle);
+   std::wostream& operator<<(std::wostream& a_stream, const std::shared_ptr<puzzle_t>& a_puzzle);
+   std::istream&  operator>>(std::istream&  a_stream,       std::shared_ptr<puzzle_t>& a_puzzle);
+   std::wistream& operator>>(std::wistream& a_stream,       std::shared_ptr<puzzle_t>& a_puzzle);
 
 }
 
