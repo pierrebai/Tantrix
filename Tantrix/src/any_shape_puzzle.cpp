@@ -11,6 +11,26 @@ namespace dak::tantrix
    //
    // Get the list of potential position for the tile-to-be-placed of the given sub-puzzle.
 
+   std::vector<sub_puzzle_t> any_shape_puzzle_t::create_initial_sub_puzzles() const
+   {
+      auto sub_puzzles = puzzle_t::create_initial_sub_puzzles();
+
+      // For loops, the line will use all tiles and starting from any tile is equivalent,
+      // so we don't need to try all different first tiles!
+      if (sub_puzzles.size() > 1 && must_be_loops())
+         sub_puzzles.erase(sub_puzzles.begin() + 1, sub_puzzles.end());
+
+      return sub_puzzles;
+   }
+
+   std::vector<sub_puzzle_t> any_shape_puzzle_t::create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const
+   {
+      auto sub_puzzles = puzzle_t::create_sub_puzzles(a_current_sub_puzzle);
+      for (auto& sub : sub_puzzles)
+         sub.right_sub_puzzles_count -= 1;
+      return sub_puzzles;
+   }
+
    std::vector<position_t> any_shape_puzzle_t::get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const
    {
       std::vector<position_t> next_positions;
@@ -59,11 +79,9 @@ namespace dak::tantrix
                // number of tiles can plug plus the number of ends we must have
                // at the end, then there is no point in going further: we will
                // never be able to connect them all.
-               //
-               // TODO: code below is only correct for puzzle with two lines.
-               //       For more lines, we'd have to count the number of tiles of the color.
                const size_t desired_ends_count = my_must_be_loops ? 0 : 2;
-               if (border_positions.size() > (a_current_sub_puzzle.other_tiles.size() + 1) * 2 + desired_ends_count)
+               const size_t tiles_count = a_current_sub_puzzle.count_tiles_of_color(color);
+               if (border_positions.size() > (tiles_count + 1) * 2 + desired_ends_count)
                {
                   return {};
                }

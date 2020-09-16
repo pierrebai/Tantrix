@@ -62,6 +62,7 @@ namespace dak::tantrix_solver_app
 
       my_solve_puzzle_timer = new QTimer(this);
       my_solve_puzzle_timer->setSingleShot(true);
+      my_error_message = new QErrorMessage(this);
 
       build_toolbar_ui();
       build_puzzle_ui();
@@ -252,10 +253,20 @@ namespace dak::tantrix_solver_app
          puzzle_stream >> my_puzzle;
          update_puzzle(path.filename().string().c_str());
       }
-      catch (const std::exception&)
+      catch (const std::exception& ex)
       {
-         // TODO: exception handling when loading a puzzle.
+         showException("Could not load the puzzle:", ex);
       }
+   }
+
+   void main_window_t::showException(const char* message, const std::exception& ex)
+   {
+      if (!my_error_message)
+         return;
+
+      std::ostringstream stream;
+      stream << message << "\n" << ex.what();
+      my_error_message->showMessage(stream.str().c_str());
    }
 
    void main_window_t::save_solutions()
@@ -274,9 +285,9 @@ namespace dak::tantrix_solver_app
          std::ofstream solutions_stream(path);
          solutions_stream << my_solutions;
       }
-      catch (const std::exception&)
+      catch (const std::exception& ex)
       {
-         // TODO: exception handling when loading a solutions.
+         showException("Could not save the solutions:", ex);
       }
    }
 
@@ -289,7 +300,7 @@ namespace dak::tantrix_solver_app
          // We must stop on load because otherwise the threads are preventing the dialog from opening!
          stop_puzzle();
 
-         filesystem::path path = AskOpen(tr("Save Solutions"), tr(solutions_file_types), this);
+         filesystem::path path = AskOpen(tr("Load Solutions"), tr(solutions_file_types), this);
          if (path.empty())
             return;
 
@@ -297,9 +308,9 @@ namespace dak::tantrix_solver_app
          solutions_stream >> my_solutions;
          update_solutions();
       }
-      catch (const std::exception&)
+      catch (const std::exception& ex)
       {
-         // TODO: exception handling when loading a solutions.
+         showException("Could not load the solutions:", ex);
       }
    }
 
@@ -674,9 +685,9 @@ namespace dak::tantrix_solver_app
       {
          my_solutions = my_async_solving.get();
       }
-      catch (const std::exception&)
+      catch (const std::exception& ex)
       {
-         // TODO: show solving errors to the user.
+         showException("Could not solve the puzzle:", ex);
       }
       update_solutions();
    }

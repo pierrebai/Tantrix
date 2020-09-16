@@ -83,13 +83,6 @@ namespace dak::tantrix
             int(i), 0
          };
          sub_puzzles.emplace_back(std::move(sub_puzzle));
-
-         // For loops, the line will use all tiles and starting from any tile is equivalent,
-         // so we don't need to try all different first tiles!
-         //
-         // TODO: this wil be false for specialized triangle_puzzle_t once we modify its algorithm.
-         if (must_be_loops())
-            break;
       }
 
       return sub_puzzles;
@@ -113,7 +106,6 @@ namespace dak::tantrix
             sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
             sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
             sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-            sub_puzzle.right_sub_puzzles_count -= 1;
             sub_puzzle.depth += 1;
             subs.emplace_back(sub_puzzle);
          }

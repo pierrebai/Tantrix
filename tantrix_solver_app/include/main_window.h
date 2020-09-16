@@ -25,7 +25,7 @@ class QLineEdit;
 class QLabel;
 class QPushButton;
 class QGraphicsView;
-
+class QErrorMessage;
 namespace dak::tantrix_solver_app
 {
    using dak::tantrix::puzzle_t;
@@ -78,6 +78,8 @@ namespace dak::tantrix_solver_app
       void update_solving_time();
       void draw_selected_solution();
 
+      void showException(const char* message, const std::exception& ex);
+
       // Toolbar buttons.
       QAction*       my_load_puzzle_action = nullptr;
       QToolButton*   my_load_puzzle_button = nullptr;
@@ -105,6 +107,7 @@ namespace dak::tantrix_solver_app
       QLabel*           my_solving_time_label = nullptr;
 
       QTimer*           my_solve_puzzle_timer = nullptr;
+      QErrorMessage*    my_error_message = nullptr;
 
       // Data.
       std::shared_ptr<puzzle_t>                 my_puzzle;

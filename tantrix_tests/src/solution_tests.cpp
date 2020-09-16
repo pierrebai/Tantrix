@@ -114,31 +114,23 @@ namespace dak::tantrix::tests
 			sol.add_tile(tile_t( 5), position_t( 2,  2));
 			sol.add_tile(tile_t( 6), position_t( 3,  2));
 
-			solution_t sol_with_offset;
-			sol_with_offset.add_tile(tile_t(13), position_t(-2 - 3,  4 + 4));
-			sol_with_offset.add_tile(tile_t(12), position_t(-1 - 3,  0 + 4));
-			sol_with_offset.add_tile(tile_t( 7), position_t(-1 - 3,  3 + 4));
-			sol_with_offset.add_tile(tile_t( 1), position_t( 0 - 3,  0 + 4));
-			sol_with_offset.add_tile(tile_t( 9), position_t( 0 - 3,  1 + 4));
-			sol_with_offset.add_tile(tile_t( 3), position_t( 0 - 3,  2 + 4));
-			sol_with_offset.add_tile(tile_t(10), position_t( 0 - 3,  4 + 4));
-			sol_with_offset.add_tile(tile_t( 2), position_t( 1 - 3,  0 + 4));
-			sol_with_offset.add_tile(tile_t( 4), position_t( 1 - 3,  2 + 4));
-			sol_with_offset.add_tile(tile_t(11), position_t( 1 - 3,  4 + 4));
-			sol_with_offset.add_tile(tile_t( 8), position_t( 2 - 3,  1 + 4));
-			sol_with_offset.add_tile(tile_t( 5), position_t( 2 - 3,  2 + 4));
-			sol_with_offset.add_tile(tile_t( 6), position_t( 3 - 3,  2 + 4));
+			solution_t sol_unordered;
+			sol_unordered.add_tile(tile_t( 4), position_t( 1,  2));
+			sol_unordered.add_tile(tile_t(12), position_t(-1,  0));
+			sol_unordered.add_tile(tile_t( 8), position_t( 2,  1));
+			sol_unordered.add_tile(tile_t( 9), position_t( 0,  1));
+			sol_unordered.add_tile(tile_t(13), position_t(-2,  4));
+			sol_unordered.add_tile(tile_t( 3), position_t( 0,  2));
+			sol_unordered.add_tile(tile_t( 1), position_t( 0,  0));
+			sol_unordered.add_tile(tile_t( 5), position_t( 2,  2));
+			sol_unordered.add_tile(tile_t(10), position_t( 0,  4));
+			sol_unordered.add_tile(tile_t( 2), position_t( 1,  0));
+			sol_unordered.add_tile(tile_t( 7), position_t(-1,  3));
+			sol_unordered.add_tile(tile_t(11), position_t( 1,  4));
+			sol_unordered.add_tile(tile_t( 6), position_t( 3,  2));
 
-			for (int rot = 1; rot < 6; ++rot)
-			{
-				auto sol2 = sol.rotate(rot);
-				sol2.normalize();
-				Assert::AreEqual(sol, sol2);
-
-				auto sol3 = sol_with_offset.rotate(rot);
-				sol3.normalize();
-				Assert::AreEqual(sol, sol3);
-			}
+         sol_unordered.normalize();
+			Assert::AreEqual(sol, sol_unordered);
 		}
 
 		TEST_METHOD(solution_is_valid)
