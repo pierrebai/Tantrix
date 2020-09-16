@@ -1,6 +1,8 @@
 #include "dak/tantrix/puzzle.h"
 #include "dak/tantrix/solution.h"
 
+#include <set>
+
 
 namespace dak::tantrix
 {
@@ -14,61 +16,29 @@ namespace dak::tantrix
    {
    }
 
-   puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors,
+   puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles,
+                      const std::vector<color_t>& some_line_colors,
                       bool must_be_loops, shape_t a_shape)
       : my_line_colors(some_line_colors), my_must_be_loops(must_be_loops), my_shape(a_shape)
    {
       if (!some_line_colors.size())
          throw std::exception("invalid puzzle: no required line colors provided");
 
-      for (const auto& tile : some_tiles)
+      std::set<tile_t> done_tiles;
+      for (const auto color : some_line_colors)
       {
-         bool inserted = false;
-         for (const auto color : some_line_colors)
+         for (const auto& tile : some_tiles)
          {
+            if (done_tiles.contains(tile))
+               continue;
+
             if (tile.has_color(color))
             {
-               my_tiles[color].emplace_back(tile);
-               inserted = true;
-               break;
+               my_initial_tiles.emplace_back(tile);
+               done_tiles.insert(tile);
             }
          }
-
-         if (!inserted)
-            throw std::exception("invalid puzzle: a tile has no color of any required lines");
       }
-   }
-
-   size_t puzzle_t::tiles_count() const
-   {
-      size_t count = 0;
-
-      for (const auto& [color, tiles] : my_tiles)
-         count += tiles.size();
-
-      return count;
-   }
-
-   size_t puzzle_t::estimated_total_count() const
-   {
-      size_t count = 1;
-      for (const auto& [color, tiles] : my_tiles)
-      {
-         const size_t tiles_count = tiles.size();
-         if (1 == count)
-         {
-            for (size_t i = 1; i < tiles_count; ++i)
-               count *= i * 2;
-         }
-         else
-         {
-            for (size_t i = 1; i < tiles_count; ++i)
-               count *= i * 6;
-
-         }
-      }
-
-      return count;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -140,59 +110,63 @@ namespace dak::tantrix
    // This is how the puzzle control the solver.
    // TODO: better document what the puzzle solver control do.
 
-   bool puzzle_t::has_more_sub_puzzles() const
+   bool puzzle_t::has_more_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const
    {
-      for (const auto& [color, tiles] : my_tiles)
-         if (tiles.size() > 0)
-            return true;
-      return false;
+      return a_current_sub_puzzle.other_tiles.size() > 0;
    }
 
-   puzzle_t::sub_puzzle puzzle_t::create_initial_sub_puzzle(int a_right_sub_puzzles_count) const
+   std::vector<sub_puzzle_t> puzzle_t::create_initial_sub_puzzles() const
    {
       if (my_line_colors.size() <= 0)
-         return sub_puzzle();
+         return {};
 
-      if (my_tiles.size() <= 0)
-         return sub_puzzle();
+      if (my_initial_tiles.size() <= 0)
+         return {};
 
-      puzzle_t sub_puzzle(*this);
+      std::vector<sub_puzzle_t> sub_puzzles;
+      for (size_t i = 0; i < my_initial_tiles.size(); ++i)
+      {
+         sub_puzzle_t sub_puzzle
+         {
+            my_initial_tiles.front(),
+            { my_initial_tiles.begin() + 1, my_initial_tiles.end() },
+            int(i), 0
+         };
+         sub_puzzles.emplace_back(std::move(sub_puzzle));
+      }
 
-      const auto color = sub_puzzle.my_line_colors.front();
-      const tile_t tile = sub_puzzle.my_tiles[color].back();
-
-      sub_puzzle.my_tiles[color].pop_back();
-      sub_puzzle.my_depth = my_depth + 1;
-      sub_puzzle.my_right_sub_puzzles_count = a_right_sub_puzzles_count;
-
-      return std::make_pair(tile, sub_puzzle);
+      return sub_puzzles;
    }
 
-   std::vector<puzzle_t::sub_puzzle> puzzle_t::sub_puzzles() const
+   std::vector<sub_puzzle_t> puzzle_t::create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const
    {
-      std::vector<sub_puzzle> subs;
+      std::vector<sub_puzzle_t> subs;
 
       for (const auto color : my_line_colors)
       {
-         const auto& tiles = const_cast<tiles_by_color_t&>(my_tiles)[color];
-         if (tiles.size())
+         if (!a_current_sub_puzzle.other_tiles[0].has_color(color))
+            continue;
+
+
+         for (size_t i = 0; i < a_current_sub_puzzle.other_tiles.size(); ++i)
          {
-            for (size_t i = 0; i < tiles.size(); ++i)
-            {
-               puzzle_t sub_puzzle(*this);
-               sub_puzzle.my_tiles[color].erase(sub_puzzle.my_tiles[color].begin() + i);
-               sub_puzzle.my_depth = my_depth + 1;
-               sub_puzzle.my_right_sub_puzzles_count -= 1;
-               subs.emplace_back(tiles[i], sub_puzzle);
-            }
-            break;
+            if (!a_current_sub_puzzle.other_tiles[0].has_color(color))
+               break;
+
+            sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
+            sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
+            sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
+            sub_puzzle.right_sub_puzzles_count -= 1;
+            sub_puzzle.depth += 1;
+            subs.emplace_back(sub_puzzle);
          }
+         break;
       }
 
       return subs;
    }
 
-   std::vector<position_t> puzzle_t::get_next_positions(const solution_t& partial_solution, const position_t& a_last_add_pos, const tile_t& a_tile) const
+   std::vector<position_t> puzzle_t::get_next_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& partial_solution) const
    {
       std::vector<position_t> next_positions;
 
@@ -201,9 +175,9 @@ namespace dak::tantrix
       // The other lines must try all connections points afterward since that may
       // reconnect the separate line segment created while building the first line.
       const auto first_color = my_line_colors[0];
-      if (a_tile.has_color(first_color))
+      if (a_current_sub_puzzle.tile_to_place.has_color(first_color))
       {
-         const bool is_zero = (my_right_sub_puzzles_count == 0);
+         const bool is_zero = (a_current_sub_puzzle.right_sub_puzzles_count == 0);
          const size_t tile_index = is_zero ? 0 : (partial_solution.tiles_count() - 1);
 
          const placed_tile_t& last_tile = partial_solution.tiles()[tile_index];
@@ -232,7 +206,7 @@ namespace dak::tantrix
          for (size_t i = 1; i < my_line_colors.size(); ++i)
          {
             const auto color = my_line_colors[i];
-            if (a_tile.has_color(color))
+            if (a_current_sub_puzzle.tile_to_place.has_color(color))
             {
                auto border_positions = partial_solution.get_borders(color);
 
@@ -240,9 +214,11 @@ namespace dak::tantrix
                // number of tiles can plug plus the number of ends we must have
                // at the end, then there is no point in going further: we will
                // never be able to connect them all.
+               //
+               // TODO: code below is only correct for puzzle with two lines.
+               //       For more lines, we'd have to count the number of tiles of the color.
                const size_t desired_ends_count = my_must_be_loops ? 0 : 2;
-               const auto& tiles = const_cast<tiles_by_color_t&>(my_tiles)[color];
-               if (border_positions.size() > (tiles.size() + 1) * 2 + desired_ends_count)
+               if (border_positions.size() > (a_current_sub_puzzle.other_tiles.size() + 1) * 2 + desired_ends_count)
                {
                   return {};
                }

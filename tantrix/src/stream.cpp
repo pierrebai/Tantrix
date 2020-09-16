@@ -354,9 +354,8 @@ namespace dak::tantrix
    std::ostream& operator<<(std::ostream& a_stream, const puzzle_t& a_puzzle)
    {
       a_stream << "tiles:";
-      for (const auto& [color, tiles] : a_puzzle.tiles())
-         for (const auto& tile : tiles)
-            a_stream << ' ' << tile.number();
+      for (const auto& tile : a_puzzle.initial_tiles())
+         a_stream << ' ' << tile.number();
       a_stream << (a_puzzle.must_be_loops() ? "\n" "loops:" : "\n" "lines:");
       for (const auto& color : a_puzzle.line_colors())
          a_stream << ' ' << color;
@@ -366,9 +365,8 @@ namespace dak::tantrix
    std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle)
    {
       a_stream << "tiles:";
-      for (const auto& [color, tiles] : a_puzzle.tiles())
-         for (const auto& tile : tiles)
-            a_stream << ' ' << tile.number();
+      for (const auto& tile : a_puzzle.initial_tiles())
+         a_stream << ' ' << tile.number();
       a_stream << (a_puzzle.must_be_loops() ? "\n" "loops:" : "\n" "lines:");
       for (const auto& color : a_puzzle.line_colors())
          a_stream << ' ' << color;

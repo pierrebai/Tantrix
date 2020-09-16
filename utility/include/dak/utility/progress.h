@@ -26,9 +26,6 @@ namespace dak::utility
       // Force to report the progress tally.
       void flush_progress();
 
-      // Set the estimated total count we expect when progress finishes.
-      void set_estimated_total_count(size_t a_count) { my_estimated_total_count = a_count; }
-
       // Update the progress with an additional count.
       void progress(size_t a_done_count);
 

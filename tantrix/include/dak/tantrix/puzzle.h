@@ -9,12 +9,23 @@
 #include "dak/tantrix/tile.h"
 
 #include <vector>
-#include <map>
 
 
 namespace dak::tantrix
 {
    struct solution_t;
+
+   ////////////////////////////////////////////////////////////////////////////
+   //
+   // Sub puzzle
+
+   struct sub_puzzle_t
+   {
+      tile_t               tile_to_place;
+      std::vector<tile_t>  other_tiles;
+      int                  right_sub_puzzles_count = 0;
+      size_t               depth = 0;
+   };
 
    ////////////////////////////////////////////////////////////////////////////
    //
@@ -24,8 +35,7 @@ namespace dak::tantrix
 
    struct puzzle_t
    {
-      using sub_puzzle = std::pair<tile_t, puzzle_t>;
-      using tiles_by_color_t = std::map<color_t, std::vector<tile_t>>;
+      using tiles_t = std::vector<tile_t>;
       using line_colors_t = std::vector<color_t>;
 
       // The shape the solution of the puzzle must have.
@@ -37,35 +47,32 @@ namespace dak::tantrix
 
       // Create a puzzle.
       puzzle_t();
-      puzzle_t(const std::vector<tile_t>& some_tiles, const std::vector<color_t>& some_line_colors,
+      puzzle_t(const std::vector<tile_t>& some_tiles,
+               const std::vector<color_t>& some_line_colors,
                bool must_be_loops, shape_t a_shape = shape_t::any);
 
       // This is how the puzzle control the solver.
       // TODO: better document what the puzzle solver control do.
-      sub_puzzle create_initial_sub_puzzle(int a_right_sub_puzzles_count) const;
-      std::vector<sub_puzzle> sub_puzzles() const;
-      std::vector<position_t> get_next_positions(const solution_t& partial_solution, const position_t& a_last_add_pos, const tile_t& a_tile) const;
-      bool has_more_sub_puzzles() const;
+      std::vector<sub_puzzle_t> create_initial_sub_puzzles() const;
+      std::vector<sub_puzzle_t> create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const;
+      std::vector<position_t> get_next_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& partial_solution) const;
+      bool has_more_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const;
       bool is_solution_valid(const solution_t& a_solution) const;
 
       // The description of the puzzle.
-      const tiles_by_color_t& tiles() const { return my_tiles; }
-      size_t tiles_count() const;
+      const tiles_t& initial_tiles() const { return my_initial_tiles; }
+      size_t initial_tiles_count() { return my_initial_tiles.size(); }
       const line_colors_t& line_colors() const { return my_line_colors; }
       bool must_be_loops() const { return my_must_be_loops; }
       shape_t shape() const { return my_shape; }
 
-      size_t depth() const { return my_depth; }
-      size_t estimated_total_count() const;
-
    private:
       bool is_solution_correctly_shaped(const solution_t& a_solution) const;
 
+      tiles_t           my_initial_tiles;
       line_colors_t     my_line_colors;
-      tiles_by_color_t  my_tiles;
-      size_t            my_depth = 0;
-      int               my_right_sub_puzzles_count = 0;
       bool              my_must_be_loops = false;
+      int               my_initial_right_sub_puzzles_count = 0;
       shape_t           my_shape = shape_t::any;
    };
 

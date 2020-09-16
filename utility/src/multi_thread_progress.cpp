@@ -3,14 +3,6 @@
 
 namespace dak::utility
 {
-   void per_thread_progress_t::set_estimated_total_count(size_t a_count)
-   {
-      if (!my_mt_progress)
-         return;
-
-      my_mt_progress->set_estimated_total_count(a_count);
-   }
-
    void per_thread_progress_t::progress(size_t a_done_count)
    {
       if (!my_mt_progress)
@@ -54,15 +46,6 @@ namespace dak::utility
       {
          // Dont'let exceptions out of the destructor.
       }
-   }
-
-   void multi_thread_progress_t::set_estimated_total_count(size_t a_count)
-   {
-      if (!my_non_thread_safe_progress)
-         return;
-
-      std::lock_guard lock(my_mutex);
-      my_non_thread_safe_progress->set_estimated_total_count(a_count);
    }
 
    void multi_thread_progress_t::update_progress_from_thread(size_t a_count_from_thread)

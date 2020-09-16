@@ -29,9 +29,6 @@ namespace dak::utility
       // Report the final progress tally when destroyed.
       ~multi_thread_progress_t();
 
-      // Propagate the estimated count to the non-thread-safe progress.
-      void set_estimated_total_count(size_t a_count);
-
    protected:
       void update_progress_from_thread(size_t a_count_from_thread);
       void report_to_non_thread_safe_progress(size_t a_count);
@@ -75,7 +72,6 @@ namespace dak::utility
       ~per_thread_progress_t();
 
       // Propagate the estimated count to the multi-thread progress.
-      void set_estimated_total_count(size_t a_count);
       void progress(size_t a_done_count);
 
    private:

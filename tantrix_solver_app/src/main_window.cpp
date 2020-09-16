@@ -320,14 +320,11 @@ namespace dak::tantrix_solver_app
 
       my_puzzle_list->clear();
 
-      for (const auto& [color, tiles] : my_puzzle.tiles())
+      for (const auto& tile : my_puzzle.initial_tiles())
       {
-         for (const auto& tile : tiles)
-         {
-            std::ostringstream stream;
-            stream << "Tile #" << tile;
-            my_puzzle_list->addItem(stream.str().c_str());
-         }
+         std::ostringstream stream;
+         stream << "Tile #" << tile;
+         my_puzzle_list->addItem(stream.str().c_str());
       }
 
       static map<tantrix::color_t, const char*> color_names =

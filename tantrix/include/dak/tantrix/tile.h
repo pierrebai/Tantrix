@@ -13,6 +13,17 @@
 
 namespace dak::tantrix
 {
+
+   ////////////////////////////////////////////////////////////////////////////
+   //
+   // Description of a tile.
+
+   struct tile_description_t
+   {
+      color_t colors[6];
+      color_t missing_color;
+   };
+
    ////////////////////////////////////////////////////////////////////////////
    //
    // A tile with its colored lines. (Colored side connections, really.)
@@ -26,7 +37,7 @@ namespace dak::tantrix
       // Get the color of the tile in the given direction.
       color_t color(const direction_t a_dir) const
       {
-         return tiles_colors[my_number][(a_dir.as_int() + my_rotation) % 6u];
+         return tiles[my_number].colors[(a_dir.as_int() + my_rotation) % 6u];
       }
 
       // Find in which direction a color is found.
@@ -50,10 +61,7 @@ namespace dak::tantrix
       // Check if the tile has the given color.
       bool has_color(const color_t& a_color) const
       {
-         for (int i = 0; i < 6; ++i)
-            if (a_color == tiles_colors[my_number][i])
-               return true;
-         return false;
+         return tiles[my_number].missing_color != a_color;
       }
 
       // Check if the tile has the given colors.
@@ -91,7 +99,8 @@ namespace dak::tantrix
       auto operator<=>(const tile_t& an_other) const = default;
 
    private:
-      static color_t tiles_colors[57][6];
+      // Description of tiles indexed by their number.
+      static tile_description_t tiles[57];
 
       std::uint8_t  my_number = 0;
       std::uint8_t  my_rotation = 0;
