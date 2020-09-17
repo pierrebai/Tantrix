@@ -365,7 +365,10 @@ namespace dak::tantrix
          a_stream << ' ' << color;
 
       if (std::dynamic_pointer_cast<triangle_puzzle_t>(a_puzzle))
-         a_stream << "triangle";
+         a_stream << "\n" "triangle";
+
+      if (a_puzzle->holes_count().has_value())
+         a_stream << "\n" "holes: " << a_puzzle->holes_count().value();
 
       return a_stream;
    }
@@ -384,19 +387,23 @@ namespace dak::tantrix
          a_stream << ' ' << color;
 
       if (std::dynamic_pointer_cast<triangle_puzzle_t>(a_puzzle))
-         a_stream << "triangle";
+         a_stream << "\n" "triangle";
+
+      if (a_puzzle->holes_count().has_value())
+         a_stream << "\n" "holes: " << a_puzzle->holes_count().value();
 
       return a_stream;
    }
 
    std::istream& operator>>(std::istream& a_stream, std::shared_ptr<puzzle_t>& a_puzzle)
    {
-      enum { none, reading_tiles, reading_lines, reading_loops, reading_shape } state = none;
+      enum { none, reading_tiles, reading_lines, reading_loops, reading_shape, reading_holes } state = none;
       bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
       bool is_triangle = false;
+      puzzle_t::maybe_size_t holes_count;
 
       std::string word;
       while (a_stream >> word)
@@ -409,6 +416,8 @@ namespace dak::tantrix
             state = reading_lines, must_be_loops = true;
          else if (word == "shape:")
             state = reading_shape;
+         else if (word == "holes:")
+            state = reading_holes;
          else if (state == reading_tiles)
          {
             int number;
@@ -432,24 +441,33 @@ namespace dak::tantrix
             else if (word == "any")
                is_triangle = false;
          }
+         else if (state == reading_holes)
+         {
+            size_t count = 0;
+            if (std::istringstream(word) >> count)
+            {
+               holes_count = count;
+            }
+         }
       }
 
       if (is_triangle)
-         a_puzzle.reset(new triangle_puzzle_t(tiles, lines, must_be_loops));
+         a_puzzle.reset(new triangle_puzzle_t(tiles, lines, must_be_loops, holes_count));
       else
-         a_puzzle.reset(new any_shape_puzzle_t(tiles, lines, must_be_loops));
+         a_puzzle.reset(new any_shape_puzzle_t(tiles, lines, must_be_loops, holes_count));
 
       return a_stream;
    }
 
    std::wistream& operator>>(std::wistream& a_stream, std::shared_ptr<puzzle_t>& a_puzzle)
    {
-      enum { none, reading_tiles, reading_lines, reading_loops, reading_shape } state = none;
+      enum { none, reading_tiles, reading_lines, reading_loops, reading_shape, reading_holes } state = none;
       bool must_be_loops = false;
 
       std::vector<tile_t> tiles;
       std::vector<color_t> lines;
       bool is_triangle = false;
+      puzzle_t::maybe_size_t holes_count;
 
       std::wstring word;
       while (a_stream >> word)
@@ -462,6 +480,8 @@ namespace dak::tantrix
             state = reading_lines, must_be_loops = true;
          else if (word == L"shape:")
             state = reading_shape;
+         else if (word == L"holes:")
+            state = reading_holes;
          else if (state == reading_tiles)
          {
             int number;
@@ -485,14 +505,23 @@ namespace dak::tantrix
             else if (word == L"any")
                is_triangle = false;
          }
+         else if (state == reading_holes)
+         {
+            size_t count = 0;
+            if (std::wistringstream(word) >> count)
+            {
+               holes_count = count;
+            }
+         }
       }
 
       if (is_triangle)
-         a_puzzle.reset(new triangle_puzzle_t(tiles, lines, must_be_loops));
+         a_puzzle.reset(new triangle_puzzle_t(tiles, lines, must_be_loops, holes_count));
       else
-         a_puzzle.reset(new any_shape_puzzle_t(tiles, lines, must_be_loops));
+         a_puzzle.reset(new any_shape_puzzle_t(tiles, lines, must_be_loops, holes_count));
 
       return a_stream;
    }
+
 
 }

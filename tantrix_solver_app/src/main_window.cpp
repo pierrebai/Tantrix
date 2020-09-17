@@ -362,6 +362,13 @@ namespace dak::tantrix_solver_app
       if (std::dynamic_pointer_cast<tantrix::triangle_puzzle_t>(my_puzzle))
          my_puzzle_list->addItem("Must be a triangle");
 
+      if (my_puzzle->holes_count().has_value())
+      {
+         std::ostringstream stream;
+         stream << "Must have " << my_puzzle->holes_count().value() << " holes";
+         my_puzzle_list->addItem(stream.str().c_str());
+      }
+
       my_solving_attempts = 0;
       my_solving_begin_time = clock_t::time_point();
       my_stop_solving = true;

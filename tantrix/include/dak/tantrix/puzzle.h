@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <optional>
 
 
 namespace dak::tantrix
@@ -44,12 +45,14 @@ namespace dak::tantrix
    {
       using tiles_t = std::vector<tile_t>;
       using line_colors_t = std::vector<color_t>;
+      using maybe_size_t = std::optional<size_t>;
 
       // Create a puzzle.
       puzzle_t();
       puzzle_t(const std::vector<tile_t>& some_tiles,
                const std::vector<color_t>& some_line_colors,
-               bool must_be_loops);
+               bool must_be_loops,
+               const maybe_size_t& a_holes_count = {});
 
       // Solver interaction.
 
@@ -80,10 +83,14 @@ namespace dak::tantrix
       // Check if loops must be formed, returns false for simple lines.
       bool must_be_loops() const { return my_must_be_loops; }
 
+      // The optional desired number of holes.
+      const maybe_size_t& holes_count() const { return my_holes_count; }
+
    protected:
       tiles_t           my_initial_tiles;
       line_colors_t     my_line_colors;
       bool              my_must_be_loops = false;
+      maybe_size_t      my_holes_count;
    };
 
 }

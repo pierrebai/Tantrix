@@ -16,8 +16,10 @@ namespace dak::tantrix
 
    puzzle_t::puzzle_t(const std::vector<tile_t>& some_tiles,
                       const std::vector<color_t>& some_line_colors,
-                      bool must_be_loops)
-      : my_line_colors(some_line_colors), my_must_be_loops(must_be_loops)
+                      bool must_be_loops, const maybe_size_t& a_holes_count)
+      : my_line_colors(some_line_colors)
+      , my_must_be_loops(must_be_loops)
+      , my_holes_count(a_holes_count)
    {
       if (!some_line_colors.size())
          throw std::exception("invalid puzzle: no required line colors provided");
@@ -48,6 +50,10 @@ namespace dak::tantrix
       for (const auto& color : my_line_colors)
          if (!a_solution.has_line(color, my_must_be_loops))
             return false;
+
+      if (my_holes_count.has_value() && a_solution.count_holes() != my_holes_count.value())
+         return false;
+
       return true;
    }
 

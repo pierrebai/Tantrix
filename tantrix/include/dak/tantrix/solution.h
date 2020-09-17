@@ -8,7 +8,6 @@
 #include "dak/tantrix/position.h"
 #include "dak/tantrix/tile.h"
 
-#include <map>
 #include <vector>
 
 namespace dak::tantrix
@@ -28,7 +27,7 @@ namespace dak::tantrix
 
    struct solution_t
    {
-      using tiles_by_pos_t = placed_tile_t[16];
+      using tiles_by_pos_t = placed_tile_t[32];
 
       // Create a new solution.
       solution_t() = default;
@@ -74,8 +73,13 @@ namespace dak::tantrix
       bool is_valid() const;
 
       // Check if the solution has a contiuous line of the given color.
-      // (Including a loop.)
       bool has_line(const color_t& a_color, bool must_be_loop) const;
+
+      // Count how many occupied positions surround a position.
+      size_t count_neighbours(const position_t& a_pos) const;
+
+      // Counts how many fully-surrounded holes the solution has.
+      size_t count_holes() const;
 
       // Compare solutions.
       auto operator<=>(const solution_t& another_solution) const = default;

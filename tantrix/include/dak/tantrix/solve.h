@@ -7,8 +7,7 @@
 
 #include "dak/tantrix/solution.h"
 
-#include <set>
-#include <vector>
+#include <map>
 
 namespace dak::utility
 {

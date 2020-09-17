@@ -22,7 +22,8 @@ namespace dak::tantrix
       triangle_puzzle_t() = default;
       triangle_puzzle_t(const std::vector<tile_t>& some_tiles,
                         const std::vector<color_t>& some_line_colors,
-                        bool must_be_loops);
+                        bool must_be_loops,
+                        const maybe_size_t& a_holes_count = {});
 
       // Solver interaction.
 

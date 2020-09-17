@@ -5,8 +5,9 @@ namespace dak::tantrix
 {
    triangle_puzzle_t::triangle_puzzle_t(const std::vector<tile_t>& some_tiles,
                                         const std::vector<color_t>& some_line_colors,
-                                        bool must_be_loops)
-      : puzzle_t(some_tiles, some_line_colors, must_be_loops)
+                                        bool must_be_loops,
+                                        const maybe_size_t& a_holes_count)
+      : puzzle_t(some_tiles, some_line_colors, must_be_loops, a_holes_count)
    {
       my_up_pyramid_positions.resize(some_tiles.size());
       my_down_pyramid_positions.resize(some_tiles.size());

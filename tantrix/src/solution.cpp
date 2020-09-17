@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <set>
+#include <map>
 
 
 namespace dak::tantrix
@@ -349,5 +350,38 @@ namespace dak::tantrix
       }
 
       return true;
+   }
+   
+   size_t solution_t::count_neighbours(const position_t& a_pos) const
+   {
+      size_t count = 0;
+
+      for (direction_t dir : directions)
+         if (is_occupied(a_pos.move(dir)))
+            count += 1;
+
+      return count;
+   }
+
+   // Counts how many fully-surrounded holes the solution has.
+   size_t solution_t::count_holes() const
+   {
+      std::set<position_t> holes;
+
+      for (size_t i = 0; i < my_tiles_count; ++i)
+      {
+         const placed_tile_t& placed_tile = my_tiles[i];
+         for (const auto& dir : directions)
+         {
+            const position_t new_pos = placed_tile.pos.move(dir);
+            if (is_occupied(new_pos))
+               continue;
+
+            if (count_neighbours(new_pos) >= 6)
+               holes.insert(new_pos);
+         }
+      }
+
+      return holes.size();
    }
 }
