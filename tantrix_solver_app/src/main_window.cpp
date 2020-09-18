@@ -19,6 +19,7 @@
 #include <QtWidgets/qgraphicsview.h>
 #include <QtWidgets/qgraphicsscene.h>
 #include <QtWidgets/qgraphicsitem.h>
+#include <QtWidgets/qinputdialog.h>
 
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>
@@ -82,19 +83,27 @@ namespace dak::tantrix_solver_app
       my_load_puzzle_button = CreateToolButton(my_load_puzzle_action);
       toolbar->addWidget(my_load_puzzle_button);
 
+      my_save_puzzle_action = CreateAction(tr("Save Puzzle"), IDB_SAVE_PUZZLE, QKeySequence(QKeySequence::StandardKey::Save));
+      my_save_puzzle_button = CreateToolButton(my_save_puzzle_action);
+      toolbar->addWidget(my_save_puzzle_button);
+
+      my_edit_puzzle_action = CreateAction(tr("Edit Puzzle"), IDB_EDIT_PUZZLE);
+      my_edit_puzzle_button = CreateToolButton(my_edit_puzzle_action);
+      toolbar->addWidget(my_edit_puzzle_button);
+
       my_load_solutions_action = CreateAction(tr("Load Solutions"), IDB_LOAD_SOLUTIONS, QKeySequence(QKeySequence::StandardKey::Open));
       my_load_solutions_button = CreateToolButton(my_load_solutions_action);
       toolbar->addWidget(my_load_solutions_button);
 
-      my_save_solutions_action = CreateAction(tr("Save Solutions"), IDB_SAVE_SOLUTIONS, QKeySequence(QKeySequence::StandardKey::Open));
+      my_save_solutions_action = CreateAction(tr("Save Solutions"), IDB_SAVE_SOLUTIONS, QKeySequence(QKeySequence::StandardKey::Save));
       my_save_solutions_button = CreateToolButton(my_save_solutions_action);
       toolbar->addWidget(my_save_solutions_button);
 
-      my_solve_puzzle_action = CreateAction(tr("Solve Puzzle"), IDB_SOLVE_PUZZLE, QKeySequence(QKeySequence::StandardKey::Save));
+      my_solve_puzzle_action = CreateAction(tr("Solve Puzzle"), IDB_SOLVE_PUZZLE);
       my_solve_puzzle_button = CreateToolButton(my_solve_puzzle_action);
       toolbar->addWidget(my_solve_puzzle_button);
 
-      my_stop_puzzle_action = CreateAction(tr("Stop Puzzle"), IDB_STOP_PUZZLE, QKeySequence(QKeySequence::StandardKey::Save));
+      my_stop_puzzle_action = CreateAction(tr("Stop Puzzle"), IDB_STOP_PUZZLE);
       my_stop_puzzle_button = CreateToolButton(my_stop_puzzle_action);
       toolbar->addWidget(my_stop_puzzle_button);
 
@@ -196,6 +205,18 @@ namespace dak::tantrix_solver_app
          self->update_toolbar();
       });
 
+      my_save_puzzle_action->connect(my_save_puzzle_action, &QAction::triggered, [self = this]()
+      {
+         self->save_puzzle();
+         self->update_toolbar();
+      });
+
+      my_edit_puzzle_action->connect(my_edit_puzzle_action, &QAction::triggered, [self = this]()
+      {
+         self->edit_puzzle();
+         self->update_toolbar();
+      });
+
       my_save_solutions_action->connect(my_save_solutions_action, &QAction::triggered, [self = this]()
       {
          self->save_solutions();
@@ -251,11 +272,67 @@ namespace dak::tantrix_solver_app
 
          std::ifstream puzzle_stream(path);
          puzzle_stream >> my_puzzle;
-         update_puzzle(path.filename().string().c_str());
+         my_puzzle_filename = path;
+         update_puzzle();
       }
       catch (const std::exception& ex)
       {
          showException("Could not load the puzzle:", ex);
+      }
+   }
+
+   void main_window_t::save_puzzle()
+   {
+      static constexpr char puzzle_file_types[] = "Puzzle Text files (*.txt);;All files (*.*)";
+
+      try
+      {
+         // We must stop on save because otherwise the threads are preventing the dialog from opening!
+         stop_puzzle();
+
+         filesystem::path path = AskSave(tr("Save Puzzle"), tr(puzzle_file_types), my_puzzle_filename.string().c_str(), this);
+         if (path.empty())
+            return;
+
+         std::ofstream puzzle_stream(path);
+         puzzle_stream << my_puzzle;
+         my_puzzle_filename = path;
+         update_puzzle();
+      }
+      catch (const std::exception& ex)
+      {
+         showException("Could not load the puzzle:", ex);
+      }
+   }
+
+   void main_window_t::edit_puzzle()
+   {
+      try
+      {
+         // We must stop on save because otherwise the threads are preventing the dialog from opening!
+         stop_puzzle();
+
+         std::string puzzle_text;
+         {
+            std::ostringstream puzzle_stream;
+            puzzle_stream << my_puzzle;
+            puzzle_text = puzzle_stream.str();
+         }
+
+         auto new_text = QInputDialog::getMultiLineText(this, "Edit Puzzle", "Modify the puzzle description", puzzle_text.c_str());
+
+         if (!new_text.isEmpty())
+         {
+            puzzle_text = new_text.toStdString();
+            std::istringstream puzzle_stream(puzzle_text);
+            puzzle_stream >> my_puzzle;
+         }
+
+         update_puzzle();
+      }
+      catch (const std::exception& ex)
+      {
+         showException("Could not edit the puzzle:", ex);
       }
    }
 
@@ -318,20 +395,20 @@ namespace dak::tantrix_solver_app
    //
    // UI updates from data.
 
-   void main_window_t::update_puzzle(const char* filename)
+   void main_window_t::update_puzzle()
    {
-      if (!my_puzzle)
-         return;
-
-      if (filename && filename[0])
+      if (my_puzzle_filename.filename().string().size() > 0)
       {
-         my_puzzle_label->setText(filename);
+         my_puzzle_label->setText(my_puzzle_filename.filename().string().c_str());
          my_puzzle_label->show();
       }
       else
       {
          my_puzzle_label->hide();
       }
+
+      if (!my_puzzle)
+         return;
 
       my_puzzle_list->clear();
 
@@ -464,8 +541,12 @@ namespace dak::tantrix_solver_app
    void main_window_t::update_toolbar()
    {
       my_load_puzzle_action->setEnabled(true);
+      my_save_puzzle_action->setEnabled(my_puzzle != nullptr);
+      my_edit_puzzle_action->setEnabled(my_puzzle != nullptr);
+
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
+
       my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->line_colors().size() > 0);
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }

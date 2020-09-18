@@ -1,6 +1,9 @@
 #include "dak/tantrix/triangle_puzzle.h"
 #include "dak/tantrix/solution.h"
 
+#include <algorithm>
+
+
 namespace dak::tantrix
 {
    triangle_puzzle_t::triangle_puzzle_t(const std::vector<tile_t>& some_tiles,
@@ -27,6 +30,15 @@ namespace dak::tantrix
             down_pos = down_pos.move(1, 0);
             pos_index -= 1;
          }
+
+         if (line_index % 2)
+         {
+            const size_t line_begin = pos_index + 1;
+            const size_t line_end   = line_begin + tiles_per_line;
+            std::reverse(my_up_pyramid_positions.begin() + line_begin, my_up_pyramid_positions.begin() + line_end);
+            std::reverse(my_down_pyramid_positions.begin() + line_begin, my_down_pyramid_positions.begin() + line_end);
+         }
+
          line_index += 1;
       }
 
@@ -54,18 +66,12 @@ namespace dak::tantrix
       if (my_initial_tiles.size() <= 0)
          return {};
 
-      const color_t first_line_color = my_line_colors[0];
-      const size_t  first_line_count = std::count_if(my_initial_tiles.begin(), my_initial_tiles.end(), [color = first_line_color](const tile_t& tile) -> bool
-      {
-         return tile.has_color(color);
-      });
-
       std::vector<sub_puzzle_t> sub_puzzles;
-      for (size_t i = 0; i < first_line_count; ++i)
+      for (size_t i = 0; i < initial_tiles_count(); ++i)
       {
          for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
          {
-            const tile_t& tile = my_initial_tiles[i].rotate(selected_orientation);
+            tile_t tile = my_initial_tiles[i].rotate(selected_orientation);
             sub_puzzle_t sub_puzzle
             {
                tile,
@@ -83,20 +89,48 @@ namespace dak::tantrix
       return sub_puzzles;
    }
 
-   std::vector<position_t> triangle_puzzle_t::get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& partial_solution) const
+   std::vector<sub_puzzle_t> triangle_puzzle_t::create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const
+   {
+      std::vector<sub_puzzle_t> subs;
+
+      const auto& last_placed_tile = a_partial_solution.tiles()[a_partial_solution.tiles_count() - 1];
+      const auto last_pos = last_placed_tile.pos;
+      const auto next_pos = next_pyramid_position(a_current_sub_puzzle, a_partial_solution);
+      const auto maybe_dir = last_pos.relative(next_pos);
+      if (!maybe_dir.has_value())
+         throw std::exception("bug in triangle solver");
+      const auto dir = maybe_dir.value();
+      const auto color = last_placed_tile.tile.color(dir);
+
+      for (size_t i = 0; i < a_current_sub_puzzle.other_tiles.size(); ++i)
+      {
+         const tile_t& tile = a_current_sub_puzzle.other_tiles[i];
+         if (!tile.has_color(color))
+            continue;
+
+         sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
+         sub_puzzle.tile_to_place = tile;
+         sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
+         sub_puzzle.depth += 1;
+         subs.emplace_back(sub_puzzle);
+      }
+
+      return subs;
+   }
+
+   position_t triangle_puzzle_t::next_pyramid_position(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const
+   {
+      const size_t done_count = a_partial_solution.tiles_count();
+      if (a_current_sub_puzzle.right_sub_puzzles_count > 0)
+         return my_up_pyramid_positions[done_count];
+      else
+         return my_down_pyramid_positions[done_count];
+   }
+
+   std::vector<position_t> triangle_puzzle_t::get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const
    {
       std::vector<position_t> next_positions;
-
-      const size_t done_count = partial_solution.tiles_count();
-      if (a_current_sub_puzzle.right_sub_puzzles_count > 0)
-      {
-         next_positions.push_back(my_up_pyramid_positions[done_count]);
-      }
-      else
-      {
-         next_positions.push_back(my_down_pyramid_positions[done_count]);
-      }
-
+      next_positions.emplace_back(next_pyramid_position(a_current_sub_puzzle, a_partial_solution));
       return next_positions;
    }
 }

@@ -13,22 +13,74 @@ namespace dak::tantrix
 
    std::vector<sub_puzzle_t> any_shape_puzzle_t::create_initial_sub_puzzles() const
    {
-      auto sub_puzzles = puzzle_t::create_initial_sub_puzzles();
+      if (my_line_colors.size() <= 0)
+         return {};
 
-      // For loops, the line will use all tiles and starting from any tile is equivalent,
-      // so we don't need to try all different first tiles!
-      if (sub_puzzles.size() > 1 && must_be_loops())
-         sub_puzzles.erase(sub_puzzles.begin() + 1, sub_puzzles.end());
+      if (my_initial_tiles.size() <= 0)
+         return {};
+
+      std::vector<sub_puzzle_t> sub_puzzles;
+      for (size_t i = 0; i < my_initial_tiles.size(); ++i)
+      {
+         sub_puzzle_t sub_puzzle
+         {
+            my_initial_tiles.front(),
+            { my_initial_tiles.begin() + 1, my_initial_tiles.end() },
+            int(i), 0
+         };
+         sub_puzzles.emplace_back(std::move(sub_puzzle));
+
+         // For loops, the line will use all tiles and starting from any tile is equivalent,
+         // so we don't need to try all different first tiles!
+         if (must_be_loops())
+            break;
+      }
 
       return sub_puzzles;
    }
 
-   std::vector<sub_puzzle_t> any_shape_puzzle_t::create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const
+   std::vector<sub_puzzle_t> any_shape_puzzle_t::create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle, const solution_t&) const
    {
-      auto sub_puzzles = puzzle_t::create_sub_puzzles(a_current_sub_puzzle);
-      for (auto& sub : sub_puzzles)
-         sub.right_sub_puzzles_count -= 1;
-      return sub_puzzles;
+      std::vector<sub_puzzle_t> subs;
+
+      bool no_Line_found = true;
+
+      for (const auto color : my_line_colors)
+      {
+         if (!a_current_sub_puzzle.other_tiles[0].has_color(color))
+            continue;
+
+         no_Line_found = false;
+
+         for (size_t i = 0; i < a_current_sub_puzzle.other_tiles.size(); ++i)
+         {
+            if (!a_current_sub_puzzle.other_tiles[i].has_color(color))
+               break;
+
+            sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
+            sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
+            sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
+            sub_puzzle.depth += 1;
+            sub_puzzle.right_sub_puzzles_count -= 1;
+            subs.emplace_back(sub_puzzle);
+         }
+         break;
+      }
+
+      if (no_Line_found)
+      {
+         for (size_t i = 0; i < a_current_sub_puzzle.other_tiles.size(); ++i)
+         {
+            sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
+            sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
+            sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
+            sub_puzzle.depth += 1;
+            sub_puzzle.right_sub_puzzles_count -= 1;
+            subs.emplace_back(sub_puzzle);
+         }
+      }
+
+      return subs;
    }
 
    std::vector<position_t> any_shape_puzzle_t::get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const

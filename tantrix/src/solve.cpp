@@ -67,7 +67,7 @@ namespace dak::tantrix
       {
          for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
          {
-            const tile_t& tile = a_sub_puzzle.tile_to_place.rotate(selected_orientation);
+            const tile_t tile = a_sub_puzzle.tile_to_place.rotate(selected_orientation);
             if (partial_solution.is_compatible(tile, new_pos))
             {
                solve_recursion(a_puzzle, a_sub_puzzle, solutions, partial_solution, tile, new_pos, a_progress);
@@ -93,15 +93,17 @@ namespace dak::tantrix
    {
       std::vector<std::future<all_solutions_t>> solutions_async;
 
-      const auto sub_sub_puzzles = a_puzzle->create_sub_puzzles(a_sub_puzzle);
+      const auto sub_sub_puzzles = a_puzzle->create_sub_puzzles(a_sub_puzzle, partial_solution);
       for (const sub_puzzle_t& sub_sub_puzzle : sub_sub_puzzles)
       {
+         #ifndef _DEBUG
          if (sub_sub_puzzle.depth < 2)
          {
             auto new_async = std::async(std::launch::async, solve_sub_puzzle_with_tile_async, a_puzzle, sub_sub_puzzle, partial_solution, *a_progress);
             solutions_async.emplace_back(std::move(new_async));
          }
          else
+         #endif
          {
             solve_sub_puzzle_with_tile(a_puzzle, sub_sub_puzzle, solutions, partial_solution, a_progress);
          }
@@ -131,15 +133,26 @@ namespace dak::tantrix
    {
       all_solutions_t all_solutions;
 
-      // Multi-thread the solution.
-      std::vector<std::future<all_solutions_t>> solutions_async;
-
       // Protect the normal non-thread-safe progress against multi-threading.
       multi_thread_progress_t mt_progress(a_progress);
 
       // The first tile can be chosen arbitrarily and placed.
       // This will force the orientation of the solution, so
       // we won't have to compare with rotations or translations.
+
+      #ifdef _DEBUG
+
+      for (const auto& sub_puzzle : a_puzzle.create_initial_sub_puzzles())
+      {
+         solution_t initial_partial_solution(sub_puzzle.tile_to_place, position_t(0, 0));
+         auto partial_solutions = solve_sub_puzzle_async(&a_puzzle, sub_puzzle, initial_partial_solution, per_thread_progress_t(mt_progress));
+         add_solutions(all_solutions, std::move(partial_solutions));
+      }
+
+      #else
+
+      // Multi-thread the solution.
+      std::vector<std::future<all_solutions_t>> solutions_async;
 
       for (const auto& sub_puzzle : a_puzzle.create_initial_sub_puzzles())
       {
@@ -153,6 +166,8 @@ namespace dak::tantrix
          auto partial_solutions = new_solutions_async.get();
          add_solutions(all_solutions, std::move(partial_solutions));
       }
+
+      #endif
 
       return all_solutions;
    }

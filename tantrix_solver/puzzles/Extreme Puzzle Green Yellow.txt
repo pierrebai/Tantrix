@@ -1,0 +1,3 @@
+tiles: 38 30 42 26 40 27 25 12 6 7
+lines: G Y
+shape: triangle

@@ -57,13 +57,13 @@ namespace dak::tantrix
       // Solver interaction.
 
       // Create the initial list of sub-puzzles to solve.
-      virtual std::vector<sub_puzzle_t> create_initial_sub_puzzles() const;
+      virtual std::vector<sub_puzzle_t> create_initial_sub_puzzles() const = 0;
 
       // Create sub-puzzles from a given sub-puzzle that has its tile placed.
-      virtual std::vector<sub_puzzle_t> create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const;
+      virtual std::vector<sub_puzzle_t> create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const = 0;
 
       // Get the list of potential position for the tile-to-be-placed of the given sub-puzzle.
-      virtual std::vector<position_t> get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& partial_solution) const = 0;
+      virtual std::vector<position_t> get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const = 0;
 
       // Verify if there are more sub-puzzles to be created from the given sub-puzzle.
       bool has_more_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const;
@@ -75,7 +75,7 @@ namespace dak::tantrix
 
       // The list of tiles to place.
       const tiles_t& initial_tiles() const { return my_initial_tiles; }
-      size_t initial_tiles_count() { return my_initial_tiles.size(); }
+      size_t initial_tiles_count() const { return my_initial_tiles.size(); }
 
       // The list of lines or loops to form.
       const line_colors_t& line_colors() const { return my_line_colors; }

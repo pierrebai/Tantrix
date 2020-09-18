@@ -365,7 +365,7 @@ namespace dak::tantrix
          a_stream << ' ' << color;
 
       if (std::dynamic_pointer_cast<triangle_puzzle_t>(a_puzzle))
-         a_stream << "\n" "triangle";
+         a_stream << "\n" "shape: triangle";
 
       if (a_puzzle->holes_count().has_value())
          a_stream << "\n" "holes: " << a_puzzle->holes_count().value();
@@ -387,7 +387,7 @@ namespace dak::tantrix
          a_stream << ' ' << color;
 
       if (std::dynamic_pointer_cast<triangle_puzzle_t>(a_puzzle))
-         a_stream << "\n" "triangle";
+         a_stream << "\n" "shape: triangle";
 
       if (a_puzzle->holes_count().has_value())
          a_stream << "\n" "holes: " << a_puzzle->holes_count().value();

@@ -39,6 +39,15 @@ namespace dak::tantrix
             }
          }
       }
+
+      for (const auto& tile : some_tiles)
+      {
+         if (done_tiles.contains(tile))
+            continue;
+
+         my_initial_tiles.emplace_back(tile);
+         done_tiles.insert(tile);
+      }
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -69,56 +78,6 @@ namespace dak::tantrix
    bool puzzle_t::has_more_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const
    {
       return a_current_sub_puzzle.other_tiles.size() > 0;
-   }
-
-   std::vector<sub_puzzle_t> puzzle_t::create_initial_sub_puzzles() const
-   {
-      if (my_line_colors.size() <= 0)
-         return {};
-
-      if (my_initial_tiles.size() <= 0)
-         return {};
-
-      std::vector<sub_puzzle_t> sub_puzzles;
-      for (size_t i = 0; i < my_initial_tiles.size(); ++i)
-      {
-         sub_puzzle_t sub_puzzle
-         {
-            my_initial_tiles.front(),
-            { my_initial_tiles.begin() + 1, my_initial_tiles.end() },
-            int(i), 0
-         };
-         sub_puzzles.emplace_back(std::move(sub_puzzle));
-      }
-
-      return sub_puzzles;
-   }
-
-   std::vector<sub_puzzle_t> puzzle_t::create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const
-   {
-      std::vector<sub_puzzle_t> subs;
-
-      for (const auto color : my_line_colors)
-      {
-         if (!a_current_sub_puzzle.other_tiles[0].has_color(color))
-            continue;
-
-
-         for (size_t i = 0; i < a_current_sub_puzzle.other_tiles.size(); ++i)
-         {
-            if (!a_current_sub_puzzle.other_tiles[0].has_color(color))
-               break;
-
-            sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
-            sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
-            sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-            sub_puzzle.depth += 1;
-            subs.emplace_back(sub_puzzle);
-         }
-         break;
-      }
-
-      return subs;
    }
 
 }

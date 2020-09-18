@@ -31,7 +31,7 @@ namespace dak::tantrix
       std::vector<sub_puzzle_t> create_initial_sub_puzzles() const override;
 
       // Create sub-puzzles from a given sub-puzzle that has its tile placed.
-      std::vector<sub_puzzle_t> create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const override;
+      std::vector<sub_puzzle_t> create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const override;
 
       // Get the list of potential position for the tile-to-be-placed of the given sub-puzzle.
       std::vector<position_t> get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const override;

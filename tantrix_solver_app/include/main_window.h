@@ -15,6 +15,7 @@
 #include <chrono>
 #include <future>
 #include <memory>
+#include <filesystem>
 
 class QToolButton;
 class QAction;
@@ -58,6 +59,9 @@ namespace dak::tantrix_solver_app
 
       // Puzzle.
       void load_puzzle();
+      void save_puzzle();
+      void edit_puzzle();
+
       void save_solutions();
       void load_solutions();
 
@@ -71,7 +75,7 @@ namespace dak::tantrix_solver_app
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
-      void update_puzzle(const char* filename);
+      void update_puzzle();
       void update_solutions();
       void update_toolbar();
       void update_solving_attempts();
@@ -83,6 +87,12 @@ namespace dak::tantrix_solver_app
       // Toolbar buttons.
       QAction*       my_load_puzzle_action = nullptr;
       QToolButton*   my_load_puzzle_button = nullptr;
+
+      QAction*       my_save_puzzle_action = nullptr;
+      QToolButton*   my_save_puzzle_button = nullptr;
+
+      QAction*       my_edit_puzzle_action = nullptr;
+      QToolButton*   my_edit_puzzle_button = nullptr;
 
       QAction*       my_solve_puzzle_action = nullptr;
       QToolButton*   my_solve_puzzle_button = nullptr;
@@ -111,6 +121,7 @@ namespace dak::tantrix_solver_app
 
       // Data.
       std::shared_ptr<puzzle_t>                 my_puzzle;
+      std::filesystem::path                     my_puzzle_filename;
       all_solutions_t                           my_solutions;
 
       std::future<all_solutions_t>              my_async_solving;
