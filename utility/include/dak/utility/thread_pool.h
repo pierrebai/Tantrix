@@ -15,6 +15,7 @@ namespace dak::utility
    ////////////////////////////////////////////////////////////////////////////
    //
    //
+
    struct work_provider_t
    {
       virtual void stop() = 0;

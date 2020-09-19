@@ -76,7 +76,7 @@ namespace dak::tantrix
             {
                tile,
                my_initial_tiles,
-               1, 0
+               1
             };
             sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
             sub_puzzles.emplace_back(sub_puzzle);
@@ -111,7 +111,6 @@ namespace dak::tantrix
          sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
          sub_puzzle.tile_to_place = tile;
          sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-         sub_puzzle.depth += 1;
          subs.emplace_back(sub_puzzle);
       }
 

@@ -26,7 +26,6 @@ namespace dak::tantrix
       tile_t               tile_to_place;
       std::vector<tile_t>  other_tiles;
       int                  right_sub_puzzles_count = 0;
-      size_t               depth = 0;
 
       size_t count_tiles_of_color(color_t a_color) const
       {

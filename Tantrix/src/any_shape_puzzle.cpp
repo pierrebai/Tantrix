@@ -26,7 +26,7 @@ namespace dak::tantrix
          {
             my_initial_tiles.front(),
             { my_initial_tiles.begin() + 1, my_initial_tiles.end() },
-            int(i), 0
+            int(i)
          };
          sub_puzzles.emplace_back(std::move(sub_puzzle));
 
@@ -60,7 +60,6 @@ namespace dak::tantrix
             sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
             sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
             sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-            sub_puzzle.depth += 1;
             sub_puzzle.right_sub_puzzles_count -= 1;
             subs.emplace_back(sub_puzzle);
          }
@@ -74,7 +73,6 @@ namespace dak::tantrix
             sub_puzzle_t sub_puzzle(a_current_sub_puzzle);
             sub_puzzle.tile_to_place = a_current_sub_puzzle.other_tiles[i];
             sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-            sub_puzzle.depth += 1;
             sub_puzzle.right_sub_puzzles_count -= 1;
             subs.emplace_back(sub_puzzle);
          }
