@@ -107,14 +107,21 @@ namespace dak::tantrix
          #ifndef _DEBUG
          // Avoid queuing sub-sub-puzzle that are too simple or if there are already enough
          // parallel tasks, to avoid overflowing the work queue.
-         if (sub_sub_puzzle.other_tiles.size() > 8)
+         if (partial_solution.tiles_count() < 3)
          {
             // Note: a_progress is passed by value volontarily so that a new one will be created for the sub-thread.
             auto new_future = a_ctx.threaded_work.add_work(sub_sub_puzzle, a_ctx.recursion_depth, [&a_ctx, partial_solution](sub_puzzle_t a_sub_sub_puzzle, size_t a_depth) -> all_solutions_t
             {
                solve_context_t ctx(a_ctx);
-               ctx.recursion_depth = a_depth;
-               solve_sub_puzzle_with_tile(a_sub_sub_puzzle, partial_solution, ctx);
+               try
+               {
+                  ctx.recursion_depth = a_depth;
+                  solve_sub_puzzle_with_tile(a_sub_sub_puzzle, partial_solution, ctx);
+               }
+               catch (...)
+               {
+                  ctx.threaded_work.stop();
+               }
                return ctx.solutions;
             });
             solutions_futures.emplace_back(std::move(new_future));
@@ -165,8 +172,15 @@ namespace dak::tantrix
             auto new_future = threaded_work.add_work(sub_puzzle, 0, [&threaded_work , &a_puzzle, &mt_progress](sub_puzzle_t sub_puzzle, size_t a_depth) -> all_solutions_t
             {
                solve_context_t ctx(threaded_work, a_puzzle, mt_progress, a_depth);
-               solution_t initial_partial_solution(sub_puzzle.tile_to_place, position_t(0, 0));
-               solve_partial(sub_puzzle, initial_partial_solution, ctx);
+               try
+               {
+                  solution_t initial_partial_solution(sub_puzzle.tile_to_place, position_t(0, 0));
+                  solve_partial(sub_puzzle, initial_partial_solution, ctx);
+               }
+               catch (...)
+               {
+                  ctx.threaded_work.stop();
+               }
                return ctx.solutions;
             });
             solutions_futures.emplace_back(std::move(new_future));

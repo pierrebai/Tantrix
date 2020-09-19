@@ -14,7 +14,7 @@ namespace dak::utility
 {
    ////////////////////////////////////////////////////////////////////////////
    //
-   //
+   // The provider of work for the pool.
 
    struct work_provider_t
    {
