@@ -87,8 +87,9 @@ namespace dak::tantrix
       for (const sub_puzzle_t& sub_sub_puzzle : sub_sub_puzzles)
       {
          #ifndef _DEBUG
-         if (sub_sub_puzzle.depth < 4)
+         if (sub_sub_puzzle.other_tiles.size() > 8)
          {
+            // Note: a_progress is passed by value volontarily so that a new one will be created for the sub-thread.
             auto token = threaded_work.add_work(sub_sub_puzzle, [&threaded_work, &a_puzzle, partial_solution, a_progress](sub_puzzle_t a_sub_sub_puzzle) -> all_solutions_t
             {
                all_solutions_t solutions;
