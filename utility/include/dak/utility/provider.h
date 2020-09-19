@@ -7,6 +7,7 @@
 
 #include <vector>
 #include <optional>
+#include <functional>
 
 
 namespace dak::utility
@@ -20,27 +21,39 @@ namespace dak::utility
    template <class ITEM>
    struct provider_t
    {
+      using item_t = ITEM;
+      using selector_t = std::function<bool(const item_t&)>;
+
+      // A selector that returns any item.
+      static bool any(const item_t&) { return true; }
+
       provider_t() = default;
 
       // Add an item that can be taken later.
-      void add(ITEM item an_item)
+      void add(item_t&& an_item)
       {
-         my_items.emplace_back(an_item);
+         my_items.emplace_back(std::move(an_item));
       }
 
       // Take an item if available.
-      std::optional<ITEM> take()
+      std::optional<item_t> take(const selector_t& a_selector = any)
       {
-         if (my_items.size() <= 0)
-            return std::optional<ITEM>();
+         const auto end = my_items.end();
+         for (auto iter = my_items.begin(); iter != end; ++iter)
+         {
+            if (a_selector(*iter))
+            {
+               auto item = std::optional<item_t>(std::move(*iter));
+               my_items.erase(iter);
+               return item;
+            }
+         }
 
-         auto item = std::optional<ITEM>(my_items.back());
-         my_item.pop_back();
-         return item;
+         return std::optional<item_t>();
       }
 
    private:
-      std::vector<ITEM> my_items;
+      std::vector<item_t> my_items;
    };
 }
 

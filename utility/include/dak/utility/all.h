@@ -9,7 +9,6 @@
 #include <dak/utility/multi_thread_progress.h>
 #include <dak/utility/stream_progress.h>
 #include <dak/utility/thread_pool.h>
-#include <dak/utility/work_item.h>
-#include <dak/utility/worker.h>
+#include <dak/utility/threaded_work.h>
 
 #endif /* DAK_UTILITY_ALL_H */
