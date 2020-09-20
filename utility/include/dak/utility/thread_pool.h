@@ -18,8 +18,14 @@ namespace dak::utility
 
    struct work_provider_t
    {
+      // Request that the threads stop.
       virtual void stop() = 0;
+
+      // Check if stop was requested.
       virtual bool is_stopped() const = 0;
+
+      // The wait-or-execute implementation, called in a loop
+      // by the threads in the thread =s pool.
       virtual void wait_or_execute() = 0;
    };
 

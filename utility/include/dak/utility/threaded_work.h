@@ -138,8 +138,8 @@ namespace dak::utility
       std::vector<work_t>           my_work_items;
       const size_t                  my_max_recursion;
 
-      // Note: the thread pool must be tha last variable so that it gets desdtroyed first
-      //       while the mutex, etc are still valid.  
+      // Note: the thread pool must be the last variable so that it gets
+      //       destroyed first while the mutex, etc are still valid.  
       thread_pool_t                 my_thread_pool;
    };
 }
