@@ -37,7 +37,8 @@ namespace dak::utility
       };
 
       // Create a threaded work using the given thread pool.
-      threaded_work_t() : my_thread_pool(*this, my_threads_count) {}
+      threaded_work_t(size_t a_max_recursion = 3)
+         : my_max_recursion(a_max_recursion), my_thread_pool(*this, std::thread::hardware_concurrency()) {}
 
       ~threaded_work_t() { stop(); }
 
@@ -66,8 +67,9 @@ namespace dak::utility
 
          // Only queue the work item if we've recursed into the threaded work only a few times.
          // Otherwise, we can end-up with too-deep stack recursion and crash.
-         if (a_recusion_depth < 3)
+         if (a_recusion_depth < my_max_recursion)
          {
+            // Shallow: queue the function to be called by any thread.
             work_t work;
             work.task = std::move(task_t(a_function));
             work.item = std::move(a_work_item);
@@ -85,6 +87,7 @@ namespace dak::utility
          }
          else
          {
+            // Too deep: call the function directly instead.
             std::promise<result_t> result;
             result.set_value(a_function(a_work_item, a_recusion_depth + 1));
             return result.get_future();
@@ -133,9 +136,7 @@ namespace dak::utility
       std::condition_variable       my_cond;
       std::atomic<bool>             my_stop = false;
       std::vector<work_t>           my_work_items;
-
-      // Note: treads count must be before thread pool since it iuse dto initialize the pool.
-      size_t                        my_threads_count = std::thread::hardware_concurrency();
+      const size_t                  my_max_recursion;
 
       // Note: the thread pool must be tha last variable so that it gets desdtroyed first
       //       while the mutex, etc are still valid.  

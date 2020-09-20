@@ -366,7 +366,8 @@ namespace dak::tantrix
    // Counts how many fully-surrounded holes the solution has.
    size_t solution_t::count_holes() const
    {
-      std::set<position_t> holes;
+      std::vector<position_t> todo;
+      todo.reserve(32);
 
       for (size_t i = 0; i < my_tiles_count; ++i)
       {
@@ -377,11 +378,58 @@ namespace dak::tantrix
             if (is_occupied(new_pos))
                continue;
 
-            if (count_neighbours(new_pos) >= 6)
-               holes.insert(new_pos);
+            todo.emplace_back(new_pos);
          }
       }
 
-      return holes.size();
+      std::sort(todo.begin(), todo.end());
+      todo.erase(std::unique(todo.begin(), todo.end()), todo.end());
+
+      size_t holes_count = 0;
+
+      while (todo.size() > 0)
+      {
+         holes_count += 1;
+
+         std::vector<position_t> hole;
+         hole.emplace_back(*todo.begin());
+         todo.erase(todo.begin());
+
+         while (true)
+         {
+            bool hole_grew = false;
+            const auto end = todo.end();
+            std::vector<position_t> new_todo;
+            new_todo.reserve(todo.size());
+            for (auto todo_pos : todo)
+            {
+               bool in_hole = false;
+               for (auto pos : hole)
+               {
+                  if (pos.relative(todo_pos).has_value())
+                  {
+                     in_hole = true;
+                     break;
+                  }
+               }
+
+               if (in_hole)
+               {
+                  hole.emplace_back(todo_pos);
+                  hole_grew = true;
+               }
+               else
+               {
+                  new_todo.emplace_back(todo_pos);
+               }
+            }
+            todo.swap(new_todo);
+            if (!hole_grew)
+               break;
+         }
+      }
+
+      // The outside of the solution is counted as a hole, so remove it.
+      return holes_count - 1;
    }
 }

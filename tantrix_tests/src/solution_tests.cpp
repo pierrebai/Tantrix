@@ -23,16 +23,20 @@ namespace dak::tantrix::tests
 		{
 			solution_t sol;
 			sol.add_tile(tile_t(13), position_t(-2,  2));
+         Assert::AreEqual<size_t>(1, sol.tiles_count());
 			Assert::AreEqual(sol.tile_at(position_t(-2,  2)), tile_t(13));
 
 			sol.add_tile(tile_t(12), position_t(-1, -2));
-			Assert::AreEqual(sol.tile_at(position_t(-1, -2)), tile_t(12));
+         Assert::AreEqual<size_t>(2, sol.tiles_count());
+         Assert::AreEqual(sol.tile_at(position_t(-1, -2)), tile_t(12));
 
 			sol.add_tile(tile_t( 7), position_t(-1,  1));
-			Assert::AreEqual(sol.tile_at(position_t(-1,  1)), tile_t( 7));
+         Assert::AreEqual<size_t>(3, sol.tiles_count());
+         Assert::AreEqual(sol.tile_at(position_t(-1,  1)), tile_t( 7));
 
 			sol.add_tile(tile_t( 1), position_t( 0, -2));
-			Assert::AreEqual(sol.tile_at(position_t( 0, -2)), tile_t( 1));
+         Assert::AreEqual<size_t>(4, sol.tiles_count());
+         Assert::AreEqual(sol.tile_at(position_t( 0, -2)), tile_t( 1));
 		}
 
 		TEST_METHOD(get_borders_solution)
@@ -184,5 +188,42 @@ namespace dak::tantrix::tests
 				Assert::IsFalse(sol.has_line(color_t::yellow(), false));
 			}
 		}
-	};
+
+      TEST_METHOD(solution_count_neighbours)
+      {
+         solution_t sol;
+         sol.add_tile(tile_t(1), position_t(0, 0));
+         sol.add_tile(tile_t(4), position_t(1, 0));
+         sol.add_tile(tile_t(13), position_t(1, 1));
+
+         Assert::AreEqual<size_t>(1, sol.count_neighbours(position_t(0, 0)));
+         Assert::AreEqual<size_t>(2, sol.count_neighbours(position_t(1, 0)));
+         Assert::AreEqual<size_t>(1, sol.count_neighbours(position_t(1, 1)));
+         Assert::AreEqual<size_t>(3, sol.count_neighbours(position_t(0, 1)));
+      }
+
+      TEST_METHOD(solution_count_holes)
+      {
+         solution_t sol;
+         Assert::AreEqual<size_t>(-1, sol.count_holes());
+
+         sol.add_tile(tile_t(7), position_t(0, 0));
+         sol.add_tile(tile_t(8), position_t(1, 0));
+         sol.add_tile(tile_t(9), position_t(1, 1));
+
+         Assert::AreEqual<size_t>(0, sol.count_holes());
+
+         sol.add_tile(tile_t(21), position_t(-1, 0));
+         sol.add_tile(tile_t(24), position_t(-2, 1));
+         sol.add_tile(tile_t(33), position_t(-2, 2));
+         sol.add_tile(tile_t(34), position_t(-1, 2));
+         sol.add_tile(tile_t(35), position_t(0, 2));
+         sol.add_tile(tile_t(36), position_t(1, 2));
+
+         Assert::AreEqual<size_t>(1, sol.count_holes());
+
+         sol.add_tile(tile_t(21), position_t(-1, 1));
+         Assert::AreEqual<size_t>(1, sol.count_holes());
+      }
+};
 }
