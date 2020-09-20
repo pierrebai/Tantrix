@@ -50,6 +50,15 @@ namespace dak::tantrix
       {
       }
 
+      solve_context_t(const solve_context_t& a_ctx)
+         : threaded_work(a_ctx.threaded_work)
+         , puzzle(a_ctx.puzzle)
+         , progress(a_ctx.progress)
+         , recursion_depth(a_ctx.recursion_depth)
+      {
+         // Note: do *not* copy solutions!
+      }
+
       puzzle_threaded_work_t&    threaded_work;
       const puzzle_t&            puzzle;
       per_thread_progress_t      progress;
