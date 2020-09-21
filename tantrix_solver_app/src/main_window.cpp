@@ -457,6 +457,10 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::update_solutions()
    {
+      if (!my_solutions_list)
+         return;
+
+      const int old_current_row = my_solutions_list->currentRow();
       my_solutions_list->clear();
 
       size_t solution_index = 0;
@@ -483,6 +487,11 @@ namespace dak::tantrix_solver_app
          }
          my_solutions_list->addItem(stream.str().c_str());
       }
+
+      if (old_current_row >= 0 && old_current_row < my_solutions_list->count())
+         my_solutions_list->setCurrentRow(old_current_row);
+      else
+         my_solutions_list->setCurrentRow(0);
 
       update_toolbar();
    }
@@ -687,13 +696,21 @@ namespace dak::tantrix_solver_app
             if (!placed_tile.tile.has_color(tc))
                continue;
 
-            auto line = new QGraphicsPathItem(convert_tile_line(placed_tile, tile_center, tile_radius, tc, qc));
-            QPen line_pen(qc);
-            line_pen.setWidth(tile_radius / 5);
-            line->setPen(line_pen);
+            {
+               auto line = new QGraphicsPathItem(convert_tile_line(placed_tile, tile_center, tile_radius, tc, qc));
+               QPen line_pen(qc.darker());
+               line_pen.setWidth(tile_radius / 3.5);
+               line->setPen(line_pen);
+               scene->addItem(line);
+            }
 
-            scene->addItem(line);
-
+            {
+               auto line = new QGraphicsPathItem(convert_tile_line(placed_tile, tile_center, tile_radius, tc, qc));
+               QPen line_pen(qc);
+               line_pen.setWidth(tile_radius / 5);
+               line->setPen(line_pen);
+               scene->addItem(line);
+            }
          }
       }
 
