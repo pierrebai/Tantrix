@@ -4,6 +4,7 @@ add_library(tantrix_tests SHARED
    src/direction_tests.cpp
    src/position_tests.cpp
    src/solution_tests.cpp
+   src/solve_tests.cpp
    src/tile_tests.cpp
 
    include/dak/tantrix_tests/helpers.h
@@ -11,12 +12,14 @@ add_library(tantrix_tests SHARED
 
 target_link_libraries(tantrix_tests PUBLIC
    tantrix
+   utility
 )
 
 target_compile_features(tantrix_tests PUBLIC cxx_std_20)
 
 target_include_directories(tantrix_tests PUBLIC
    "${PROJECT_SOURCE_DIR}/tantrix/include"
+   "${PROJECT_SOURCE_DIR}/utility/include"
    "${PROJECT_SOURCE_DIR}/tantrix_tests/include"
 )
 

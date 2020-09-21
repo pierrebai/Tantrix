@@ -43,7 +43,7 @@ namespace dak::tantrix_solver_app
    // Create the main window.
 
    main_window_t::main_window_t()
-      : progress_t(10000)
+      : progress_t(10000), my_solving_stopwatch(my_solving_time_buffer)
    {
       build_ui();
       fill_ui();
@@ -447,7 +447,7 @@ namespace dak::tantrix_solver_app
       }
 
       my_solving_attempts = 0;
-      my_solving_begin_time = clock_t::time_point();
+      my_solving_stopwatch.elapsed();
       my_stop_solving = true;
 
       update_solving_attempts();
@@ -491,19 +491,9 @@ namespace dak::tantrix_solver_app
    {
       if (my_solving_attempts)
       {
-         my_solving_end_time = clock_t::now();
-         auto seconds = std::chrono::duration_cast<chrono::milliseconds>(my_solving_end_time - my_solving_begin_time).count() / 1000;
+         my_solving_stopwatch.elapsed();
 
-         ostringstream stream;
-
-         if (seconds < 2 * 60)
-            stream << "Time: " << seconds << "s";
-         else if (seconds < 60 * 60)
-            stream << "Time: " << (seconds / 60) << "min " << (seconds % 60) << "s";
-         else
-            stream << "Time: " << (seconds / 3600) << "h " << ((seconds / 60) % 60) << "min " << (seconds % 60) << "s";
-
-         my_solving_time_label->setText(stream.str().c_str());
+         my_solving_time_label->setText((std::string("Time: ") + my_solving_time_buffer).c_str());
 
          if (!my_solving_time_label->isVisible())
             my_solving_time_label->show();
@@ -732,7 +722,7 @@ namespace dak::tantrix_solver_app
 
       my_stop_solving = false;
       my_solving_attempts = 0;
-      my_solving_begin_time = clock_t::now();
+      my_solving_stopwatch.start();
       my_async_solving = std::async(std::launch::async, [self = this, puzzle = my_puzzle]()
       {
          try

@@ -1,13 +1,11 @@
 #include "dak/tantrix/tantrix.h"
 #include "dak/tantrix/stream.h"
 #include "dak/utility/stream_progress.h"
+#include "dak/utility/stopwatch.h"
 
 #include <iostream>
 #include <fstream>
-#include <chrono>
-#include <algorithm>
 #include <filesystem>
-#include <mutex>
 
 using namespace std;
 using namespace dak::tantrix;
@@ -39,13 +37,16 @@ int main(int arg_count, char** arg_values)
 
          cout << puzzle << endl;
 
-         auto begin_time = clock::now();
+         string elapsed_time;
+         stopwatch_t stopwatch(elapsed_time);
+
          stream_progress_t progress(cout);
          const auto solutions = solve(*puzzle, progress);
-         auto end_time = clock::now();
+
+         stopwatch.stop();
 
          cout << "\n";
-         cout << "time: " << chrono::duration_cast<chrono::milliseconds>(end_time - begin_time).count() / 1000.0 << "s" << endl;
+         cout << "time: " << elapsed_time << endl;
          cout << "solutions: " << solutions.size() << endl;
 
          path solution_filename(filename);

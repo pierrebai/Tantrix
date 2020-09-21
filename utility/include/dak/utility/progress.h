@@ -29,7 +29,6 @@ namespace dak::utility
       // Update the progress with an additional count.
       void progress(size_t a_done_count);
 
-      size_t estimated_total_count() const { return my_estimated_total_count; }
       size_t total_count_so_far() const { return my_total_count_so_far; }
 
    protected:
@@ -37,7 +36,6 @@ namespace dak::utility
       virtual void update_progress(size_t a_total_count_so_far) = 0;
 
    private:
-      size_t my_estimated_total_count = 0;
       size_t my_report_every = my_default_report_every;
       size_t my_total_count_so_far = 0;
 

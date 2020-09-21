@@ -30,12 +30,14 @@ namespace dak::utility
       ~multi_thread_progress_t();
 
    protected:
+      // Receive progress from a per-thread progress. (see below)
       void update_progress_from_thread(size_t a_count_from_thread);
+
+      // Propagate the progress to the non-thread-safe progress.
       void report_to_non_thread_safe_progress(size_t a_count);
 
    private:
       progress_t*          my_non_thread_safe_progress = nullptr;
-      size_t               my_estimated_total_count = 0;
       size_t               my_report_every = 100 * 1000;
       std::atomic<size_t>  my_total_count_so_far = 0;
       std::mutex           my_mutex;
@@ -71,7 +73,7 @@ namespace dak::utility
       // Report the final progress tally when destroyed.
       ~per_thread_progress_t();
 
-      // Propagate the estimated count to the multi-thread progress.
+      // Propagate the progress to the multi-thread progress.
       void progress(size_t a_done_count);
 
    private:

@@ -23,7 +23,7 @@ namespace dak::utility
       if (!my_stream)
          return;
 
-      *my_stream << a_total_count_so_far << " / " << estimated_total_count() << "\r";
+      *my_stream << a_total_count_so_far << "\r";
    }
 }
 

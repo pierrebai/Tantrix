@@ -11,6 +11,7 @@
 #include <dak/tantrix/solve.h>
 
 #include <dak/utility/progress.h>
+#include <dak/utility/stopwatch.h>
 
 #include <chrono>
 #include <future>
@@ -128,9 +129,8 @@ namespace dak::tantrix_solver_app
       std::atomic<bool>                         my_stop_solving = false;
       std::atomic<size_t>                       my_solving_attempts = 0;
       
-      using clock_t = std::chrono::steady_clock;
-      clock_t::time_point                       my_solving_begin_time;
-      clock_t::time_point                       my_solving_end_time;
+      dak::utility::stopwatch_t                 my_solving_stopwatch;
+      std::string                               my_solving_time_buffer;
 
       Q_OBJECT;
    };
