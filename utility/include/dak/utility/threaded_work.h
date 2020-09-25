@@ -60,14 +60,14 @@ namespace dak::utility
       }
 
       // Queue the the given function and work item to be executed in a thread.
-      std::future<result_t> add_work(work_item_t a_work_item, size_t a_recusion_depth, function_t a_function)
+      std::future<result_t> add_work(work_item_t a_work_item, size_t a_recursion_depth, function_t a_function)
       {
          if (my_stop)
             return {};
 
          // Only queue the work item if we've recursed into the threaded work only a few times.
          // Otherwise, we can end-up with too-deep stack recursion and crash.
-         if (a_recusion_depth < my_max_recursion)
+         if (a_recursion_depth < my_max_recursion)
          {
             // Shallow: queue the function to be called by any thread.
             work_t work;
@@ -89,13 +89,13 @@ namespace dak::utility
          {
             // Too deep: call the function directly instead.
             std::promise<result_t> result;
-            result.set_value(a_function(a_work_item, a_recusion_depth + 1));
+            result.set_value(a_function(a_work_item, a_recursion_depth + 1));
             return result.get_future();
          }
       }
 
       // Wait for a particular result, execute work while waiting.
-      result_t wait_for(std::future<result_t>& a_token, size_t a_recusion_depth)
+      result_t wait_for(std::future<result_t>& a_token, size_t a_recursion_depth)
       {
          while (!is_stopped())
          {
@@ -104,7 +104,7 @@ namespace dak::utility
             if (a_token.wait_for(std::chrono::seconds(0)) == std::future_status::ready)
                return a_token.get();
 
-            internal_wait_or_execute(lock, a_recusion_depth);
+            internal_wait_or_execute(lock, a_recursion_depth);
          }
 
          return {};

@@ -25,7 +25,7 @@ namespace dak::utility
       virtual bool is_stopped() const = 0;
 
       // The wait-or-execute implementation, called in a loop
-      // by the threads in the thread =s pool.
+      // by the threads in the thread pool.
       virtual void wait_or_execute() = 0;
    };
 

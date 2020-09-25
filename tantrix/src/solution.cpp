@@ -178,7 +178,7 @@ namespace dak::tantrix
       // The first algorithm can reject having no line or too many lines,
       // but it cannot detect extra loops. The second algorithm is slower
       // but fixes that. This avoids using the more accurate but slower
-      // algorithm for teh common case of rejecting the solution.
+      // algorithm for the common case of rejecting the solution.
       return internal_fast_has_line(a_color, must_be_loop)
           && internal_slow_has_line(a_color, must_be_loop);
    }
