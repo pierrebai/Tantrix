@@ -26,6 +26,9 @@ namespace dak::utility
       // Force to report the progress tally.
       void flush_progress();
 
+      // Clear the progress.
+      void clear_progress() { my_total_count_so_far = 0; }
+
       // Update the progress with an additional count.
       void progress(size_t a_done_count);
 

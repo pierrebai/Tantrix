@@ -29,6 +29,12 @@ namespace dak::utility
       // Report the final progress tally when destroyed.
       ~multi_thread_progress_t();
 
+      // Force to report the progress tally.
+      void flush_progress() { report_to_non_thread_safe_progress(my_total_count_so_far); }
+
+      // Clear the progress.
+      void clear_progress() { my_total_count_so_far = 0; }
+
    protected:
       // Receive progress from a per-thread progress. (see below)
       void update_progress_from_thread(size_t a_count_from_thread);
@@ -53,33 +59,32 @@ namespace dak::utility
    // only report from time to time to the multi-thread progress to avoid
    // accessing the shared atomic variable too often.
 
-   struct per_thread_progress_t
+   struct per_thread_progress_t : progress_t
    {
       // Create a per-thread progress that report to the given multi-thread progress.
       per_thread_progress_t() = default;
       per_thread_progress_t(multi_thread_progress_t& a_mt_progress)
-         : my_mt_progress(&a_mt_progress), my_report_every(a_mt_progress.my_report_every / 10) {}
+         : progress_t(a_mt_progress.my_report_every / 10), my_mt_progress(&a_mt_progress) {}
 
       per_thread_progress_t(const per_thread_progress_t& an_other)
-         : my_mt_progress(an_other.my_mt_progress), my_report_every(an_other.my_report_every) {}
+         : progress_t(an_other), my_mt_progress(an_other.my_mt_progress) { clear_progress(); }
 
       per_thread_progress_t& operator=(const per_thread_progress_t& an_other)
       {
-         my_mt_progress = an_other.my_mt_progress;
-         my_report_every = an_other.my_report_every;
+         progress_t::operator=(an_other);
+         clear_progress();
          return *this;
       }
 
       // Report the final progress tally when destroyed.
       ~per_thread_progress_t();
 
+   protected:
       // Propagate the progress to the multi-thread progress.
-      void progress(size_t a_done_count);
+      void update_progress(size_t a_total_count_so_far) override;
 
    private:
       multi_thread_progress_t*   my_mt_progress = nullptr;
-      size_t                     my_report_every = 100 * 1000;
-      size_t                     my_count_since_last_report = 0;
    };
 
 }

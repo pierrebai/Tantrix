@@ -50,7 +50,8 @@ namespace dak::utility::tests
 
          Assert::AreNotEqual(t1, t2);
 
-         // After stop, the tim ebuffer is no longer updated by the stopwatch.
+         // Stop updates the time buffer a last time and after stop,
+         // the time buffer is no longer updated by the stopwatch.
          stopwatch.stop();
 
          stopwatch.elapsed();

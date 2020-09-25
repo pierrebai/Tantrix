@@ -3,18 +3,13 @@
 
 namespace dak::utility
 {
-   void per_thread_progress_t::progress(size_t a_done_count)
+   void per_thread_progress_t::update_progress(size_t a_total_count_so_far)
    {
       if (!my_mt_progress)
          return;
 
-      my_count_since_last_report += a_done_count;
-
-      if (my_count_since_last_report > my_report_every)
-      {
-         my_mt_progress->update_progress_from_thread(my_count_since_last_report);
-         my_count_since_last_report = 0;
-      }
+      my_mt_progress->update_progress_from_thread(a_total_count_so_far);
+      clear_progress();
    }
 
    per_thread_progress_t::~per_thread_progress_t()
@@ -24,13 +19,13 @@ namespace dak::utility
          if (!my_mt_progress)
          return;
 
-         my_mt_progress->update_progress_from_thread(my_count_since_last_report);
+         my_mt_progress->update_progress_from_thread(total_count_so_far());
+         clear_progress();
       }
       catch (std::exception&)
       {
          // Dont'let exceptions out of the destructor.
       }
-      my_count_since_last_report = 0;
    }
 
    multi_thread_progress_t::~multi_thread_progress_t()

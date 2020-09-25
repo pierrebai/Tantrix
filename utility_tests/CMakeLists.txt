@@ -3,6 +3,7 @@ add_library(utility_tests SHARED
    src/stopwatch_tests.cpp
    src/progress_tests.cpp
    src/stream_progress_tests.cpp
+   src/multi_thread_progress_tests.cpp
    src/thread_pool_tests.cpp
    src/threaded_work_tests.cpp
 )
