@@ -13,4 +13,5 @@ add_subdirectory(QtAdditions)
 add_subdirectory(tantrix_solver)
 add_subdirectory(tantrix_solver_app)
 add_subdirectory(tantrix_tests)
+add_subdirectory(utility_tests)
 
