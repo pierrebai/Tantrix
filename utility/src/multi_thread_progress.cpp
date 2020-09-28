@@ -19,7 +19,7 @@ namespace dak::utility
          if (!my_mt_progress)
          return;
 
-         my_mt_progress->update_progress_from_thread(total_count_so_far());
+         my_mt_progress->update_progress_from_thread(total_progress());
          clear_progress();
       }
       catch (std::exception&)

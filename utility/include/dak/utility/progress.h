@@ -32,10 +32,11 @@ namespace dak::utility
       // Update the progress with an additional count.
       void progress(size_t a_done_count);
 
-      size_t total_count_so_far() const { return my_total_count_so_far; }
+      // Get the total progress so far.
+      size_t total_progress() const { return my_total_count_so_far; }
 
    protected:
-      // Update the toal progress so far to the actual implementation.
+      // Update the total progress so far to the actual implementation.
       virtual void update_progress(size_t a_total_count_so_far) = 0;
 
    private:

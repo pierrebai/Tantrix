@@ -72,6 +72,7 @@ namespace dak::utility
       per_thread_progress_t& operator=(const per_thread_progress_t& an_other)
       {
          progress_t::operator=(an_other);
+         // Avoid copying the per-thread progress accumulated.
          clear_progress();
          return *this;
       }
