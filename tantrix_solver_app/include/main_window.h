@@ -32,6 +32,7 @@ namespace dak::tantrix_solver_app
 {
    using dak::tantrix::puzzle_t;
    using dak::tantrix::solution_t;
+   using dak::tantrix::tile_t;
    using dak::tantrix::all_solutions_t;
 
    /////////////////////////////////////////////////////////////////////////
@@ -76,12 +77,17 @@ namespace dak::tantrix_solver_app
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
+      std::optional<solution_t> get_selected_solution() const;
+      std::optional<tile_t> get_selected_tile() const;
+
       void update_puzzle();
       void update_solutions();
       void update_toolbar();
       void update_solving_attempts();
       void update_solving_time();
+
       void draw_selected_solution();
+      void draw_selected_puzzle_tile();
 
       void showException(const char* message, const std::exception& ex);
 

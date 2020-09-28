@@ -124,6 +124,8 @@ namespace dak::tantrix_solver_app
 
       my_puzzle_list = new QListWidget();
       my_puzzle_list->setMinimumWidth(200);
+      my_puzzle_list->setSelectionMode(QListWidget::SelectionMode::SingleSelection);
+      my_puzzle_list->setSelectionBehavior(QListWidget::SelectionBehavior::SelectRows);
       puzzle_layout->addWidget(my_puzzle_list);
 
       puzzle_dock->setWidget(puzzle_container);
@@ -190,9 +192,26 @@ namespace dak::tantrix_solver_app
          self->verify_async_puzzle_solving();
       });
 
+      // Puzzle list.
+
+      my_puzzle_list->connect(my_puzzle_list, &QListWidget::currentRowChanged, [self = this]()
+      {
+         self->draw_selected_puzzle_tile();
+      });
+
+      my_puzzle_list->connect(my_puzzle_list, &QListWidget::itemClicked, [self = this]()
+      {
+         self->draw_selected_puzzle_tile();
+      });
+
       // Solution list.
 
       my_solutions_list->connect(my_solutions_list, &QListWidget::currentRowChanged, [self = this]()
+      {
+         self->draw_selected_solution();
+      });
+
+      my_solutions_list->connect(my_solutions_list, &QListWidget::itemClicked, [self = this]()
       {
          self->draw_selected_solution();
       });
@@ -592,13 +611,13 @@ namespace dak::tantrix_solver_app
       return QPointF(center1.x() * 0.6 + center2.x() * 0.4, center1.y() * 0.6 + center2.y() * 0.4);
    }
 
-   static QPainterPath convert_tile_line(const tantrix::placed_tile_t& a_placed_tile, const QPointF& a_tile_center, double a_tile_radius, const tantrix::color_t& a_color, const QColor& a_qt_color)
+   static QPainterPath convert_tile_line(const tile_t& a_tile, const tantrix::position_t& a_pos, const QPointF& a_tile_center, double a_tile_radius, const tantrix::color_t& a_color, const QColor& a_qt_color)
    {
-      auto dir1 = a_placed_tile.tile.find_color(a_color, 0);
-      auto dir2 = a_placed_tile.tile.find_color(a_color, dir1.rotate(1));
+      auto dir1 = a_tile.find_color(a_color, 0);
+      auto dir2 = a_tile.find_color(a_color, dir1.rotate(1));
 
-      auto pos1 = convert_tile_side(a_placed_tile.pos, dir1, a_tile_radius);
-      auto pos2 = convert_tile_side(a_placed_tile.pos, dir2, a_tile_radius);
+      auto pos1 = convert_tile_side(a_pos, dir1, a_tile_radius);
+      auto pos2 = convert_tile_side(a_pos, dir2, a_tile_radius);
 
       QPainterPath path;
 
@@ -650,68 +669,107 @@ namespace dak::tantrix_solver_app
       return path;
    }
 
-   void main_window_t::draw_selected_solution()
+   static std::map<tantrix::color_t, QColor> color_conversions =
    {
-      auto scene = new QGraphicsScene;
+      { tantrix::color_t::red(),    QColor(220, 0, 0) },
+      { tantrix::color_t::green(),  QColor(0, 220, 0) },
+      { tantrix::color_t::blue(),   QColor(10, 10, 240) },
+      { tantrix::color_t::yellow(), QColor(220, 220, 0) },
+   };
 
-      const int index = my_solutions_list->currentRow();
-
-      if (index < 0 || index >= my_solutions.size())
-      {
-         my_solution_canvas->setScene(scene);
-         return;
-      }
-
-      auto solution = my_solutions.begin();
-      std::advance(solution, index);
-
+   static void draw_tile_in_scene(const tile_t& a_tile, const tantrix::position_t& a_pos, QGraphicsScene& a_scene)
+   {
       const double tile_radius = 50;
       QPen tile_pen(QColor(50, 50, 50, 128));
       QBrush tile_brush(QColor(0, 0, 0));
       tile_pen.setWidth(3);
 
-      std::map<tantrix::color_t, QColor> colors =
+      QPolygonF polygon = create_hexagon(tile_radius);
+
+      const QPointF tile_center = convert_tile_pos(a_pos, tile_radius);
+      polygon.translate(tile_center);
+
+      auto hex = new QGraphicsPolygonItem(polygon);
+      hex->setPen(tile_pen);
+      hex->setBrush(tile_brush);
+      a_scene.addItem(hex);
+
+      for (const auto& [tc, qc] : color_conversions)
       {
-         { tantrix::color_t::red(),    QColor(220, 0, 0) },
-         { tantrix::color_t::green(),  QColor(0, 220, 0) },
-         { tantrix::color_t::blue(),   QColor(10, 10, 240) },
-         { tantrix::color_t::yellow(), QColor(220, 220, 0) },
-      };
+         if (!a_tile.has_color(tc))
+            continue;
 
-      for (size_t i = 0; i < solution->first.tiles_count(); ++i)
-      {
-         const auto& placed_tile = solution->first.tiles()[i];
-         QPolygonF polygon = create_hexagon(tile_radius);
-
-         const QPointF tile_center = convert_tile_pos(placed_tile.pos, tile_radius);
-         polygon.translate(tile_center);
-
-         auto hex = new QGraphicsPolygonItem(polygon);
-         hex->setPen(tile_pen);
-         hex->setBrush(tile_brush);
-         scene->addItem(hex);
-
-         for (const auto& [tc, qc] : colors)
          {
-            if (!placed_tile.tile.has_color(tc))
-               continue;
-
-            {
-               auto line = new QGraphicsPathItem(convert_tile_line(placed_tile, tile_center, tile_radius, tc, qc));
-               QPen line_pen(qc.darker());
-               line_pen.setWidth(tile_radius / 3.5);
-               line->setPen(line_pen);
-               scene->addItem(line);
-            }
-
-            {
-               auto line = new QGraphicsPathItem(convert_tile_line(placed_tile, tile_center, tile_radius, tc, qc));
-               QPen line_pen(qc);
-               line_pen.setWidth(tile_radius / 5);
-               line->setPen(line_pen);
-               scene->addItem(line);
-            }
+            auto line = new QGraphicsPathItem(convert_tile_line(a_tile, a_pos, tile_center, tile_radius, tc, qc));
+            QPen line_pen(qc.darker());
+            line_pen.setWidth(tile_radius / 3.5);
+            line->setPen(line_pen);
+            a_scene.addItem(line);
          }
+
+         {
+            auto line = new QGraphicsPathItem(convert_tile_line(a_tile, a_pos, tile_center, tile_radius, tc, qc));
+            QPen line_pen(qc);
+            line_pen.setWidth(tile_radius / 5);
+            line->setPen(line_pen);
+            a_scene.addItem(line);
+         }
+      }
+   }
+
+   std::optional<solution_t> main_window_t::get_selected_solution() const
+   {
+      const int index = my_solutions_list->currentRow();
+
+      if (index < 0 || index >= my_solutions.size())
+         return {};
+
+      auto solution = my_solutions.begin();
+      std::advance(solution, index);
+
+      return std::optional<solution_t>(solution->first);
+   }
+
+   std::optional<tile_t> main_window_t::get_selected_tile() const
+   {
+      if (!my_puzzle)
+         return {};
+
+      const int index = my_puzzle_list->currentRow();
+
+      if (index < 0 || index >= my_puzzle->initial_tiles().size())
+         return {};
+
+      return std::optional<tile_t>(my_puzzle->initial_tiles()[index]);
+   }
+
+   void main_window_t::draw_selected_puzzle_tile()
+   {
+      auto scene = new QGraphicsScene;
+
+      auto tile = get_selected_tile();
+      if (!tile.has_value())
+      {
+         my_solution_canvas->setScene(scene);
+         return;
+      }
+
+      draw_tile_in_scene(tile.value(), tantrix::position_t(), *scene);
+      my_solution_canvas->setScene(scene);
+   }
+
+   void main_window_t::draw_selected_solution()
+   {
+      auto solution = get_selected_solution();
+      if (!solution.has_value())
+         return draw_selected_puzzle_tile();
+
+      auto scene = new QGraphicsScene;
+
+      for (size_t i = 0; i < solution.value().tiles_count(); ++i)
+      {
+         const auto& placed_tile = solution.value().tiles()[i];
+         draw_tile_in_scene(placed_tile.tile, placed_tile.pos, *scene);
       }
 
       my_solution_canvas->setScene(scene);
