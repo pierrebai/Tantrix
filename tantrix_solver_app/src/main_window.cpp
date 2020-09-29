@@ -755,7 +755,14 @@ namespace dak::tantrix_solver_app
       if (!my_puzzle)
          return {};
 
-      const int index = my_puzzle_list->currentRow();
+      auto selection_model = my_puzzle_list->selectionModel();
+      if (!selection_model)
+         return {};
+
+      if (selection_model->selectedRows().size() <= 0)
+         return {};
+
+      const int index = selection_model->selectedRows().at(0).row();
 
       if (index < 0 || index >= my_puzzle->initial_tiles().size())
          return {};
@@ -778,7 +785,7 @@ namespace dak::tantrix_solver_app
          return;
       }
 
-      const int selected_index = my_puzzle_list->currentRow();
+      auto selected_tile = get_selected_tile();
 
       const int tiles_per_row = std::sqrt(my_puzzle->initial_tiles_count());
       int tile_index = 0;
@@ -789,7 +796,9 @@ namespace dak::tantrix_solver_app
          const int tile_y = tile_index / tiles_per_row;
          const tantrix::position_t pos(tile_x * 2 - tile_y, tile_y * 2);
 
-         draw_tile_selection(tile_index == selected_index, pos, *scene);
+         bool is_selected = selected_tile.has_value() && selected_tile.value().is_same(tile);
+
+         draw_tile_selection(is_selected, pos, *scene);
          draw_tile_in_scene(tile, pos, *scene);
 
          tile_index += 1;
