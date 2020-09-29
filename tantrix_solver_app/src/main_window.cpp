@@ -293,6 +293,9 @@ namespace dak::tantrix_solver_app
          puzzle_stream >> my_puzzle;
          my_puzzle_filename = path;
          update_puzzle();
+
+         my_solutions.clear();
+         update_solutions();
       }
       catch (const std::exception& ex)
       {
@@ -762,6 +765,10 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::draw_selected_puzzle_tile()
    {
+      auto solution = get_selected_solution();
+      if (solution.has_value())
+         return draw_selected_solution();
+
       auto scene = new QGraphicsScene;
 
       if (!my_puzzle)
@@ -796,14 +803,32 @@ namespace dak::tantrix_solver_app
    {
       auto solution = get_selected_solution();
       if (!solution.has_value())
-         return draw_selected_puzzle_tile();
+         return;
+
+      auto selected_tile = get_selected_tile();
+      std::optional<tantrix::position_t> selected_pos;
 
       auto scene = new QGraphicsScene;
 
       for (size_t i = 0; i < solution.value().tiles_count(); ++i)
       {
          const auto& placed_tile = solution.value().tiles()[i];
+         bool is_selected = selected_tile.has_value() && selected_tile.value().is_same(placed_tile.tile);
+         if (is_selected)
+         {
+            selected_pos = placed_tile.pos;
+            selected_tile = placed_tile.tile;
+            continue;
+         }
+
+         draw_tile_selection(false, placed_tile.pos, *scene);
          draw_tile_in_scene(placed_tile.tile, placed_tile.pos, *scene);
+      }
+
+      if (selected_tile.has_value() && selected_pos.has_value())
+      {
+         draw_tile_selection(true, selected_pos.value(), *scene);
+         draw_tile_in_scene(selected_tile.value(), selected_pos.value(), *scene);
       }
 
       delete my_solution_canvas->scene();
