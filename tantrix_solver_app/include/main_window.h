@@ -27,7 +27,9 @@ class QLineEdit;
 class QLabel;
 class QPushButton;
 class QGraphicsView;
+class QGraphicsScene;
 class QErrorMessage;
+
 namespace dak::tantrix_solver_app
 {
    using dak::tantrix::puzzle_t;

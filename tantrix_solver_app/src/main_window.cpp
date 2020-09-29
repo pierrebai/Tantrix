@@ -677,9 +677,10 @@ namespace dak::tantrix_solver_app
       { tantrix::color_t::yellow(), QColor(220, 220, 0) },
    };
 
+   const double tile_radius = 50;
+
    static void draw_tile_in_scene(const tile_t& a_tile, const tantrix::position_t& a_pos, QGraphicsScene& a_scene)
    {
-      const double tile_radius = 50;
       QPen tile_pen(QColor(50, 50, 50, 128));
       QBrush tile_brush(QColor(0, 0, 0));
       tile_pen.setWidth(3);
@@ -717,6 +718,22 @@ namespace dak::tantrix_solver_app
       }
    }
 
+   static void draw_tile_selection(bool is_selected, const tantrix::position_t& a_pos, QGraphicsScene& a_scene)
+   {
+      const QPointF tile_center = convert_tile_pos(a_pos, tile_radius);
+      const double factor = 1.25;
+      auto selection = new QGraphicsEllipseItem(tile_center.x() - tile_radius * factor, tile_center.y() - tile_radius * factor,
+                                                                  tile_radius * 2 * factor,               tile_radius * 2 * factor);
+
+      QPen selection_pen(    is_selected ? QColor(100, 100, 100,   0) : QColor(100, 100, 100, 0));
+      QBrush selection_brush(is_selected ? QColor(120, 220, 240, 128) : QColor(100, 100, 100, 0));
+      selection_pen.setWidth(1);
+      selection->setPen(selection_pen);
+      selection->setBrush(selection_brush);
+
+      a_scene.addItem(selection);
+   }
+
    std::optional<solution_t> main_window_t::get_selected_solution() const
    {
       const int index = my_solutions_list->currentRow();
@@ -747,14 +764,31 @@ namespace dak::tantrix_solver_app
    {
       auto scene = new QGraphicsScene;
 
-      auto tile = get_selected_tile();
-      if (!tile.has_value())
+      if (!my_puzzle)
       {
+         delete my_solution_canvas->scene();
          my_solution_canvas->setScene(scene);
          return;
       }
 
-      draw_tile_in_scene(tile.value(), tantrix::position_t(), *scene);
+      const int selected_index = my_puzzle_list->currentRow();
+
+      const int tiles_per_row = std::sqrt(my_puzzle->initial_tiles_count());
+      int tile_index = 0;
+
+      for (const auto& tile : my_puzzle->initial_tiles())
+      {
+         const int tile_x = tile_index % tiles_per_row;
+         const int tile_y = tile_index / tiles_per_row;
+         const tantrix::position_t pos(tile_x * 2 - tile_y, tile_y * 2);
+
+         draw_tile_selection(tile_index == selected_index, pos, *scene);
+         draw_tile_in_scene(tile, pos, *scene);
+
+         tile_index += 1;
+      }
+
+      delete my_solution_canvas->scene();
       my_solution_canvas->setScene(scene);
    }
 
@@ -772,6 +806,7 @@ namespace dak::tantrix_solver_app
          draw_tile_in_scene(placed_tile.tile, placed_tile.pos, *scene);
       }
 
+      delete my_solution_canvas->scene();
       my_solution_canvas->setScene(scene);
    }
 
