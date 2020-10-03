@@ -19,7 +19,7 @@ target_compile_features(tantrix_tests PUBLIC cxx_std_20)
 
 target_include_directories(tantrix_tests PUBLIC
    "${PROJECT_SOURCE_DIR}/tantrix/include"
-   "${PROJECT_SOURCE_DIR}/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
    "${PROJECT_SOURCE_DIR}/tantrix_tests/include"
 )
 

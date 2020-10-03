@@ -15,7 +15,7 @@ add_library(tantrix
 
 target_include_directories(tantrix PUBLIC
    include
-   "${PROJECT_SOURCE_DIR}/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
 )
 
 target_compile_features(tantrix PUBLIC cxx_std_20)

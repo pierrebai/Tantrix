@@ -36,7 +36,7 @@ target_include_directories(tantrix_solver_app PUBLIC
    include
    resources
    "${PROJECT_SOURCE_DIR}/tantrix/include"
-   "${PROJECT_SOURCE_DIR}/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
    "${PROJECT_SOURCE_DIR}/QtAdditions/include"
 )
 
