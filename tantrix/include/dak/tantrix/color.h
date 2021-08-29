@@ -32,7 +32,7 @@ namespace dak::tantrix
       auto operator<=>(const color_t& an_other) const = default;
 
    private:
-      constexpr color_t(std::int8_t a_dir) : my_color(a_dir % 6) {}
+      constexpr color_t(std::int8_t a_color) : my_color(a_color % 4) {}
 
       std::int8_t my_color = 0;
    };

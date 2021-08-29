@@ -146,7 +146,7 @@ namespace dak::tantrix
       std::sort(my_tiles, my_tiles + my_tiles_count);
    }
 
-   std::vector<position_t> solution_t::get_borders(const color_t& a_color) const
+   std::vector<position_t> solution_t::get_borders(const std::optional<color_t>& a_color) const
    {
       std::vector<position_t> positions;
       positions.reserve(32);
@@ -156,7 +156,7 @@ namespace dak::tantrix
          const placed_tile_t& placed_tile = my_tiles[i];
          for (const auto& dir : directions)
          {
-            if (placed_tile.tile.color(dir) != a_color)
+            if (a_color.has_value() && placed_tile.tile.color(dir) != a_color.value())
                continue;
 
             const position_t new_pos = placed_tile.pos.move(dir);
@@ -363,45 +363,37 @@ namespace dak::tantrix
       return count;
    }
 
-   // Counts how many fully-surrounded holes the solution has.
    size_t solution_t::count_holes() const
    {
-      std::vector<position_t> todo;
-      todo.reserve(32);
+      return get_holes().size();
+   }
 
-      for (size_t i = 0; i < my_tiles_count; ++i)
-      {
-         const placed_tile_t& placed_tile = my_tiles[i];
-         for (const auto& dir : directions)
-         {
-            const position_t new_pos = placed_tile.pos.move(dir);
-            if (is_occupied(new_pos))
-               continue;
+   // Counts how many fully-surrounded holes the solution has.
+   std::vector<solution_t::hole_t> solution_t::get_holes() const
+   {
+      std::vector<hole_t> holes;
 
-            todo.emplace_back(new_pos);
-         }
-      }
-
-      std::sort(todo.begin(), todo.end());
-      todo.erase(std::unique(todo.begin(), todo.end()), todo.end());
+      std::vector<position_t> borders = get_borders();
 
       size_t holes_count = 0;
 
-      while (todo.size() > 0)
+      while (borders.size() > 0)
       {
          holes_count += 1;
 
-         std::vector<position_t> hole;
-         hole.emplace_back(*todo.begin());
-         todo.erase(todo.begin());
+         hole_t hole;
+         hole.emplace_back(*borders.begin());
+         borders.erase(borders.begin());
 
+         // Expand the new hole to all touching borders.
+         // Create a new vector of borders untouched by this hole.
          while (true)
          {
             bool hole_grew = false;
-            const auto end = todo.end();
-            std::vector<position_t> new_todo;
-            new_todo.reserve(todo.size());
-            for (auto todo_pos : todo)
+            const auto end = borders.end();
+            std::vector<position_t> untouched_borders;
+            untouched_borders.reserve(borders.size());
+            for (auto todo_pos : borders)
             {
                bool in_hole = false;
                for (auto pos : hole)
@@ -420,16 +412,25 @@ namespace dak::tantrix
                }
                else
                {
-                  new_todo.emplace_back(todo_pos);
+                  untouched_borders.emplace_back(todo_pos);
                }
             }
-            todo.swap(new_todo);
+            borders.swap(untouched_borders);
             if (!hole_grew)
                break;
          }
+
+         holes.emplace_back(std::move(hole));
       }
 
       // The outside of the solution is counted as a hole, so remove it.
-      return holes_count - 1;
+      // We can identify it because it is the largest hole.
+      if (holes.size() > 0)
+      {
+         std::sort(holes.begin(), holes.end(), [](const hole_t& a, const hole_t& b) { return a.size() < b.size(); });
+         holes.pop_back();
+      }
+
+      return holes;
    }
 }

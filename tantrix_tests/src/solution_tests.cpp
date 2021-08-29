@@ -205,7 +205,7 @@ namespace dak::tantrix::tests
       TEST_METHOD(solution_count_holes)
       {
          solution_t sol;
-         Assert::AreEqual<size_t>(-1, sol.count_holes());
+         Assert::AreEqual<size_t>(0, sol.count_holes());
 
          sol.add_tile(tile_t(7), position_t(0, 0));
          sol.add_tile(tile_t(8), position_t(1, 0));

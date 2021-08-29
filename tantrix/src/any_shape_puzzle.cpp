@@ -139,6 +139,12 @@ namespace dak::tantrix
                return border_positions;
             }
          }
+
+         // We allow extra tiles that are not part of loops nor lines but are used to fill holes.
+         // Just return all holes they could fill.
+         std::vector<solution_t::hole_t> holes = a_partial_solution.get_holes();
+         for (auto& hole : holes)
+            next_positions.insert(next_positions.end(), hole.begin(), hole.end());
       }
 
       return next_positions;

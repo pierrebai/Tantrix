@@ -9,6 +9,7 @@
 #include "dak/tantrix/tile.h"
 
 #include <vector>
+#include <optional>
 
 namespace dak::tantrix
 {
@@ -28,6 +29,7 @@ namespace dak::tantrix
    struct solution_t
    {
       using tiles_by_pos_t = placed_tile_t[32];
+      using hole_t = std::vector<position_t>;
 
       // Create a new solution.
       solution_t() = default;
@@ -50,7 +52,7 @@ namespace dak::tantrix
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
       // Get the positions outside the solution where they touch a color.
-      std::vector<position_t> get_borders(const color_t& a_color) const;
+      std::vector<position_t> get_borders(const std::optional<color_t>& a_color = std::optional<color_t>()) const;
 
       // Create a copy of this solution rotated of a given amount (increment of sixth of a turn).
       solution_t rotate(int rotation) const;
@@ -79,6 +81,7 @@ namespace dak::tantrix
       size_t count_neighbours(const position_t& a_pos) const;
 
       // Counts how many fully-surrounded holes the solution has.
+      std::vector<hole_t> get_holes() const;
       size_t count_holes() const;
 
       // Compare solutions.
