@@ -156,7 +156,7 @@ namespace dak::tantrix
       // Protect the normal non-thread-safe progress against multi-threading.
       multi_thread_progress_t mt_progress(a_progress);
 
-      puzzle_threaded_work_t threaded_work;
+      puzzle_threaded_work_t threaded_work(3, 1);
 
       // The first tile can be chosen arbitrarily and placed.
       // This will force the orientation of the solution, so
