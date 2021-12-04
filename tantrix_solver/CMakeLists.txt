@@ -18,6 +18,6 @@ target_compile_features(tantrix_solver PUBLIC
 
 target_include_directories(tantrix_solver PUBLIC
    "${PROJECT_SOURCE_DIR}/tantrix/include"
-   "${PROJECT_SOURCE_DIR}/dak_utility/utility/include"
+   "${PROJECT_SOURCE_DIR}/dak/utility/include"
 )
 

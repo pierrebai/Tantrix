@@ -8,7 +8,7 @@ add_definitions(-DUNICODE)
 add_definitions(-D_UNICODE)
 
 add_subdirectory(tantrix)
-add_subdirectory(dak_utility/utility)
+add_subdirectory(dak/utility)
 add_subdirectory(QtAdditions)
 add_subdirectory(tantrix_solver)
 add_subdirectory(tantrix_solver_app)
