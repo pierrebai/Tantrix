@@ -23,7 +23,7 @@ set_target_properties(tantrix_solver_app PROPERTIES OUTPUT_NAME "Tantrix Solver"
 
 target_link_libraries(tantrix_solver_app PUBLIC
    tantrix
-   utility
+   dak_utility
    QtAdditions
    Qt5::Widgets Qt5::Gui Qt5::Core Qt5::WinExtras
 )
@@ -35,9 +35,6 @@ target_compile_features(tantrix_solver_app PUBLIC
 target_include_directories(tantrix_solver_app PUBLIC
    include
    resources
-   "${PROJECT_SOURCE_DIR}/tantrix/include"
-   "${PROJECT_SOURCE_DIR}/dak/utility/include"
-   "${PROJECT_SOURCE_DIR}/QtAdditions/include"
 )
 
 add_custom_command(TARGET tantrix_solver_app POST_BUILD

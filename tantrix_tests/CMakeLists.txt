@@ -12,14 +12,12 @@ add_library(tantrix_tests SHARED
 
 target_link_libraries(tantrix_tests PUBLIC
    tantrix
-   utility
+   dak_utility
 )
 
 target_compile_features(tantrix_tests PUBLIC cxx_std_20)
 
-target_include_directories(tantrix_tests PUBLIC
-   "${PROJECT_SOURCE_DIR}/tantrix/include"
-   "${PROJECT_SOURCE_DIR}/dak/utility/include"
+target_include_directories(tantrix_tests PRIVATE
    "${PROJECT_SOURCE_DIR}/tantrix_tests/include"
 )
 

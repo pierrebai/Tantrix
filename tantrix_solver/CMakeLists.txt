@@ -10,14 +10,9 @@ add_executable(tantrix_solver
 
 target_link_libraries(tantrix_solver PUBLIC
    tantrix
-   utility
+   dak_utility
 )
 
 target_compile_features(tantrix_solver PUBLIC
    cxx_std_20)
-
-target_include_directories(tantrix_solver PUBLIC
-   "${PROJECT_SOURCE_DIR}/tantrix/include"
-   "${PROJECT_SOURCE_DIR}/dak/utility/include"
-)
 
