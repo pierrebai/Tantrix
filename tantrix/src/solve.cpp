@@ -2,15 +2,14 @@
 #include "dak/tantrix/solve.h"
 #include "dak/utility/progress.h"
 #include "dak/utility/multi_thread_progress.h"
-#include "dak/utility/threaded_work.h"
+#include "dak/utility/threaded_worker.h"
 
 
 namespace dak::tantrix
 {
    using multi_thread_progress_t = dak::utility::multi_thread_progress_t;
    using per_thread_progress_t = dak::utility::per_thread_progress_t;
-   using namespace dak::utility;
-   using puzzle_threaded_work_t = threaded_work_t<sub_puzzle_t, all_solutions_t>;
+   using puzzle_threaded_worker_t = dak::utility::threaded_worker_t<sub_puzzle_t, all_solutions_t>;
 
 
    ////////////////////////////////////////////////////////////////////////////
@@ -39,11 +38,11 @@ namespace dak::tantrix
    struct solve_context_t
    {
       solve_context_t(
-         puzzle_threaded_work_t& a_threaded_work,
+         puzzle_threaded_worker_t& a_threaded_worker,
          const puzzle_t& a_puzzle,
          multi_thread_progress_t& a_progress,
          size_t a_depth)
-         : threaded_work(a_threaded_work)
+         : threaded_worker(a_threaded_worker)
          , puzzle(a_puzzle)
          , progress(a_progress)
          , recursion_depth(a_depth)
@@ -51,7 +50,7 @@ namespace dak::tantrix
       }
 
       solve_context_t(const solve_context_t& a_ctx)
-         : threaded_work(a_ctx.threaded_work)
+         : threaded_worker(a_ctx.threaded_worker)
          , puzzle(a_ctx.puzzle)
          , progress(a_ctx.progress)
          , recursion_depth(a_ctx.recursion_depth)
@@ -59,7 +58,7 @@ namespace dak::tantrix
          // Note: do *not* copy solutions!
       }
 
-      puzzle_threaded_work_t&    threaded_work;
+      puzzle_threaded_worker_t&  threaded_worker;
       const puzzle_t&            puzzle;
       per_thread_progress_t      progress;
       size_t                     recursion_depth;
@@ -119,7 +118,7 @@ namespace dak::tantrix
          if (partial_solution.tiles_count() < 3)
          {
             // Note: a_progress is passed by value volontarily so that a new one will be created for the sub-thread.
-            auto new_future = a_ctx.threaded_work.add_work(sub_sub_puzzle, a_ctx.recursion_depth, [&a_ctx, partial_solution](sub_puzzle_t a_sub_sub_puzzle, size_t a_depth) -> all_solutions_t
+            auto new_future = a_ctx.threaded_worker.add_work(sub_sub_puzzle, a_ctx.recursion_depth, [&a_ctx, partial_solution](sub_puzzle_t a_sub_sub_puzzle, size_t a_depth) -> all_solutions_t
             {
                solve_context_t ctx(a_ctx);
                try
@@ -129,7 +128,7 @@ namespace dak::tantrix
                }
                catch (...)
                {
-                  ctx.threaded_work.stop();
+                  ctx.threaded_worker.stop();
                }
                return ctx.solutions;
             });
@@ -144,7 +143,7 @@ namespace dak::tantrix
 
       for (auto& new_future : solutions_futures)
       {
-         auto partial_solutions = a_ctx.threaded_work.wait_for(new_future, a_ctx.recursion_depth);
+         auto partial_solutions = a_ctx.threaded_worker.wait_for(new_future, a_ctx.recursion_depth);
          add_solutions(a_ctx.solutions, std::move(partial_solutions));
       }
    }
@@ -156,7 +155,7 @@ namespace dak::tantrix
       // Protect the normal non-thread-safe progress against multi-threading.
       multi_thread_progress_t mt_progress(a_progress);
 
-      puzzle_threaded_work_t threaded_work(3, 1);
+      puzzle_threaded_worker_t threaded_worker(3, 1);
 
       // The first tile can be chosen arbitrarily and placed.
       // This will force the orientation of the solution, so
@@ -168,7 +167,7 @@ namespace dak::tantrix
          {
             all_solutions_t solutions;
             solution_t initial_partial_solution(sub_puzzle.tile_to_place, position_t(0, 0));
-            solve_partial(threaded_work, a_puzzle, sub_puzzle, solutions, initial_partial_solution, per_thread_progress_t(mt_progress));
+            solve_partial(threaded_worker, a_puzzle, sub_puzzle, solutions, initial_partial_solution, per_thread_progress_t(mt_progress));
             add_solutions(all_solutions, std::move(solutions));
          }
 
@@ -178,9 +177,9 @@ namespace dak::tantrix
 
          for (const auto& sub_puzzle : a_puzzle.create_initial_sub_puzzles())
          {
-            auto new_future = threaded_work.add_work(sub_puzzle, 0, [&threaded_work , &a_puzzle, &mt_progress](sub_puzzle_t sub_puzzle, size_t a_depth) -> all_solutions_t
+            auto new_future = threaded_worker.add_work(sub_puzzle, 0, [&threaded_worker , &a_puzzle, &mt_progress](sub_puzzle_t sub_puzzle, size_t a_depth) -> all_solutions_t
             {
-               solve_context_t ctx(threaded_work, a_puzzle, mt_progress, a_depth);
+               solve_context_t ctx(threaded_worker, a_puzzle, mt_progress, a_depth);
                try
                {
                   solution_t initial_partial_solution(sub_puzzle.tile_to_place, position_t(0, 0));
@@ -188,7 +187,7 @@ namespace dak::tantrix
                }
                catch (...)
                {
-                  ctx.threaded_work.stop();
+                  ctx.threaded_worker.stop();
                }
                return ctx.solutions;
             });
@@ -197,7 +196,7 @@ namespace dak::tantrix
 
          for (auto& new_future : solutions_futures)
          {
-            auto partial_solutions = threaded_work.wait_for(new_future, 0);
+            auto partial_solutions = threaded_worker.wait_for(new_future, 0);
             add_solutions(all_solutions, std::move(partial_solutions));
          }
 
