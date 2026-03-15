@@ -8,7 +8,7 @@
 
 #include <dak/tantrix/puzzle.h>
 #include <dak/tantrix/solution.h>
-#include <dak/tantrix/solve.h>
+#include <dak/solver/solve.h>
 
 #include <dak/utility/progress.h>
 #include <dak/utility/stopwatch.h>
@@ -131,9 +131,9 @@ namespace dak::tantrix_solver_app
       // Data.
       std::shared_ptr<puzzle_t>                 my_puzzle;
       std::filesystem::path                     my_puzzle_filename;
-      all_solutions_t                           my_solutions;
+      solver::all_solutions_t                   my_solutions;
 
-      std::future<all_solutions_t>              my_async_solving;
+      std::future<solver::all_solutions_t>      my_async_solving;
       std::atomic<bool>                         my_stop_solving = false;
       std::atomic<size_t>                       my_solving_attempts = 0;
       

@@ -1,4 +1,5 @@
 #include "dak/tantrix/solution.h"
+#include "dak/tantrix/puzzle.h"
 
 #include <algorithm>
 #include <set>
@@ -19,11 +20,51 @@ namespace dak::tantrix
    //    - Check if vector of solutions already contains a solution.
    //    - Add a solution if it is not already known.
 
+   solution_t::ptr_t solution_t::clone() const
+   {
+      return std::make_shared<solution_t>(*this);
+   }
+
+   // Compare solutions.
+   std::strong_ordering solution_t::operator<=>(const solver::solution_t& another_solution) const
+   {
+      auto other = dynamic_cast<const tantrix::solution_t *>(&another_solution);
+      if (!other)
+         return std::strong_ordering::less;
+
+      return *this <=> *other;
+   }
+
+   std::strong_ordering solution_t::operator<=>(const tantrix::solution_t& another_solution) const
+   {
+      auto order = (my_tiles_count <=> another_solution.my_tiles_count);
+      if (order != std::strong_ordering::equal)
+         return order;
+
+      for (size_t i = 0; i < my_tiles_count; ++i) {
+         order = (my_tiles[i] <=> another_solution.my_tiles[i]);
+         if (order != std::strong_ordering::equal)
+            return order;
+      }
+
+      return std::strong_ordering::equal;
+     
+   }
+
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
    {
       my_tiles[my_tiles_count].pos = a_pos;
       my_tiles[my_tiles_count].tile = a_tile;
       my_tiles_count += 1;
+   }
+
+   void solution_t::add_part(const solver::solution_part_t::ptr_t& a_part)
+   {
+      auto part = std::dynamic_pointer_cast<placed_tile_t>(a_part);
+      if (!part)
+         return;
+
+      add_tile(part->tile, part->pos);
    }
 
    tile_t* solution_t::internal_tile_at(const position_t& a_pos) const
@@ -49,54 +90,58 @@ namespace dak::tantrix
       return false;
    }
 
-   bool solution_t::is_compatible(const tile_t& a_tile, const position_t a_pos) const
+   bool solution_t::is_compatible(const solver::solution_part_t::ptr_t& a_part) const
    {
+      auto part = std::dynamic_pointer_cast<placed_tile_t>(a_part);
+      if (!part)
+         return false;
+
       for (size_t i = 0; i < my_tiles_count; ++i)
       {
          const placed_tile_t& placed_tile = my_tiles[i];
-         switch (a_pos.x() - placed_tile.pos.x())
+         switch (part->pos.x() - placed_tile.pos.x())
          {
             case -1:
-               switch (a_pos.y() - placed_tile.pos.y())
+               switch (part->pos.y() - placed_tile.pos.y())
                {
                   case -1:
                      // Not a neighbour.
                      break;
                   case 0:
-                     if (placed_tile.tile.color(0) != a_tile.color(direction_t(3)))
+                     if (placed_tile.tile.color(0) != part->tile.color(direction_t(3)))
                         return false;
                      break;
                   case 1:
-                     if (placed_tile.tile.color(5) != a_tile.color(direction_t(2)))
+                     if (placed_tile.tile.color(5) != part->tile.color(direction_t(2)))
                         return false;
                      break;
                }
                break;
             case 0:
-               switch (a_pos.y() - placed_tile.pos.y())
+               switch (part->pos.y() - placed_tile.pos.y())
                {
                   case -1:
-                     if (placed_tile.tile.color(1) != a_tile.color(direction_t(4)))
+                     if (placed_tile.tile.color(1) != part->tile.color(direction_t(4)))
                         return false;
                      break;
                   case 0:
                      // Same location, always incompatible!
                      return false;
                   case 1:
-                     if (placed_tile.tile.color(4) != a_tile.color(direction_t(1)))
+                     if (placed_tile.tile.color(4) != part->tile.color(direction_t(1)))
                         return false;
                      break;
                }
                break;
             case 1:
-               switch (a_pos.y() - placed_tile.pos.y())
+               switch (part->pos.y() - placed_tile.pos.y())
                {
                   case -1:
-                     if (placed_tile.tile.color(2) != a_tile.color(direction_t(5)))
+                     if (placed_tile.tile.color(2) != part->tile.color(direction_t(5)))
                         return false;
                      break;
                   case 0:
-                     if (placed_tile.tile.color(3) != a_tile.color(direction_t(0)))
+                     if (placed_tile.tile.color(3) != part->tile.color(direction_t(0)))
                         return false;
                      break;
                   case 1:
@@ -350,6 +395,14 @@ namespace dak::tantrix
       }
 
       return true;
+   }
+
+   bool solution_t::is_almost_done(const solver::problem_t::ptr_t& a_problem) const
+   {
+      auto puzzle = std::dynamic_pointer_cast<puzzle_t>(a_problem);
+      if (!puzzle)
+         return true;
+      return puzzle->initial_tiles_count() - my_tiles_count < 3;
    }
    
    size_t solution_t::count_neighbours(const position_t& a_pos) const

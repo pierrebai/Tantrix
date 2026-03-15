@@ -382,7 +382,13 @@ namespace dak::tantrix_solver_app
             return;
 
          std::ofstream solutions_stream(path);
-         solutions_stream << my_solutions;
+
+         for (const auto& solution : my_solutions) {
+            auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution.first);
+            if (!puzzle_solution)
+               continue;
+            solutions_stream << *puzzle_solution << endl;
+         }
       }
       catch (const std::exception& ex)
       {
@@ -403,8 +409,14 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
+         my_solutions.clear();
          std::ifstream solutions_stream(path);
-         solutions_stream >> my_solutions;
+         while (solutions_stream) {
+            tantrix::solution_t solution;
+            solutions_stream >> solution;
+            if (solutions_stream)
+               my_solutions[std::make_shared<tantrix::solution_t>(solution)] = 1;
+         }
          update_solutions();
       }
       catch (const std::exception& ex)
@@ -486,7 +498,7 @@ namespace dak::tantrix_solver_app
       my_solutions_list->clear();
 
       size_t solution_index = 0;
-      for (const auto& [solution, count] : my_solutions)
+      for (const auto& [abstract_solution, count] : my_solutions)
       {
          std::ostringstream stream;
 
@@ -497,10 +509,14 @@ namespace dak::tantrix_solver_app
             break;
          }
 
+         auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(abstract_solution);
+         if (!solution)
+            continue;
+
          stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
-         for (size_t i = 0; i < solution.tiles_count(); ++i)
+         for (size_t i = 0; i < solution->tiles_count(); ++i)
          {
-            const auto& placed_tile = solution.tiles()[i];
+            const auto& placed_tile = solution->tiles()[i];
             stream << "    "
                    << std::setw(3) << placed_tile.pos.x()
                    << " / "
@@ -737,17 +753,21 @@ namespace dak::tantrix_solver_app
       a_scene.addItem(selection);
    }
 
-   std::optional<solution_t> main_window_t::get_selected_solution() const
+   std::optional<tantrix::solution_t> main_window_t::get_selected_solution() const
    {
       const int index = my_solutions_list->currentRow();
 
       if (index < 0 || index >= my_solutions.size())
          return {};
 
-      auto solution = my_solutions.begin();
-      std::advance(solution, index);
+      auto solution_it = my_solutions.begin();
+      std::advance(solution_it, index);
 
-      return std::optional<solution_t>(solution->first);
+      auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(solution_it->first);
+      if (!solution)
+         return {};
+
+      return std::optional<solution_t>(*solution);
    }
 
    std::optional<tile_t> main_window_t::get_selected_tile() const
@@ -871,11 +891,12 @@ namespace dak::tantrix_solver_app
       {
          try
          {
-            return tantrix::solve(*puzzle, *self);
+            auto initial_solution = std::make_shared<tantrix::solution_t>();
+            return solver::solve(puzzle, initial_solution, *self);
          }
          catch (const std::exception&)
          {
-            return all_solutions_t();
+            return solver::all_solutions_t();
          }
       });
       my_solve_puzzle_timer->start(500);

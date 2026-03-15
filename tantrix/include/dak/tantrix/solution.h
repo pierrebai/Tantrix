@@ -5,15 +5,18 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
+#include "dak/solver/problem.h"
+#include "dak/solver/solution.h"
 #include "dak/tantrix/position.h"
 #include "dak/tantrix/tile.h"
 
+#include <map>
 #include <vector>
 #include <optional>
 
 namespace dak::tantrix
 {
-   struct placed_tile_t
+   struct placed_tile_t : solver::solution_part_t
    {
       position_t  pos;
       tile_t      tile;
@@ -26,7 +29,7 @@ namespace dak::tantrix
    //
    // Solution that places all the given tiles.
 
-   struct solution_t
+   struct solution_t : solver::solution_t
    {
       using tiles_by_pos_t = placed_tile_t[32];
       using hole_t = std::vector<position_t>;
@@ -38,6 +41,9 @@ namespace dak::tantrix
          add_tile(a_tile, a_pos);
       }
 
+      // Make a copy of this solution.
+      ptr_t clone() const override;
+      
       // Access the solution tiles.
       const placed_tile_t* tiles() const { return my_tiles; }
       size_t tiles_count() const { return my_tiles_count; }
@@ -50,6 +56,9 @@ namespace dak::tantrix
 
       // Add a tile to the solution.
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
+
+      // Add a part of the solution to this solution.
+      void add_part(const solver::solution_part_t::ptr_t& a_part) override;
 
       // Get the positions outside the solution where they touch a color.
       std::vector<position_t> get_borders(const std::optional<color_t>& a_color = std::optional<color_t>()) const;
@@ -68,11 +77,14 @@ namespace dak::tantrix
       bool is_occupied(const position_t& a_pos) const;
 
       // Check if a tile at a given position would be compatible with the solution.
-      bool is_compatible(const tile_t& a_tile, const position_t a_pos) const;
+      bool is_compatible(const solver::solution_part_t::ptr_t& a_part) const;
 
       // Check if the solution has no invalid holes or borders.
       // (Hole with more than 3 sides or having more than two of the same color.)
       bool is_valid() const;
+
+      // Nearing completion, stop spawning threads.
+      bool is_almost_done(const solver::problem_t::ptr_t& a_problem) const override;
 
       // Check if the solution has a contiuous line of the given color.
       bool has_line(const color_t& a_color, bool must_be_loop) const;
@@ -85,7 +97,8 @@ namespace dak::tantrix
       size_t count_holes() const;
 
       // Compare solutions.
-      auto operator<=>(const solution_t& another_solution) const = default;
+      std::strong_ordering operator<=>(const solver::solution_t& another_solution) const override;
+      std::strong_ordering operator<=>(const tantrix::solution_t& another_solution) const;
 
    private:
       tile_t* internal_tile_at(const position_t& a_pos) const;
@@ -96,6 +109,8 @@ namespace dak::tantrix
       size_t         my_tiles_count = 0;
       tiles_by_pos_t my_tiles;
    };
+
+   using all_solutions_t = std::map<solution_t, size_t>;
 }
 
 #endif /* DAK_TANTRIX_SOLUTION_H */

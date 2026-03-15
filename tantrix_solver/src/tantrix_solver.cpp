@@ -1,5 +1,6 @@
 #include "dak/tantrix/tantrix.h"
 #include "dak/tantrix/stream.h"
+#include "dak/solver/solve.h"
 #include "dak/utility/stream_progress.h"
 #include "dak/utility/stopwatch.h"
 
@@ -10,7 +11,7 @@
 using namespace std;
 using namespace dak::tantrix;
 using namespace dak::utility;
-
+;
 int main(int arg_count, char** arg_values)
 {
    using clock = chrono::steady_clock;
@@ -41,7 +42,8 @@ int main(int arg_count, char** arg_values)
          stopwatch_t stopwatch(elapsed_time);
 
          stream_progress_t progress(cout);
-         const auto solutions = solve(*puzzle, progress);
+         std::shared_ptr<solution_t> empty_solution = std::make_shared<solution_t>();
+         const auto solutions = dak::solver::solve(puzzle, empty_solution, progress);
 
          stopwatch.stop();
 
@@ -53,7 +55,12 @@ int main(int arg_count, char** arg_values)
          solution_filename.replace_extension("solutions.txt");
 
          ofstream solution_stream(solution_filename);
-         solution_stream << solutions << endl;
+         for (const auto& solution : solutions) {
+            auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution.first);
+            if (!puzzle_solution)
+               continue;
+            solution_stream << *puzzle_solution << endl;
+         }
       }
       catch (exception& ex)
       {
