@@ -20,7 +20,13 @@ namespace dak::tantrix
    {
       position_t  pos;
       tile_t      tile;
+
+      placed_tile_t() = default;
+      placed_tile_t(tile_t tile, position_t pos) : pos(std::move(pos)), tile(std::move(tile)) {}
    
+      static std::shared_ptr<placed_tile_t> make() { return std::make_shared<placed_tile_t>(); }
+      static std::shared_ptr<placed_tile_t> make(tile_t tile, position_t pos) { return std::make_shared<placed_tile_t>(std::move(tile), std::move(pos)); }
+
       // Compare placed tiles.
       auto operator<=>(const placed_tile_t&) const = default;
    };

@@ -147,10 +147,12 @@ namespace dak::tantrix
          return {};
 
       std::vector<solver::solution_part_t::ptr_t> next_positions;
-      auto placed_tile = std::make_shared<placed_tile_t>();
-      placed_tile->pos = next_pyramid_position(*current_sub_puzzle, *partial_solution);
-      placed_tile->tile = current_sub_puzzle->tile_to_place;
-      next_positions.emplace_back(placed_tile);
+      for (int rotation = 0; rotation < 6; ++rotation) {
+         next_positions.emplace_back(
+            placed_tile_t::make(
+               current_sub_puzzle->tile_to_place.rotate(rotation),
+               next_pyramid_position(*current_sub_puzzle, *partial_solution)));
+      }
       return next_positions;
    }
 }

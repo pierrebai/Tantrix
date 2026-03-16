@@ -82,23 +82,23 @@ namespace dak::tantrix::tests
 
 		TEST_METHOD(solution_is_compatible)
 		{
-			// solution_t sol;
-			// Assert::IsTrue(sol.is_compatible(tile_t(4), position_t(0, 0)));
+			solution_t sol;
+			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(0, 0))));
 
-			// sol.add_tile(tile_t(1), position_t(0, 0));
-			// Assert::IsFalse(sol.is_compatible(tile_t(4), position_t( 0,  0)));
-			// Assert::IsTrue( sol.is_compatible(tile_t(4), position_t(-1,  0)));
-			// Assert::IsFalse(sol.is_compatible(tile_t(4), position_t( 0, -1)));
-			// Assert::IsTrue( sol.is_compatible(tile_t(4), position_t( 1, -1)));
-			// Assert::IsTrue( sol.is_compatible(tile_t(4), position_t( 1,  0)));
-			// Assert::IsFalse(sol.is_compatible(tile_t(4), position_t( 0,  1)));
-			// Assert::IsFalse(sol.is_compatible(tile_t(4), position_t(-1,  1)));
+			sol.add_tile(tile_t(1), position_t(0, 0));
+			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 0,  0))));
+			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(-1,  0))));
+			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 0, -1))));
+			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1, -1))));
+			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1,  0))));
+			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 0,  1))));
+			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(-1,  1))));
 
-			// Assert::IsTrue(sol.is_compatible(tile_t(4), position_t(1, 1)));
-			// Assert::IsTrue(sol.is_compatible(tile_t(4), position_t(2, 0)));
-			// Assert::IsTrue(sol.is_compatible(tile_t(4), position_t(2, 1)));
-			// Assert::IsTrue(sol.is_compatible(tile_t(4), position_t(1, 2)));
-			// Assert::IsTrue(sol.is_compatible(tile_t(4), position_t(-2, -5)));
+			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1,  1))));
+			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 2,  0))));
+			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 2,  1))));
+			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1,  2))));
+			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(-2, -5))));
 		}
 
 		TEST_METHOD(normalize_solution)

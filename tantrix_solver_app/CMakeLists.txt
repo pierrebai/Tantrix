@@ -12,6 +12,7 @@ find_package(Qt5 COMPONENTS WinExtras REQUIRED)
 add_executable(tantrix_solver_app WIN32
    src/tantrix_solver_app.cpp
    src/main_window.cpp                  include/main_window.h
+   src/draw_tantrix_puzzle.cpp          include/draw_tantrix_puzzle.h
 
    resources/resource.rc                resources/resource.h
 

@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef DAK_TANTRIX_COLOR_H
-#define DAK_TANTRIX_COLOR_H
-
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include <compare>
@@ -37,6 +34,3 @@ namespace dak::tantrix
       std::int8_t my_color = 0;
    };
 }
-
-
-#endif /* DAK_TANTRIX_COLOR_H */

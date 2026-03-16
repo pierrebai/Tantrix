@@ -1,8 +1,5 @@
 #pragma once
 
-#ifndef DAK_TANTRIX_SOLVER_APP_MAIN_WINDOW_H
-#define DAK_TANTRIX_SOLVER_APP_MAIN_WINDOW_H
-
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
 
@@ -17,6 +14,7 @@
 #include <future>
 #include <memory>
 #include <filesystem>
+#include <optional>
 
 class QToolButton;
 class QAction;
@@ -69,17 +67,17 @@ namespace dak::tantrix_solver_app
       void save_solutions();
       void load_solutions();
 
-      // Asynchornous puzzle solving.
+      // Asynchronous puzzle solving.
       void solve_puzzle();
       void verify_async_puzzle_solving();
-      bool is_async_filtering_ready();
+      bool is_async_puzzle_solving_done();
       void stop_puzzle();
 
       // Asynchornous puzzle solving update.
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
-      std::optional<solution_t> get_selected_solution() const;
+      std::shared_ptr<solution_t> get_selected_solution() const;
       std::optional<tile_t> get_selected_tile() const;
 
       void update_puzzle();
@@ -134,7 +132,6 @@ namespace dak::tantrix_solver_app
       solver::all_solutions_t                   my_solutions;
 
       std::future<solver::all_solutions_t>      my_async_solving;
-      std::atomic<bool>                         my_stop_solving = false;
       std::atomic<size_t>                       my_solving_attempts = 0;
       
       dak::utility::stopwatch_t                 my_solving_stopwatch;
@@ -143,6 +140,4 @@ namespace dak::tantrix_solver_app
       Q_OBJECT;
    };
 }
-
-#endif /* DAK_TANTRIX_SOLVER_APP_MAIN_WINDOW_H */
 
