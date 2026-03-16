@@ -106,6 +106,13 @@ namespace dak::tantrix
       const auto first_color = my_line_colors[0];
       if (current_sub_puzzle->tile_to_place.has_color(first_color))
       {
+         if (partial_solution->tiles_count() == 0) {
+            placed_tile_t placed_tile;
+            placed_tile.pos = position_t(0, 0);
+            placed_tile.tile = current_sub_puzzle->tile_to_place;
+            next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+            return next_positions;
+         }
          const bool is_zero = (current_sub_puzzle->right_sub_puzzles_count == 0);
          const size_t tile_index = is_zero ? 0 : (partial_solution->tiles_count() - 1);
 
@@ -125,13 +132,14 @@ namespace dak::tantrix
             if (partial_solution->is_occupied(new_pos))
                continue;
 
-            placed_tile_t placed_tile;
-            placed_tile.pos = new_pos;
-            placed_tile.tile = current_sub_puzzle->tile_to_place;
-            next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+            for (int rotation = 0; rotation < 6; ++rotation) {
+               placed_tile_t placed_tile;
+               placed_tile.pos = new_pos;
+               placed_tile.tile = current_sub_puzzle->tile_to_place.rotate(rotation);
+               next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+            }
 
-            // TODO: why the break?
-            // break;
+            break;
          }
 
          return next_positions;
@@ -157,10 +165,12 @@ namespace dak::tantrix
                }
 
                for (const position_t& new_pos : border_positions) {
-                  placed_tile_t placed_tile;
-                  placed_tile.pos = new_pos;
-                  placed_tile.tile = current_sub_puzzle->tile_to_place;
-                  next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+                  for (int rotation = 0; rotation < 6; ++rotation) {
+                     placed_tile_t placed_tile;
+                     placed_tile.pos = new_pos;
+                     placed_tile.tile = current_sub_puzzle->tile_to_place.rotate(rotation);
+                     next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+                  }
                }
                return next_positions;
             }
@@ -171,10 +181,12 @@ namespace dak::tantrix
          std::vector<solution_t::hole_t> holes = partial_solution->get_holes();
          for (auto& hole : holes) {
             for (const position_t& new_pos : hole) {
-               placed_tile_t placed_tile;
-               placed_tile.pos = new_pos;
-               placed_tile.tile = current_sub_puzzle->tile_to_place;
-               next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+               for (int rotation = 0; rotation < 6; ++rotation) {
+                  placed_tile_t placed_tile;
+                  placed_tile.pos = new_pos;
+                  placed_tile.tile = current_sub_puzzle->tile_to_place.rotate(rotation);
+                  next_positions.emplace_back(std::make_shared<placed_tile_t>(placed_tile));
+               }
             }
          }
       }

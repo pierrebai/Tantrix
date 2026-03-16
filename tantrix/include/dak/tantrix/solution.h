@@ -99,6 +99,7 @@ namespace dak::tantrix
       // Compare solutions.
       std::strong_ordering operator<=>(const solver::solution_t& another_solution) const override;
       std::strong_ordering operator<=>(const tantrix::solution_t& another_solution) const;
+      bool operator==(const tantrix::solution_t& another_solution) const;
 
    private:
       tile_t* internal_tile_at(const position_t& a_pos) const;

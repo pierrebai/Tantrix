@@ -51,6 +51,11 @@ namespace dak::tantrix
      
    }
 
+   bool solution_t::operator==(const tantrix::solution_t& another_solution) const
+   {
+      return (*this <=> another_solution) == std::strong_ordering::equal;
+   }
+
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
    {
       my_tiles[my_tiles_count].pos = a_pos;
