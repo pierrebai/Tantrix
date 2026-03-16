@@ -3,12 +3,12 @@
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
 
-#include <dak/tantrix/puzzle.h>
-#include <dak/tantrix/solution.h>
 #include <dak/solver/solve.h>
-
 #include <dak/utility/progress.h>
 #include <dak/utility/stopwatch.h>
+
+#include <dak/tantrix/solution.h>
+#include <dak/tantrix/tile.h>
 
 #include <chrono>
 #include <future>
@@ -30,11 +30,6 @@ class QErrorMessage;
 
 namespace dak::tantrix_solver_app
 {
-   using dak::tantrix::puzzle_t;
-   using dak::tantrix::solution_t;
-   using dak::tantrix::tile_t;
-   using dak::tantrix::all_solutions_t;
-
    /////////////////////////////////////////////////////////////////////////
    //
    // Main window of the tantrix solver app.
@@ -77,8 +72,8 @@ namespace dak::tantrix_solver_app
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
-      std::shared_ptr<solution_t> get_selected_solution() const;
-      std::optional<tile_t> get_selected_tile() const;
+      std::shared_ptr<tantrix::solution_t> get_selected_solution() const;
+      std::optional<tantrix::tile_t> get_selected_tile() const;
 
       void update_puzzle();
       void update_solutions();
@@ -127,7 +122,7 @@ namespace dak::tantrix_solver_app
       QErrorMessage*    my_error_message = nullptr;
 
       // Data.
-      std::shared_ptr<puzzle_t>                 my_puzzle;
+      solver::problem_t::ptr_t                  my_puzzle;
       std::filesystem::path                     my_puzzle_filename;
       solver::all_solutions_t                   my_solutions;
 

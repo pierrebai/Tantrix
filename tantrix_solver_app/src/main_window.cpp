@@ -1,5 +1,7 @@
 #include <main_window.h>
 #include <draw_tantrix_puzzle.h>
+#include <tantrix_puzzle.h>
+#include <dak/tantrix/puzzle.h>
 
 #include <resource.h>
 
@@ -290,11 +292,8 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ifstream puzzle_stream(path);
-         puzzle_stream >> my_puzzle;
-         my_puzzle_filename = path;
+         my_puzzle = load_tantrix_puzzle(path);
          update_puzzle();
-
          my_solutions.clear();
          update_solutions();
       }
@@ -317,9 +316,7 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ofstream puzzle_stream(path);
-         puzzle_stream << my_puzzle;
-         my_puzzle_filename = path;
+         save_tantrix_puzzle(path, my_puzzle);
          update_puzzle();
       }
       catch (const std::exception& ex)
@@ -338,7 +335,7 @@ namespace dak::tantrix_solver_app
          std::string puzzle_text;
          {
             std::ostringstream puzzle_stream;
-            puzzle_stream << my_puzzle;
+            save_tantrix_puzzle(puzzle_stream, my_puzzle);
             puzzle_text = puzzle_stream.str();
          }
 
@@ -348,7 +345,7 @@ namespace dak::tantrix_solver_app
          {
             puzzle_text = new_text.toStdString();
             std::istringstream puzzle_stream(puzzle_text);
-            puzzle_stream >> my_puzzle;
+            my_puzzle = load_tantrix_puzzle(puzzle_stream);
          }
 
          update_puzzle();
@@ -382,14 +379,7 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ofstream solutions_stream(path);
-
-         for (const auto& solution : my_solutions) {
-            auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution.first);
-            if (!puzzle_solution)
-               continue;
-            solutions_stream << *puzzle_solution << endl;
-         }
+         save_tantrix_solutions(path, my_solutions);
       }
       catch (const std::exception& ex)
       {
@@ -410,14 +400,7 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         my_solutions.clear();
-         std::ifstream solutions_stream(path);
-         while (solutions_stream) {
-            tantrix::solution_t solution;
-            solutions_stream >> solution;
-            if (solutions_stream)
-               my_solutions[std::make_shared<tantrix::solution_t>(solution)] = 1;
-         }
+         my_solutions = load_tantrix_solutions(path);
          update_solutions();
       }
       catch (const std::exception& ex)
@@ -447,39 +430,8 @@ namespace dak::tantrix_solver_app
 
       my_puzzle_list->clear();
 
-      for (const auto& tile : my_puzzle->initial_tiles())
-      {
-         std::ostringstream stream;
-         stream << "Tile #" << tile;
-         my_puzzle_list->addItem(stream.str().c_str());
-      }
-
-      static map<tantrix::color_t, const char*> color_names =
-      {
-         { tantrix::color_t::red(),    "Red"    },
-         { tantrix::color_t::green(),  "Green"  },
-         { tantrix::color_t::blue(),   "Blue"   },
-         { tantrix::color_t::yellow(), "Yellow" },
-      };
-
-      const char* const line_type = (my_puzzle->must_be_loops() ? "Loop" : "Line");
-
-      for (const auto& color : my_puzzle->line_colors())
-      {
-         std::ostringstream stream;
-         stream << color_names[color] << " " << line_type;
-         my_puzzle_list->addItem(stream.str().c_str());
-      }
-
-      if (std::dynamic_pointer_cast<tantrix::triangle_puzzle_t>(my_puzzle))
-         my_puzzle_list->addItem("Must be a triangle");
-
-      if (my_puzzle->holes_count().has_value())
-      {
-         std::ostringstream stream;
-         stream << "Must have " << my_puzzle->holes_count().value() << " holes";
-         my_puzzle_list->addItem(stream.str().c_str());
-      }
+      for (const std::string& item : get_tantrix_puzzle_description(my_puzzle))
+         my_puzzle_list->addItem(item.c_str());
 
       my_solving_attempts = 0;
       my_solving_stopwatch.elapsed();
@@ -498,34 +450,8 @@ namespace dak::tantrix_solver_app
       const int old_current_row = my_solutions_list->currentRow();
       my_solutions_list->clear();
 
-      size_t solution_index = 0;
-      for (const auto& [abstract_solution, count] : my_solutions)
-      {
-         std::ostringstream stream;
-
-         if (solution_index == 1000)
-         {
-            stream << "And " << my_solutions.size() - solution_index << " other solutions";
-            my_solutions_list->addItem(stream.str().c_str());
-            break;
-         }
-
-         auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(abstract_solution);
-         if (!solution)
-            continue;
-
-         stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
-         for (size_t i = 0; i < solution->tiles_count(); ++i)
-         {
-            const auto& placed_tile = solution->tiles()[i];
-            stream << "    "
-                   << std::setw(3) << placed_tile.pos.x()
-                   << " / "
-                   << std::setw(3) << placed_tile.pos.y()
-                   << " : tile #" << std::setw(2) << placed_tile.tile << "\n";
-         }
-         my_solutions_list->addItem(stream.str().c_str());
-      }
+      for (const std::string& item : get_tantrix_solutions_description(my_solutions))
+         my_solutions_list->addItem(item.c_str());
 
       if (old_current_row >= 0 && old_current_row < my_solutions_list->count())
          my_solutions_list->setCurrentRow(old_current_row);
@@ -578,6 +504,8 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::update_toolbar()
    {
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
+
       my_load_puzzle_action->setEnabled(true);
       my_save_puzzle_action->setEnabled(my_puzzle != nullptr);
       my_edit_puzzle_action->setEnabled(my_puzzle != nullptr);
@@ -585,7 +513,7 @@ namespace dak::tantrix_solver_app
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
 
-      my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->line_colors().size() > 0);
+      my_solve_puzzle_action->setEnabled(puzzle && puzzle->line_colors().size() > 0);
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
 
@@ -602,9 +530,10 @@ namespace dak::tantrix_solver_app
       return std::dynamic_pointer_cast<tantrix::solution_t>(solution_it->first);
    }
 
-   std::optional<tile_t> main_window_t::get_selected_tile() const
+   std::optional<tantrix::tile_t> main_window_t::get_selected_tile() const
    {
-      if (!my_puzzle)
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
+      if (!puzzle)
          return {};
 
       auto selection_model = my_puzzle_list->selectionModel();
@@ -616,10 +545,10 @@ namespace dak::tantrix_solver_app
 
       const int index = selection_model->selectedRows().at(0).row();
 
-      if (index < 0 || index >= my_puzzle->initial_tiles().size())
+      if (index < 0 || index >= puzzle->initial_tiles().size())
          return {};
 
-      return std::optional<tile_t>(my_puzzle->initial_tiles()[index]);
+      return std::optional<tantrix::tile_t>(puzzle->initial_tiles()[index]);
    }
 
    void main_window_t::draw_selected_puzzle_tile()
@@ -628,7 +557,8 @@ namespace dak::tantrix_solver_app
       if (solution)
          return draw_selected_solution();
 
-      draw_tantrix_puzzle_tiles(my_solution_canvas, my_puzzle, get_selected_tile());
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
+      draw_tantrix_puzzle_tiles(my_solution_canvas, puzzle, get_selected_tile());
    }
 
    void main_window_t::draw_selected_solution()
@@ -637,7 +567,8 @@ namespace dak::tantrix_solver_app
       if (!solution)
          return;
 
-      draw_tantrix_solution(my_solution_canvas, my_puzzle, solution, get_selected_tile());
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
+      draw_tantrix_solution(my_solution_canvas, puzzle, solution, get_selected_tile());
    }
 
    /////////////////////////////////////////////////////////////////////////
