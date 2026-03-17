@@ -1,7 +1,10 @@
+file(GLOB PUZZLE_FILES "puzzles/*.txt")
+
 add_executable(six_eight_solver
    src/six_eight_solver.cpp
-   "puzzles/Puzzles.txt"
+   ${PUZZLE_FILES}
 )
+
 
 target_link_libraries(six_eight_solver PUBLIC
    six_eight
