@@ -78,6 +78,7 @@ namespace dak::six_eight
       position_t get_next_position_to_fill() const;
 
       // Check if a tile at a given position would be compatible with the solution.
+      bool is_compatible(const tile_t& a_tile, const position_t& a_pos) const;
       bool is_compatible(const solver::solution_part_t::ptr_t& a_part) const override;
 
       // Check if the solution is valid.

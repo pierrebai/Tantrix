@@ -26,6 +26,8 @@ namespace dak::six_eight
 
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
    {
+      if (!is_compatible(a_tile, a_pos))
+         return;
       my_tiles[my_tiles_count].pos = a_pos;
       my_tiles[my_tiles_count].tile = a_tile;
       my_tiles_count += 1;
@@ -53,7 +55,7 @@ namespace dak::six_eight
       if (a_pos.y() < 0 || a_pos.y() >= 8)
          return invalid;
       
-      const char id = my_tiles_at_pos[a_pos.x()][a_pos.y()];
+      const tile_t::id_t id = my_tiles_at_pos[a_pos.x()][a_pos.y()];
       if (id == 0)
          return invalid;
 
@@ -91,18 +93,23 @@ namespace dak::six_eight
       return position_t(-1000, -1000);
    }
 
+   bool solution_t::is_compatible(const tile_t& a_tile, const position_t& a_pos) const
+   {
+      for (const position_t& tile_block_pos : a_tile.get_description().block_positions) {
+         const position_t placed_block_pos = a_pos.move(tile_block_pos);
+         if (is_occupied(placed_block_pos))
+            return false;
+      }
+      return true;
+   }
+
    bool solution_t::is_compatible(const solver::solution_part_t::ptr_t& a_part) const
    {
       auto placed_tile = std::dynamic_pointer_cast<placed_tile_t>(a_part);
       if (!placed_tile)
          return false;
 
-      for (const position_t& tile_block_pos : placed_tile->tile.get_description().block_positions) {
-         const position_t placed_block_pos = placed_tile->pos.move(tile_block_pos);
-         if (is_occupied(placed_block_pos))
-            return false;
-      }
-      return true;
+      return is_compatible(placed_tile->tile, placed_tile->pos);
    }
 
    void solution_t::normalize()

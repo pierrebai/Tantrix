@@ -222,17 +222,15 @@ namespace dak::six_eight::tests
          Assert::AreEqual(true, position_t(0, 0).relative(position_t(0, -1)).has_value());
          Assert::AreEqual(direction_t(1), position_t(0, 0).relative(position_t(0, -1)).value());
 
-         Assert::AreEqual(true, position_t(0, 0).relative(position_t(1, -1)).has_value());
-         Assert::AreEqual(direction_t(2), position_t(0, 0).relative(position_t(1, -1)).value());
+         Assert::AreEqual(false, position_t(0, 0).relative(position_t(1, -1)).has_value());
 
          Assert::AreEqual(true, position_t(0, 0).relative(position_t(1, 0)).has_value());
-         Assert::AreEqual(direction_t(3), position_t(0, 0).relative(position_t(1, 0)).value());
+         Assert::AreEqual(direction_t(2), position_t(0, 0).relative(position_t(1, 0)).value());
 
          Assert::AreEqual(true, position_t(0, 0).relative(position_t(0, 1)).has_value());
-         Assert::AreEqual(direction_t(4), position_t(0, 0).relative(position_t(0, 1)).value());
+         Assert::AreEqual(direction_t(3), position_t(0, 0).relative(position_t(0, 1)).value());
 
-         Assert::AreEqual(true, position_t(0, 0).relative(position_t(-1, 1)).has_value());
-         Assert::AreEqual(direction_t(5), position_t(0, 0).relative(position_t(-1, 1)).value());
+         Assert::AreEqual(false, position_t(0, 0).relative(position_t(-1, 1)).has_value());
 
       }
 
