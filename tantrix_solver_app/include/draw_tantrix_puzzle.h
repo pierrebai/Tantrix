@@ -1,13 +1,12 @@
 #pragma once
 
-#include <QtWidgets/qgraphicsscene.h>
 #include <dak/tantrix/puzzle.h>
 #include <dak/tantrix/solution.h>
 
+#include <memory>
 #include <optional>
 
 class QGraphicsView;
-class QGraphicsScene;
 
 namespace dak::tantrix_solver_app
 {

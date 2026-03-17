@@ -1,6 +1,8 @@
 #include <main_window.h>
 #include <draw_tantrix_puzzle.h>
 #include <tantrix_puzzle.h>
+#include <draw_six_eight_puzzle.h>
+#include <six_eight_puzzle.h>
 #include <dak/tantrix/puzzle.h>
 
 #include <resource.h>
@@ -292,7 +294,15 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         my_puzzle = load_tantrix_puzzle(path);
+         try
+         {
+            my_puzzle = load_tantrix_puzzle(path);
+         }
+         catch(const std::exception& e)
+         {
+            my_puzzle = load_six_eight_puzzle(path);
+         }
+         
          update_puzzle();
          my_solutions.clear();
          update_solutions();
@@ -316,7 +326,10 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         save_tantrix_puzzle(path, my_puzzle);
+         if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+            save_tantrix_puzzle(path, my_puzzle);
+         if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+            save_six_eight_puzzle(path, my_puzzle);
          update_puzzle();
       }
       catch (const std::exception& ex)
@@ -335,7 +348,10 @@ namespace dak::tantrix_solver_app
          std::string puzzle_text;
          {
             std::ostringstream puzzle_stream;
-            save_tantrix_puzzle(puzzle_stream, my_puzzle);
+            if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+               save_tantrix_puzzle(puzzle_stream, my_puzzle);
+            if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+               save_six_eight_puzzle(puzzle_stream, my_puzzle);
             puzzle_text = puzzle_stream.str();
          }
 
@@ -345,7 +361,10 @@ namespace dak::tantrix_solver_app
          {
             puzzle_text = new_text.toStdString();
             std::istringstream puzzle_stream(puzzle_text);
-            my_puzzle = load_tantrix_puzzle(puzzle_stream);
+            if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+               my_puzzle = load_tantrix_puzzle(puzzle_stream);
+            if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+               my_puzzle = load_six_eight_puzzle(puzzle_stream);
          }
 
          update_puzzle();
@@ -372,6 +391,9 @@ namespace dak::tantrix_solver_app
 
       try
       {
+         if (my_solutions.size() <= 0)
+            return;
+
          // We must stop on load because otherwise the threads are preventing the dialog from opening!
          stop_puzzle();
 
@@ -379,7 +401,10 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         save_tantrix_solutions(path, my_solutions);
+         if (dynamic_pointer_cast<tantrix::solution_t>(my_solutions.begin()->first))
+            save_tantrix_solutions(path, my_solutions);
+         if (dynamic_pointer_cast<six_eight::solution_t>(my_solutions.begin()->first))
+            save_six_eight_solutions(path, my_solutions);
       }
       catch (const std::exception& ex)
       {
@@ -401,6 +426,8 @@ namespace dak::tantrix_solver_app
             return;
 
          my_solutions = load_tantrix_solutions(path);
+         if (my_solutions.size() <= 0)
+            load_six_eight_solutions(path);
          update_solutions();
       }
       catch (const std::exception& ex)
@@ -430,8 +457,13 @@ namespace dak::tantrix_solver_app
 
       my_puzzle_list->clear();
 
-      for (const std::string& item : get_tantrix_puzzle_description(my_puzzle))
-         my_puzzle_list->addItem(item.c_str());
+      if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_tantrix_puzzle_description(my_puzzle))
+            my_puzzle_list->addItem(item.c_str());
+
+      if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_six_eight_puzzle_description(my_puzzle))
+            my_puzzle_list->addItem(item.c_str());
 
       my_solving_attempts = 0;
       my_solving_stopwatch.elapsed();
@@ -450,8 +482,13 @@ namespace dak::tantrix_solver_app
       const int old_current_row = my_solutions_list->currentRow();
       my_solutions_list->clear();
 
-      for (const std::string& item : get_tantrix_solutions_description(my_solutions))
-         my_solutions_list->addItem(item.c_str());
+      if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_tantrix_solutions_description(my_solutions))
+            my_solutions_list->addItem(item.c_str());
+
+      if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_six_eight_solutions_description(my_solutions))
+            my_solutions_list->addItem(item.c_str());
 
       if (old_current_row >= 0 && old_current_row < my_solutions_list->count())
          my_solutions_list->setCurrentRow(old_current_row);
@@ -504,8 +541,6 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::update_toolbar()
    {
-      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
-
       my_load_puzzle_action->setEnabled(true);
       my_save_puzzle_action->setEnabled(my_puzzle != nullptr);
       my_edit_puzzle_action->setEnabled(my_puzzle != nullptr);
@@ -513,11 +548,15 @@ namespace dak::tantrix_solver_app
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
 
-      my_solve_puzzle_action->setEnabled(puzzle && puzzle->line_colors().size() > 0);
+      my_solve_puzzle_action->setEnabled(false);
+      if (auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         my_solve_puzzle_action->setEnabled(puzzle->line_colors().size() > 0);
+      if (auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         my_solve_puzzle_action->setEnabled(puzzle->initial_tiles_count() > 0);
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
 
-   std::shared_ptr<tantrix::solution_t> main_window_t::get_selected_solution() const
+   solver::solution_t::ptr_t main_window_t::get_selected_solution() const
    {
       const int index = my_solutions_list->currentRow();
 
@@ -527,10 +566,10 @@ namespace dak::tantrix_solver_app
       auto solution_it = my_solutions.begin();
       std::advance(solution_it, index);
 
-      return std::dynamic_pointer_cast<tantrix::solution_t>(solution_it->first);
+      return solution_it->first;
    }
 
-   std::optional<tantrix::tile_t> main_window_t::get_selected_tile() const
+   std::optional<tantrix::tile_t> main_window_t::get_selected_tantrix_tile() const
    {
       auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
       if (!puzzle)
@@ -551,14 +590,37 @@ namespace dak::tantrix_solver_app
       return std::optional<tantrix::tile_t>(puzzle->initial_tiles()[index]);
    }
 
+   std::optional<six_eight::tile_t> main_window_t::get_selected_six_eight_tile() const
+   {
+      auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle);
+      if (!puzzle)
+         return {};
+
+      auto selection_model = my_puzzle_list->selectionModel();
+      if (!selection_model)
+         return {};
+
+      if (selection_model->selectedRows().size() <= 0)
+         return {};
+
+      const int index = selection_model->selectedRows().at(0).row();
+
+      if (index < 0 || index >= puzzle->initial_tiles().size())
+         return {};
+
+      return std::optional<six_eight::tile_t>(puzzle->initial_tiles()[index]);
+   }
+
    void main_window_t::draw_selected_puzzle_tile()
    {
       auto solution = get_selected_solution();
       if (solution)
          return draw_selected_solution();
 
-      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
-      draw_tantrix_puzzle_tiles(my_solution_canvas, puzzle, get_selected_tile());
+      if (auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         draw_tantrix_puzzle_tiles(my_solution_canvas, puzzle, get_selected_tantrix_tile());
+      if (auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         draw_six_eight_puzzle_tiles(my_solution_canvas, puzzle, get_selected_six_eight_tile());
    }
 
    void main_window_t::draw_selected_solution()
@@ -567,8 +629,12 @@ namespace dak::tantrix_solver_app
       if (!solution)
          return;
 
-      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
-      draw_tantrix_solution(my_solution_canvas, puzzle, solution, get_selected_tile());
+      if (auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         if (auto sol = std::dynamic_pointer_cast<tantrix::solution_t>(solution))
+            draw_tantrix_solution(my_solution_canvas, puzzle, sol, get_selected_tantrix_tile());
+      if (auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         if (auto sol = std::dynamic_pointer_cast<six_eight::solution_t>(solution))
+            draw_six_eight_solution(my_solution_canvas, puzzle, sol, get_selected_six_eight_tile());
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -596,7 +662,11 @@ namespace dak::tantrix_solver_app
       {
          try
          {
-            auto initial_solution = std::make_shared<tantrix::solution_t>();
+            solver::solution_t::ptr_t initial_solution;
+            if (dynamic_pointer_cast<tantrix::puzzle_t>(puzzle))
+               initial_solution = std::make_shared<tantrix::solution_t>();
+            if (dynamic_pointer_cast<six_eight::puzzle_t>(puzzle))
+               initial_solution = std::make_shared<six_eight::solution_t>();
             return solver::solve(puzzle, initial_solution, *self);
          }
          catch (const std::exception&)

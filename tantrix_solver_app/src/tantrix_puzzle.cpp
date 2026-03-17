@@ -60,6 +60,9 @@ namespace dak::tantrix_solver_app
 
    solver::all_solutions_t load_tantrix_solutions(const std::filesystem::path& a_path)
    {
+      if (a_path.empty())
+         return {};
+
       solver::all_solutions_t solver_solutions;
 
       tantrix::all_solutions_t solutions;

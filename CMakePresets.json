@@ -17,6 +17,13 @@
             "displayName": "",
             "configurePreset": "VS 2022",
             "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "VS 2022 Release",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "VS 2022",
+            "configuration": "Release"
         }
     ]
 }

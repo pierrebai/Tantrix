@@ -7,8 +7,8 @@
 #include <dak/utility/progress.h>
 #include <dak/utility/stopwatch.h>
 
-#include <dak/tantrix/solution.h>
 #include <dak/tantrix/tile.h>
+#include <dak/six_eight/tile.h>
 
 #include <chrono>
 #include <future>
@@ -72,8 +72,9 @@ namespace dak::tantrix_solver_app
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
-      std::shared_ptr<tantrix::solution_t> get_selected_solution() const;
-      std::optional<tantrix::tile_t> get_selected_tile() const;
+      solver::solution_t::ptr_t get_selected_solution() const;
+      std::optional<tantrix::tile_t> get_selected_tantrix_tile() const;
+      std::optional<six_eight::tile_t> get_selected_six_eight_tile() const;
 
       void update_puzzle();
       void update_solutions();
