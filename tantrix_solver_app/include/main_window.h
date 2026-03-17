@@ -44,6 +44,7 @@ namespace dak::tantrix_solver_app
       // Create the UI elements.
       void build_ui();
       void build_toolbar_ui();
+      void build_avail_puzzles_ui();
       void build_puzzle_ui();
       void build_solutions_ui();
       void build_solution_canvas();
@@ -51,11 +52,14 @@ namespace dak::tantrix_solver_app
       // Connect the signals of the UI elements.
       void connect_ui();
 
-      // Fill the UI with the intial data.
+      // Fill the UI with the initial data.
       void fill_ui();
+      void fill_available_puzzles();
 
       // Puzzle.
       void load_puzzle();
+      void load_puzzle(const std::filesystem::path& a_path);
+      void load_puzzle_from_available_puzzle(int a_row);
       void save_puzzle();
       void edit_puzzle();
 
@@ -68,7 +72,7 @@ namespace dak::tantrix_solver_app
       bool is_async_puzzle_solving_done();
       void stop_puzzle();
 
-      // Asynchornous puzzle solving update.
+      // Asynchronous puzzle solving update.
       void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
@@ -111,6 +115,9 @@ namespace dak::tantrix_solver_app
 
       // UI elements.
       QGraphicsView*    my_solution_canvas = nullptr;
+
+      QListWidget*      my_avail_puzzles_list = nullptr;
+      QLabel*           my_avail_puzzles_label = nullptr;
 
       QListWidget*      my_puzzle_list = nullptr;
       QLabel*           my_puzzle_label = nullptr;

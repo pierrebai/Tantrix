@@ -47,7 +47,7 @@ namespace dak::six_eight
       // Rotate the tile in place by a multiple of quarter of a turn.
       tile_t& rotate_in_place(int an_amount)
       {
-         my_rotation = (my_rotation + an_amount) % 4u;
+         my_rotation = (my_rotation + an_amount) % get_description().possible_rotations;
          return *this;
       }
 
@@ -70,7 +70,7 @@ namespace dak::six_eight
       auto operator<=>(const tile_t& an_other) const = default;
 
       // Return the six block positions occupied by the rotated tile.
-      tile_description_t get_description() const;
+      const tile_description_t& get_description() const;
 
    private:
       id_t         my_id = 0;

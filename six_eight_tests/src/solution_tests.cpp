@@ -28,7 +28,7 @@ namespace dak::six_eight::tests
 
          sol.add_tile(tile_t('b'), position_t(4, 0));
          Assert::AreEqual<size_t>(2, sol.tiles_count());
-         Assert::AreEqual(sol.tile_at(position_t(5, 0)), tile_t('b'));
+         Assert::AreEqual(sol.tile_at(position_t(4, 0)), tile_t('b'));
 
          sol.add_tile(tile_t('c'), position_t(0, 4));
          Assert::AreEqual<size_t>(3, sol.tiles_count());
@@ -36,7 +36,7 @@ namespace dak::six_eight::tests
 
          sol.add_tile(tile_t('d'), position_t(4, 4));
          Assert::AreEqual<size_t>(4, sol.tiles_count());
-         Assert::AreEqual(sol.tile_at(position_t(4, 5)), tile_t('d'));
+         Assert::AreEqual(sol.tile_at(position_t(4, 4)), tile_t('d'));
       }
 
       TEST_METHOD(solution_is_occupied)
@@ -54,28 +54,42 @@ namespace dak::six_eight::tests
          Assert::IsTrue( sol.is_occupied(position_t(-1,  1)));
 
          sol.add_tile(tile_t('b'), position_t(5, 0));
-         Assert::IsFalse(sol.is_occupied(position_t( 5,  0)));
+         Assert::IsTrue( sol.is_occupied(position_t( 5,  0)));
          Assert::IsTrue( sol.is_occupied(position_t( 6,  0)));
          Assert::IsTrue( sol.is_occupied(position_t( 0, -1)));
          Assert::IsTrue( sol.is_occupied(position_t( 1, -1)));
-         Assert::IsTrue( sol.is_occupied(position_t( 6,  1)));
-         Assert::IsTrue( sol.is_occupied(position_t( 6,  2)));
-         Assert::IsFalse(sol.is_occupied(position_t( 5,  1)));
+         Assert::IsTrue( sol.is_occupied(position_t( 7,  1)));
+         Assert::IsTrue( sol.is_occupied(position_t( 7,  0)));
+         Assert::IsTrue( sol.is_occupied(position_t( 5,  1)));
       }
 
       TEST_METHOD(solution_is_compatible)
       {
-			solution_t sol;
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('B'), position_t(0, 0))));
+         {
+            solution_t sol;
+            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('B'), position_t(0, 0))));
 
-			sol.add_tile(tile_t('B'), position_t(0, 0));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 0,  0))));
-			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  0))));
-			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 2,  0))));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  1))));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  1))));
-			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 2,  1))));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t(-1,  1))));
+            sol.add_tile(tile_t('B'), position_t(0, 0));
+            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 0,  0))));
+            Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  0))));
+            Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 2,  0))));
+            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  1))));
+            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  1))));
+            Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 2,  1))));
+            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t(-1,  1))));
+         }
+         {
+            solution_t sol;
+
+            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('8').rotate(1), position_t(0, 0))));
+            sol.add_tile(tile_t('8').rotate(1), position_t(0, 0));
+
+            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('f').rotate(2), position_t(0, 1))));
+            sol.add_tile(tile_t('f').rotate(1), position_t(0, 1));
+
+            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('d').rotate(3), position_t(2, 1))));
+            sol.add_tile(tile_t('d').rotate(1), position_t(2, 1));
+         }
       }
 
       TEST_METHOD(normalize_solution)

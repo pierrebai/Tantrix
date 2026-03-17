@@ -21,7 +21,7 @@ namespace dak::six_eight
    //    - Add a solution if it is not already known.
    solution_t::solution_t()
    {
-      memset(my_tiles_at_pos, 0, 6 * 8 * sizeof(tile_t::id_t));
+      memset(my_tiles_at_pos, 0, sizeof(my_tiles_at_pos));
    }
 
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
@@ -31,7 +31,8 @@ namespace dak::six_eight
       my_tiles[my_tiles_count].pos = a_pos;
       my_tiles[my_tiles_count].tile = a_tile;
       my_tiles_count += 1;
-      for (const position_t& tile_block_pos : a_tile.get_description().block_positions) {
+      const auto& block_positions = a_tile.get_description().block_positions;
+      for (const position_t& tile_block_pos : block_positions) {
          const position_t placed_block_pos = a_pos.move(tile_block_pos);
          my_tiles_at_pos[placed_block_pos.x()][placed_block_pos.y()] = a_tile.id();
       }
@@ -95,7 +96,8 @@ namespace dak::six_eight
 
    bool solution_t::is_compatible(const tile_t& a_tile, const position_t& a_pos) const
    {
-      for (const position_t& tile_block_pos : a_tile.get_description().block_positions) {
+      const auto& block_positions =  a_tile.get_description().block_positions;
+      for (const position_t& tile_block_pos : block_positions) {
          const position_t placed_block_pos = a_pos.move(tile_block_pos);
          if (is_occupied(placed_block_pos))
             return false;

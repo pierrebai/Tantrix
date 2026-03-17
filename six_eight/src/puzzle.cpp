@@ -58,8 +58,7 @@ namespace dak::six_eight
 
       std::vector<tile_t> other_tiles(current_sub_puzzle->other_tiles);
       for (size_t i = 0; i < other_tiles.size(); ++i) {
-         const tile_t& tile_to_place = other_tiles[0];
-         const int possible_rotations = tile_to_place.get_description().possible_rotations;
+         const int possible_rotations = other_tiles[0].get_description().possible_rotations;
          for (int rotation = 0; rotation < possible_rotations; ++rotation) {
             sub_puzzle_t sub_puzzle;
             sub_puzzle.tile_to_place = other_tiles[0].rotate(rotation);
@@ -71,8 +70,9 @@ namespace dak::six_eight
       }
 
       // std::cout << "Created " << sub_puzzles.size() << " sub puzzles with position " << position_to_fill << std::endl;
-      // if (sub_puzzles.size() == 1) {
-      //    std::cout << a_partial_solution << std::endl;
+      // if (sub_puzzles.size() == 7)
+      // {
+      //    std::cout << *partial_solution << std::endl;
       // }
 
       return sub_puzzles;
@@ -86,8 +86,16 @@ namespace dak::six_eight
       auto current_sub_puzzle = std::dynamic_pointer_cast<sub_puzzle_t>(a_current_sub_problem);
       if (!current_sub_puzzle)
          return {};
-      // std::cout << "Sub-puzzle position to fill " << current_sub_puzzle->position_to_fill << std::endl;
-      return { placed_tile_t::make(current_sub_puzzle->tile_to_place, current_sub_puzzle->position_to_fill) };
+
+      std::vector<solver::solution_part_t::ptr_t> parts;
+
+      parts.emplace_back(
+         placed_tile_t::make(
+            current_sub_puzzle->tile_to_place,
+            current_sub_puzzle->position_to_fill));
+
+      // std::cout << "Created part for " << current_sub_puzzle->tile_to_place.id() << " in\n" << *std::dynamic_pointer_cast<six_eight::solution_t>(a_partial_solution) << std::endl;
+      return parts;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -96,7 +104,10 @@ namespace dak::six_eight
 
    bool puzzle_t::is_solution_valid(const solver::solution_t::ptr_t& a_solution) const
    {
-      return true;
+      auto solution = std::dynamic_pointer_cast<six_eight::solution_t>(a_solution);
+      if (!solution)
+         return false;
+      return solution->tiles_count() == 8;
    }
 
    ////////////////////////////////////////////////////////////////////////////

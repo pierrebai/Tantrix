@@ -76,7 +76,8 @@ namespace dak::tantrix_solver_app
 
       const QPointF tile_center = convert_tile_pos(a_pos, tile_radius);
 
-      for (const six_eight::position_t& block_pos : a_tile.get_description().block_positions) {
+      const auto& block_positions = a_tile.get_description().block_positions;
+      for (const six_eight::position_t& block_pos : block_positions) {
          QPolygonF polygon = create_square(tile_radius);
          polygon.translate(tile_center);
          polygon.translate(convert_tile_pos(block_pos, tile_radius));
@@ -98,7 +99,8 @@ namespace dak::tantrix_solver_app
       QBrush selection_brush(is_selected ? QColor(120, 220, 240, 128) : QColor(100, 100, 100, 0));
       selection_pen.setWidth(1);
 
-      for (const six_eight::position_t& block_pos : a_tile.get_description().block_positions) {
+      const auto& block_positions = a_tile.get_description().block_positions;
+      for (const six_eight::position_t& block_pos : block_positions) {
          const QPointF tile_center = convert_tile_pos(a_pos.move(block_pos), tile_radius);
    
          auto selection = new QGraphicsEllipseItem(
@@ -134,7 +136,7 @@ namespace dak::tantrix_solver_app
       {
          const int tile_x = tile_index % tiles_per_row;
          const int tile_y = tile_index / tiles_per_row;
-         const six_eight::position_t pos(tile_x * 5, tile_y * 5);
+         const six_eight::position_t pos(tile_x * 6, tile_y * 6);
 
          bool is_selected = a_selected_tile.has_value() && a_selected_tile.value().is_same(tile);
 

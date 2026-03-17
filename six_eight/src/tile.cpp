@@ -95,7 +95,7 @@ namespace dak::six_eight
           position_t(0, 2),
           position_t(1, 1),
           position_t(1, 2),
-          position_t(2, 2),
+          position_t(2, 1),
       }},
       { 'g', { 4,
           position_t(0, 0),
@@ -301,7 +301,7 @@ namespace dak::six_eight
           position_t(0, 1),
           position_t(1, 0),
           position_t(1, 1),
-          position_t(2, 2),
+          position_t(1, 2),
           position_t(1, 3),
           position_t(2, 1),
       }},
@@ -502,16 +502,21 @@ namespace dak::six_eight
    static tile_description_t rotate_description(const tile_description_t& a_desc, int a_rotation)
    {
       tile_description_t new_desc = a_desc;
-      int min_x = 1000;
       int min_y = 1000;
       for (position_t& pos : new_desc.block_positions) {
          pos.rotate_in_place(a_rotation);
-         min_x = std::min(min_x, pos.x());
          min_y = std::min(min_y, pos.y());
       }
 
+      int min_x_first_line = 1000;
+      for (position_t& pos : new_desc.block_positions) {
+         if (pos.y() == min_y) {
+            min_x_first_line = std::min(min_x_first_line, pos.x());
+         }
+      }
+
       for (position_t& pos : new_desc.block_positions)
-         pos = pos.move(-min_x, -min_y);
+         pos = pos.move(-min_x_first_line, -min_y);
 
       std::sort(new_desc.block_positions, new_desc.block_positions + 6);
 
@@ -536,9 +541,15 @@ namespace dak::six_eight
       return descriptions;
    }
 
-   tile_description_t tile_t::get_description() const
+   const tile_description_t& tile_t::get_description() const
    {
-      return get_descriptions()[my_id][my_rotation];
+      const auto& desc = get_descriptions();
+      const auto it = desc.find(my_id);
+      if (it == desc.end()) {
+         static tile_description_t invalid;
+         return invalid;
+      }
+      return it->second[my_rotation % it->second.size()];
    }
 
    /* static */
