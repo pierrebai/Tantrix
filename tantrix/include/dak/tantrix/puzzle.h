@@ -5,6 +5,7 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
+#include "dak/solver/problem.h"
 #include "dak/tantrix/position.h"
 #include "dak/tantrix/tile.h"
 
@@ -21,7 +22,7 @@ namespace dak::tantrix
    //
    // Sub puzzle
 
-   struct sub_puzzle_t
+   struct sub_puzzle_t : solver::sub_problem_t
    {
       tile_t               tile_to_place;
       std::vector<tile_t>  other_tiles;
@@ -40,7 +41,7 @@ namespace dak::tantrix
    //
    // Puzzle, provide tiles and next position to try to the solver.
 
-   struct puzzle_t
+   struct puzzle_t : solver::problem_t
    {
       using tiles_t = std::vector<tile_t>;
       using line_colors_t = std::vector<color_t>;
@@ -53,22 +54,11 @@ namespace dak::tantrix
                bool must_be_loops,
                const maybe_size_t& a_holes_count = {});
 
-      // Solver interaction.
-
-      // Create the initial list of sub-puzzles to solve.
-      virtual std::vector<sub_puzzle_t> create_initial_sub_puzzles() const = 0;
-
-      // Create sub-puzzles from a given sub-puzzle that has its tile placed.
-      virtual std::vector<sub_puzzle_t> create_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const = 0;
-
-      // Get the list of potential position for the tile-to-be-placed of the given sub-puzzle.
-      virtual std::vector<position_t> get_sub_puzzle_positions(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const = 0;
-
       // Verify if there are more sub-puzzles to be created from the given sub-puzzle.
-      bool has_more_sub_puzzles(const sub_puzzle_t& a_current_sub_puzzle) const;
+      bool has_more_sub_problems(const solver::sub_problem_t::ptr_t& a_current_sub_problem) const override;
 
       // Verify if the solution satisfies the initial puzzle.
-      virtual bool is_solution_valid(const solution_t& a_solution) const;
+      virtual bool is_solution_valid(const solver::solution_t::ptr_t& a_solution) const;
 
       // The description of the puzzle.
 

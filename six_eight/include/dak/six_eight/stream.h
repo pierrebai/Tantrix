@@ -1,19 +1,15 @@
 #pragma once
 
-#ifndef DAK_TANTRIX_STREAM_H
-#define DAK_TANTRIX_STREAM_H
-
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
-#include <dak/tantrix/tantrix.h>
+#include <dak/six_eight/six_eight.h>
 
 #include <iostream>
 #include <memory>
 
-namespace dak::tantrix
+namespace dak::six_eight
 {
    struct direction_t;
-   struct color_t;
    struct tile_t;
    struct solution_t;
    struct puzzle_t;
@@ -21,11 +17,6 @@ namespace dak::tantrix
    ////////////////////////////////////////////////////////////////////////////
    //
    // Write or read various classes to an output stream or input stream.
-
-   std::ostream&  operator<<(std::ostream&  a_stream, const color_t& a_color);
-   std::wostream& operator<<(std::wostream& a_stream, const color_t& a_color);
-   std::istream&  operator>>(std::istream&  a_stream,       color_t& a_color);
-   std::wistream& operator>>(std::wistream& a_stream,       color_t& a_color);
 
    std::ostream&  operator<<(std::ostream&  a_stream, const direction_t& a_direction);
    std::wostream& operator<<(std::wostream& a_stream, const direction_t& a_direction);
@@ -57,4 +48,3 @@ namespace dak::tantrix
 
 }
 
-#endif /* DAK_TANTRIX_STREAM_H */

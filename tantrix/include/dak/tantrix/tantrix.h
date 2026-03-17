@@ -13,6 +13,5 @@
 #include "dak/tantrix/puzzle.h"
 #include "dak/tantrix/any_shape_puzzle.h"
 #include "dak/tantrix/triangle_puzzle.h"
-#include "dak/tantrix/solve.h"
 
 #endif /* DAK_TANTRIX_TANTRIX_H */

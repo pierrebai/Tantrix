@@ -1,14 +1,29 @@
 {
-  "version": 2,
-  "configurePresets": [
-    {
-      "name": "VS 2022",
-      "generator": "Visual Studio 17 2022",
-      "binaryDir": "${sourceDir}/build",
-      "cacheVariables": {
-        "CMAKE_GENERATOR_TOOLSET": "v143"
-      }
-    }
-  ]
+    "version": 2,
+    "configurePresets": [
+        {
+            "name": "VS 2022",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "CMAKE_GENERATOR_TOOLSET": "v143"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "VS 2022 RelWithDebInfo",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "VS 2022",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "VS 2022 Release",
+            "description": "",
+            "displayName": "",
+            "configurePreset": "VS 2022",
+            "configuration": "Release"
+        }
+    ]
 }
-

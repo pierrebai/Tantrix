@@ -1,4 +1,9 @@
 #include <main_window.h>
+#include <draw_tantrix_puzzle.h>
+#include <tantrix_puzzle.h>
+#include <draw_six_eight_puzzle.h>
+#include <six_eight_puzzle.h>
+#include <dak/tantrix/puzzle.h>
 
 #include <resource.h>
 
@@ -289,11 +294,16 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ifstream puzzle_stream(path);
-         puzzle_stream >> my_puzzle;
-         my_puzzle_filename = path;
+         try
+         {
+            my_puzzle = load_tantrix_puzzle(path);
+         }
+         catch(const std::exception& e)
+         {
+            my_puzzle = load_six_eight_puzzle(path);
+         }
+         
          update_puzzle();
-
          my_solutions.clear();
          update_solutions();
       }
@@ -316,9 +326,10 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ofstream puzzle_stream(path);
-         puzzle_stream << my_puzzle;
-         my_puzzle_filename = path;
+         if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+            save_tantrix_puzzle(path, my_puzzle);
+         if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+            save_six_eight_puzzle(path, my_puzzle);
          update_puzzle();
       }
       catch (const std::exception& ex)
@@ -337,7 +348,10 @@ namespace dak::tantrix_solver_app
          std::string puzzle_text;
          {
             std::ostringstream puzzle_stream;
-            puzzle_stream << my_puzzle;
+            if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+               save_tantrix_puzzle(puzzle_stream, my_puzzle);
+            if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+               save_six_eight_puzzle(puzzle_stream, my_puzzle);
             puzzle_text = puzzle_stream.str();
          }
 
@@ -347,7 +361,10 @@ namespace dak::tantrix_solver_app
          {
             puzzle_text = new_text.toStdString();
             std::istringstream puzzle_stream(puzzle_text);
-            puzzle_stream >> my_puzzle;
+            if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+               my_puzzle = load_tantrix_puzzle(puzzle_stream);
+            if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+               my_puzzle = load_six_eight_puzzle(puzzle_stream);
          }
 
          update_puzzle();
@@ -374,6 +391,9 @@ namespace dak::tantrix_solver_app
 
       try
       {
+         if (my_solutions.size() <= 0)
+            return;
+
          // We must stop on load because otherwise the threads are preventing the dialog from opening!
          stop_puzzle();
 
@@ -381,8 +401,10 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ofstream solutions_stream(path);
-         solutions_stream << my_solutions;
+         if (dynamic_pointer_cast<tantrix::solution_t>(my_solutions.begin()->first))
+            save_tantrix_solutions(path, my_solutions);
+         if (dynamic_pointer_cast<six_eight::solution_t>(my_solutions.begin()->first))
+            save_six_eight_solutions(path, my_solutions);
       }
       catch (const std::exception& ex)
       {
@@ -403,8 +425,9 @@ namespace dak::tantrix_solver_app
          if (path.empty())
             return;
 
-         std::ifstream solutions_stream(path);
-         solutions_stream >> my_solutions;
+         my_solutions = load_tantrix_solutions(path);
+         if (my_solutions.size() <= 0)
+            load_six_eight_solutions(path);
          update_solutions();
       }
       catch (const std::exception& ex)
@@ -434,43 +457,17 @@ namespace dak::tantrix_solver_app
 
       my_puzzle_list->clear();
 
-      for (const auto& tile : my_puzzle->initial_tiles())
-      {
-         std::ostringstream stream;
-         stream << "Tile #" << tile;
-         my_puzzle_list->addItem(stream.str().c_str());
-      }
+      if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_tantrix_puzzle_description(my_puzzle))
+            my_puzzle_list->addItem(item.c_str());
 
-      static map<tantrix::color_t, const char*> color_names =
-      {
-         { tantrix::color_t::red(),    "Red"    },
-         { tantrix::color_t::green(),  "Green"  },
-         { tantrix::color_t::blue(),   "Blue"   },
-         { tantrix::color_t::yellow(), "Yellow" },
-      };
-
-      const char* const line_type = (my_puzzle->must_be_loops() ? "Loop" : "Line");
-
-      for (const auto& color : my_puzzle->line_colors())
-      {
-         std::ostringstream stream;
-         stream << color_names[color] << " " << line_type;
-         my_puzzle_list->addItem(stream.str().c_str());
-      }
-
-      if (std::dynamic_pointer_cast<tantrix::triangle_puzzle_t>(my_puzzle))
-         my_puzzle_list->addItem("Must be a triangle");
-
-      if (my_puzzle->holes_count().has_value())
-      {
-         std::ostringstream stream;
-         stream << "Must have " << my_puzzle->holes_count().value() << " holes";
-         my_puzzle_list->addItem(stream.str().c_str());
-      }
+      if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_six_eight_puzzle_description(my_puzzle))
+            my_puzzle_list->addItem(item.c_str());
 
       my_solving_attempts = 0;
       my_solving_stopwatch.elapsed();
-      my_stop_solving = true;
+      stop_progress(true);
 
       update_solving_attempts();
       update_solving_time();
@@ -485,30 +482,13 @@ namespace dak::tantrix_solver_app
       const int old_current_row = my_solutions_list->currentRow();
       my_solutions_list->clear();
 
-      size_t solution_index = 0;
-      for (const auto& [solution, count] : my_solutions)
-      {
-         std::ostringstream stream;
+      if (dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_tantrix_solutions_description(my_solutions))
+            my_solutions_list->addItem(item.c_str());
 
-         if (solution_index == 1000)
-         {
-            stream << "And " << my_solutions.size() - solution_index << " other solutions";
-            my_solutions_list->addItem(stream.str().c_str());
-            break;
-         }
-
-         stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
-         for (size_t i = 0; i < solution.tiles_count(); ++i)
-         {
-            const auto& placed_tile = solution.tiles()[i];
-            stream << "    "
-                   << std::setw(3) << placed_tile.pos.x()
-                   << " / "
-                   << std::setw(3) << placed_tile.pos.y()
-                   << " : tile #" << std::setw(2) << placed_tile.tile << "\n";
-         }
-         my_solutions_list->addItem(stream.str().c_str());
-      }
+      if (dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         for (const std::string& item : get_six_eight_solutions_description(my_solutions))
+            my_solutions_list->addItem(item.c_str());
 
       if (old_current_row >= 0 && old_current_row < my_solutions_list->count())
          my_solutions_list->setCurrentRow(old_current_row);
@@ -568,191 +548,31 @@ namespace dak::tantrix_solver_app
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
 
-      my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->line_colors().size() > 0);
+      my_solve_puzzle_action->setEnabled(false);
+      if (auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         my_solve_puzzle_action->setEnabled(puzzle->line_colors().size() > 0);
+      if (auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         my_solve_puzzle_action->setEnabled(puzzle->initial_tiles_count() > 0);
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
 
-   static constexpr double two_pi = 2 * 3.14159265;
-
-   static double dir_to_angle(const tantrix::direction_t& dir)
-   {
-      double angle = two_pi * dir.as_int() / 6.;
-      return angle;
-   }
-
-   static QPolygonF create_hexagon(const double tile_radius)
-   {
-      QPolygonF hexagon;
-
-      for (const auto& dir : tantrix::directions)
-      {
-         double angle = two_pi / 12. + dir_to_angle(dir);
-         QPointF point(std::cos(angle) * tile_radius, std::sin(angle) * tile_radius);
-         hexagon << point;
-      }
-
-      return hexagon;
-   }
-
-   static QPointF convert_tile_pos(const tantrix::position_t& a_pos, const double a_tile_radius)
-   {
-      const double tile_spacing_x = (a_tile_radius * std::sqrt(0.75) + 2) * 2;
-      const double tile_spacing_y = (a_tile_radius * 1.5 + 3);
-      const int x = a_pos.x();
-      const int y = a_pos.y();
-      const double draw_x_offset = y * tile_spacing_x / 2;
-      const double draw_x = x * tile_spacing_x + draw_x_offset;
-      const double draw_y = y * tile_spacing_y;
-      return QPointF(draw_x, draw_y);
-   }
-
-   static QPointF convert_tile_side(const tantrix::position_t& a_pos, const tantrix::direction_t& a_dir, const double a_tile_radius)
-   {
-      const QPointF center1 = convert_tile_pos(a_pos,             a_tile_radius);
-      const QPointF center2 = convert_tile_pos(a_pos.move(a_dir), a_tile_radius);
-
-      return QPointF(center1.x() * 0.6 + center2.x() * 0.4, center1.y() * 0.6 + center2.y() * 0.4);
-   }
-
-   static QPainterPath convert_tile_line(const tile_t& a_tile, const tantrix::position_t& a_pos, const QPointF& a_tile_center, double a_tile_radius, const tantrix::color_t& a_color, const QColor& a_qt_color)
-   {
-      auto dir1 = a_tile.find_color(a_color, 0);
-      auto dir2 = a_tile.find_color(a_color, dir1.rotate(1));
-
-      auto pos1 = convert_tile_side(a_pos, dir1, a_tile_radius);
-      auto pos2 = convert_tile_side(a_pos, dir2, a_tile_radius);
-
-      QPainterPath path;
-
-      const int dir_delta = std::abs(dir1.as_int() - dir2.as_int());
-      switch (dir_delta)
-      {
-         case 1:
-         case 5:
-         {
-            auto pos_between_1_center = a_tile_center * 0.02 + pos1 * 0.98;
-            auto pos_between_2_center = a_tile_center * 0.02 + pos2 * 0.98;
-
-            auto pos_between_1_2 = a_tile_center * 0.3 + pos_between_1_center * 0.35 + pos_between_2_center * 0.35;
-
-            path.moveTo(pos1);
-            path.lineTo(pos_between_1_center);
-            path.cubicTo(pos_between_1_2, pos_between_1_2, pos_between_2_center);
-            path.lineTo(pos2);
-
-            break;
-         }
-
-         case 3:
-         {
-            path.moveTo(pos1);
-            path.lineTo(pos2);
-
-            break;
-         }
-
-         case 2:
-         case 4:
-         {
-            auto pos_between_1_center = a_tile_center * 0.02 + pos1 * 0.98;
-            auto pos_between_2_center = a_tile_center * 0.02 + pos2 * 0.98;
-
-            auto pos_between_1_2 = a_tile_center * 0.6 + pos_between_1_center * 0.2 + pos_between_2_center * 0.2;
-
-
-            path.moveTo(pos1);
-            path.lineTo(pos_between_1_center);
-            path.cubicTo(pos_between_1_2, pos_between_1_2, pos_between_2_center);
-            path.lineTo(pos2);
-
-            break;
-         }
-      }
-
-      return path;
-   }
-
-   static std::map<tantrix::color_t, QColor> color_conversions =
-   {
-      { tantrix::color_t::red(),    QColor(220, 0, 0) },
-      { tantrix::color_t::green(),  QColor(0, 220, 0) },
-      { tantrix::color_t::blue(),   QColor(10, 10, 240) },
-      { tantrix::color_t::yellow(), QColor(220, 220, 0) },
-   };
-
-   const double tile_radius = 50;
-
-   static void draw_tile_in_scene(const tile_t& a_tile, const tantrix::position_t& a_pos, QGraphicsScene& a_scene)
-   {
-      QPen tile_pen(QColor(50, 50, 50, 128));
-      QBrush tile_brush(QColor(0, 0, 0));
-      tile_pen.setWidth(3);
-
-      QPolygonF polygon = create_hexagon(tile_radius);
-
-      const QPointF tile_center = convert_tile_pos(a_pos, tile_radius);
-      polygon.translate(tile_center);
-
-      auto hex = new QGraphicsPolygonItem(polygon);
-      hex->setPen(tile_pen);
-      hex->setBrush(tile_brush);
-      a_scene.addItem(hex);
-
-      for (const auto& [tc, qc] : color_conversions)
-      {
-         if (!a_tile.has_color(tc))
-            continue;
-
-         {
-            auto line = new QGraphicsPathItem(convert_tile_line(a_tile, a_pos, tile_center, tile_radius, tc, qc));
-            QPen line_pen(qc.darker());
-            line_pen.setWidth(tile_radius / 3.5);
-            line->setPen(line_pen);
-            a_scene.addItem(line);
-         }
-
-         {
-            auto line = new QGraphicsPathItem(convert_tile_line(a_tile, a_pos, tile_center, tile_radius, tc, qc));
-            QPen line_pen(qc);
-            line_pen.setWidth(tile_radius / 5);
-            line->setPen(line_pen);
-            a_scene.addItem(line);
-         }
-      }
-   }
-
-   static void draw_tile_selection(bool is_selected, const tantrix::position_t& a_pos, QGraphicsScene& a_scene)
-   {
-      const QPointF tile_center = convert_tile_pos(a_pos, tile_radius);
-      const double factor = 1.25;
-      auto selection = new QGraphicsEllipseItem(tile_center.x() - tile_radius * factor, tile_center.y() - tile_radius * factor,
-                                                                  tile_radius * 2 * factor,               tile_radius * 2 * factor);
-
-      QPen selection_pen(    is_selected ? QColor(100, 100, 100,   0) : QColor(100, 100, 100, 0));
-      QBrush selection_brush(is_selected ? QColor(120, 220, 240, 128) : QColor(100, 100, 100, 0));
-      selection_pen.setWidth(1);
-      selection->setPen(selection_pen);
-      selection->setBrush(selection_brush);
-
-      a_scene.addItem(selection);
-   }
-
-   std::optional<solution_t> main_window_t::get_selected_solution() const
+   solver::solution_t::ptr_t main_window_t::get_selected_solution() const
    {
       const int index = my_solutions_list->currentRow();
 
       if (index < 0 || index >= my_solutions.size())
          return {};
 
-      auto solution = my_solutions.begin();
-      std::advance(solution, index);
+      auto solution_it = my_solutions.begin();
+      std::advance(solution_it, index);
 
-      return std::optional<solution_t>(solution->first);
+      return solution_it->first;
    }
 
-   std::optional<tile_t> main_window_t::get_selected_tile() const
+   std::optional<tantrix::tile_t> main_window_t::get_selected_tantrix_tile() const
    {
-      if (!my_puzzle)
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle);
+      if (!puzzle)
          return {};
 
       auto selection_model = my_puzzle_list->selectionModel();
@@ -764,84 +584,57 @@ namespace dak::tantrix_solver_app
 
       const int index = selection_model->selectedRows().at(0).row();
 
-      if (index < 0 || index >= my_puzzle->initial_tiles().size())
+      if (index < 0 || index >= puzzle->initial_tiles().size())
          return {};
 
-      return std::optional<tile_t>(my_puzzle->initial_tiles()[index]);
+      return std::optional<tantrix::tile_t>(puzzle->initial_tiles()[index]);
+   }
+
+   std::optional<six_eight::tile_t> main_window_t::get_selected_six_eight_tile() const
+   {
+      auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle);
+      if (!puzzle)
+         return {};
+
+      auto selection_model = my_puzzle_list->selectionModel();
+      if (!selection_model)
+         return {};
+
+      if (selection_model->selectedRows().size() <= 0)
+         return {};
+
+      const int index = selection_model->selectedRows().at(0).row();
+
+      if (index < 0 || index >= puzzle->initial_tiles().size())
+         return {};
+
+      return std::optional<six_eight::tile_t>(puzzle->initial_tiles()[index]);
    }
 
    void main_window_t::draw_selected_puzzle_tile()
    {
       auto solution = get_selected_solution();
-      if (solution.has_value())
+      if (solution)
          return draw_selected_solution();
 
-      auto scene = new QGraphicsScene;
-
-      if (!my_puzzle)
-      {
-         delete my_solution_canvas->scene();
-         my_solution_canvas->setScene(scene);
-         return;
-      }
-
-      auto selected_tile = get_selected_tile();
-
-      const int tiles_per_row = std::sqrt(my_puzzle->initial_tiles_count());
-      int tile_index = 0;
-
-      for (const auto& tile : my_puzzle->initial_tiles())
-      {
-         const int tile_x = tile_index % tiles_per_row;
-         const int tile_y = tile_index / tiles_per_row;
-         const tantrix::position_t pos(tile_x * 2 - tile_y, tile_y * 2);
-
-         bool is_selected = selected_tile.has_value() && selected_tile.value().is_same(tile);
-
-         draw_tile_selection(is_selected, pos, *scene);
-         draw_tile_in_scene(tile, pos, *scene);
-
-         tile_index += 1;
-      }
-
-      delete my_solution_canvas->scene();
-      my_solution_canvas->setScene(scene);
+      if (auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         draw_tantrix_puzzle_tiles(my_solution_canvas, puzzle, get_selected_tantrix_tile());
+      if (auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         draw_six_eight_puzzle_tiles(my_solution_canvas, puzzle, get_selected_six_eight_tile());
    }
 
    void main_window_t::draw_selected_solution()
    {
       auto solution = get_selected_solution();
-      if (!solution.has_value())
+      if (!solution)
          return;
 
-      auto selected_tile = get_selected_tile();
-      std::optional<tantrix::position_t> selected_pos;
-
-      auto scene = new QGraphicsScene;
-
-      for (size_t i = 0; i < solution.value().tiles_count(); ++i)
-      {
-         const auto& placed_tile = solution.value().tiles()[i];
-         bool is_selected = selected_tile.has_value() && selected_tile.value().is_same(placed_tile.tile);
-         if (is_selected)
-         {
-            selected_pos = placed_tile.pos;
-            selected_tile = placed_tile.tile;
-            continue;
-         }
-
-         draw_tile_selection(false, placed_tile.pos, *scene);
-         draw_tile_in_scene(placed_tile.tile, placed_tile.pos, *scene);
-      }
-
-      if (selected_tile.has_value() && selected_pos.has_value())
-      {
-         draw_tile_selection(true, selected_pos.value(), *scene);
-         draw_tile_in_scene(selected_tile.value(), selected_pos.value(), *scene);
-      }
-
-      delete my_solution_canvas->scene();
-      my_solution_canvas->setScene(scene);
+      if (auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(my_puzzle))
+         if (auto sol = std::dynamic_pointer_cast<tantrix::solution_t>(solution))
+            draw_tantrix_solution(my_solution_canvas, puzzle, sol, get_selected_tantrix_tile());
+      if (auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(my_puzzle))
+         if (auto sol = std::dynamic_pointer_cast<six_eight::solution_t>(solution))
+            draw_six_eight_solution(my_solution_canvas, puzzle, sol, get_selected_six_eight_tile());
    }
 
    /////////////////////////////////////////////////////////////////////////
@@ -851,37 +644,40 @@ namespace dak::tantrix_solver_app
    void main_window_t::update_progress(size_t a_total_count_so_far)
    {
       my_solving_attempts = a_total_count_so_far;
-      if (my_stop_solving)
-         throw std::exception("Stop solving the puzzle.");
    }
 
    /////////////////////////////////////////////////////////////////////////
    //
-   // Asynchornous puzzle solving.
+   // Asynchronous puzzle solving.
 
    void main_window_t::solve_puzzle()
    {
       if (!my_puzzle)
          return;
 
-      my_stop_solving = false;
+      stop_progress(false);
       my_solving_attempts = 0;
       my_solving_stopwatch.start();
       my_async_solving = std::async(std::launch::async, [self = this, puzzle = my_puzzle]()
       {
          try
          {
-            return tantrix::solve(*puzzle, *self);
+            solver::solution_t::ptr_t initial_solution;
+            if (dynamic_pointer_cast<tantrix::puzzle_t>(puzzle))
+               initial_solution = std::make_shared<tantrix::solution_t>();
+            if (dynamic_pointer_cast<six_eight::puzzle_t>(puzzle))
+               initial_solution = std::make_shared<six_eight::solution_t>();
+            return solver::solve(puzzle, initial_solution, *self);
          }
          catch (const std::exception&)
          {
-            return all_solutions_t();
+            return solver::all_solutions_t();
          }
       });
       my_solve_puzzle_timer->start(500);
    }
 
-   bool main_window_t::is_async_filtering_ready()
+   bool main_window_t::is_async_puzzle_solving_done()
    {
       if (!my_async_solving.valid())
          return false;
@@ -897,7 +693,7 @@ namespace dak::tantrix_solver_app
       update_solving_attempts();
       update_solving_time();
 
-      if (!is_async_filtering_ready())
+      if (!is_async_puzzle_solving_done())
       {
          my_solve_puzzle_timer->start(500);
          return;
@@ -916,6 +712,6 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::stop_puzzle()
    {
-      my_stop_solving = true;
+      stop_progress(true);
    }
 }
