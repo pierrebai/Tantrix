@@ -306,9 +306,12 @@ namespace dak::six_eight
             if (tile.is_valid())
                tiles.push_back(tile);
          }
+         if (tiles.size() == 8)
+            break;
       }
 
-      a_puzzle.reset(new puzzle_t(tiles));
+      if (tiles.size() == 8)
+         a_puzzle.reset(new puzzle_t(tiles));
 
       return a_stream;
    }
@@ -327,9 +330,12 @@ namespace dak::six_eight
             if (tile.is_valid())
                tiles.push_back(tile);
          }
+         if (tiles.size() == 8)
+            break;
       }
 
-      a_puzzle.reset(new puzzle_t(tiles));
+      if (tiles.size() == 8)
+         a_puzzle.reset(new puzzle_t(tiles));
 
       return a_stream;
    }

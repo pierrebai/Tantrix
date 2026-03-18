@@ -20,6 +20,16 @@ namespace dak::tantrix_solver_app
       return puzzle;
    }
 
+   solver::problem_t::ptr_t load_six_eight_puzzle(const std::string& a_puzzle_desc)
+   {
+      std::istringstream stream(a_puzzle_desc);
+      std::string word;
+      stream >> word;
+      if (word != "6x8")
+         return {};
+      return load_six_eight_puzzle(stream);
+   }
+
    solver::problem_t::ptr_t load_six_eight_puzzle(const std::filesystem::path& a_path)
    {
       if (a_path.empty())
@@ -27,6 +37,33 @@ namespace dak::tantrix_solver_app
 
       std::ifstream puzzle_stream(a_path);
       return load_six_eight_puzzle(puzzle_stream);
+   }
+
+   std::vector<std::string> load_six_eight_puzzles(std::istream& a_stream)
+   {
+      std::vector<std::string> puzzles;
+      while (a_stream) {
+         std::shared_ptr<six_eight::puzzle_t> puzzle;
+         a_stream >> puzzle;
+         if (puzzle) {
+            std::string desc;
+            std::ostringstream stream;
+            stream << "6x8 ";
+            for (const auto& tile : puzzle->initial_tiles())
+               stream <<tile.id() << " ";
+            puzzles.emplace_back(stream.str());
+         }
+      }
+      return puzzles;
+   }
+
+   std::vector<std::string> load_six_eight_puzzles(const std::filesystem::path& a_path)
+   {
+      if (a_path.empty())
+         return{};
+
+      std::ifstream puzzle_stream(a_path);
+      return load_six_eight_puzzles(puzzle_stream);
    }
 
    void save_six_eight_puzzle(std::ostream& a_stream, const solver::problem_t::ptr_t& a_puzzle)
@@ -85,7 +122,7 @@ namespace dak::tantrix_solver_app
 
       for (const auto& tile : puzzle->initial_tiles()) {
          std::ostringstream stream;
-         stream << "Tile " << tile;
+         stream << "Tile " << tile.id();
          description.emplace_back(stream.str().c_str());
       }
 
@@ -118,7 +155,7 @@ namespace dak::tantrix_solver_app
                    << std::setw(3) << placed_tile.pos.x()
                    << " / "
                    << std::setw(3) << placed_tile.pos.y()
-                   << " : tile" << std::setw(2) << placed_tile.tile << "\n";
+                   << " : tile" << std::setw(2) << placed_tile.tile.id() << "\n";
          }
          description.emplace_back(stream.str().c_str());
       }

@@ -58,8 +58,12 @@ namespace dak::tantrix_solver_app
 
       // Puzzle.
       void load_puzzle();
+      void load_puzzle(const std::string& a_path_or_desc);
       void load_puzzle(const std::filesystem::path& a_path);
+      void load_puzzle_from_desc(const std::string& a_desc);
+      void load_puzzle(const solver::problem_t::ptr_t& a_puzzle);
       void load_puzzle_from_available_puzzle(int a_row);
+
       void save_puzzle();
       void edit_puzzle();
 
