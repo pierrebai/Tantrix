@@ -86,6 +86,8 @@ namespace dak::tantrix
          return tile_t(*this).rotate_in_place(an_amount);
       }
 
+      int rotation() const { return my_rotation; }
+
       // Check if the tile are the same tile, ignoring orientation.
       bool is_same(const tile_t& an_other) const
       {

@@ -12,10 +12,10 @@ find_package(Qt5 COMPONENTS WinExtras REQUIRED)
 add_executable(tantrix_solver_app WIN32
    src/tantrix_solver_app.cpp
    src/main_window.cpp                  include/main_window.h
-   src/draw_tantrix_puzzle.cpp          include/draw_tantrix_puzzle.h
-   src/tantrix_puzzle.cpp               include/tantrix_puzzle.h
-   src/draw_six_eight_puzzle.cpp        include/draw_six_eight_puzzle.h
-   src/six_eight_puzzle.cpp             include/six_eight_puzzle.h
+   src/draw_tantrix_puzzle.cpp          
+   src/tantrix_puzzle.cpp               include/tantrix_puzzle_api.h
+   src/draw_six_eight_puzzle.cpp        
+   src/six_eight_puzzle.cpp             include/six_eight_puzzle_api.h
 
    resources/resource.rc                resources/resource.h
 
@@ -73,10 +73,10 @@ set(CPACK_GENERATOR NSIS)
 set(CPACK_PACKAGE_NAME "TantrixSolver")
 set(CPACK_PACKAGE_VENDOR "Pierre Baillargeon")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Tantrix Solver - An application to solve Tantrix(tm) puzzles.")
-set(CPACK_PACKAGE_VERSION "1.4.1")
+set(CPACK_PACKAGE_VERSION "1.5.0")
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "4")
-set(CPACK_PACKAGE_VERSION_PATCH "1")
+set(CPACK_PACKAGE_VERSION_MINOR "5")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
 set(CPACK_PACKAGE_INSTALL_DIRECTORY "Tantrix Solver")
 set(CPACK_RESOURCE_FILE_LICENSE "${PROJECT_SOURCE_DIR}/LICENSE")
 

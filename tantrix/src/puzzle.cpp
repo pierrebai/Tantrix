@@ -81,6 +81,9 @@ namespace dak::tantrix
 
    bool puzzle_t::has_more_sub_problems(const solver::sub_problem_t::ptr_t& a_current_sub_problem) const
    {
+      if (!a_current_sub_problem)
+         return my_initial_tiles.size() > 0;
+         
       auto sub_puzzle = std::dynamic_pointer_cast<sub_puzzle_t>(a_current_sub_problem);
       if (!sub_puzzle)
          return false;

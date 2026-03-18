@@ -407,7 +407,7 @@ namespace dak::tantrix
       auto puzzle = std::dynamic_pointer_cast<puzzle_t>(a_problem);
       if (!puzzle)
          return true;
-      return puzzle->initial_tiles_count() - my_tiles_count < 3;
+      return puzzle->initial_tiles().size() - my_tiles_count < 3;
    }
    
    size_t solution_t::count_neighbours(const position_t& a_pos) const

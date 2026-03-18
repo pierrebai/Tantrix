@@ -1,5 +1,7 @@
 #pragma once
 
+#include <puzzle_api.h>
+
 #include <QtWidgets/qmainwindow.h>
 #include <QtWidgets/qlistwidget.h>
 
@@ -7,14 +9,10 @@
 #include <dak/utility/progress.h>
 #include <dak/utility/stopwatch.h>
 
-#include <dak/tantrix/tile.h>
-#include <dak/six_eight/tile.h>
-
 #include <chrono>
 #include <future>
 #include <memory>
 #include <filesystem>
-#include <optional>
 
 class QToolButton;
 class QAction;
@@ -58,7 +56,6 @@ namespace dak::tantrix_solver_app
 
       // Puzzle.
       void load_puzzle();
-      void load_puzzle(const std::string& a_path_or_desc);
       void load_puzzle(const std::filesystem::path& a_path);
       void load_puzzle_from_desc(const std::string& a_desc);
       void load_puzzle(const solver::problem_t::ptr_t& a_puzzle);
@@ -81,8 +78,7 @@ namespace dak::tantrix_solver_app
 
       // UI updates from data.
       solver::solution_t::ptr_t get_selected_solution() const;
-      std::optional<tantrix::tile_t> get_selected_tantrix_tile() const;
-      std::optional<six_eight::tile_t> get_selected_six_eight_tile() const;
+      std::string get_selected_tile() const;
 
       void update_puzzle();
       void update_solutions();
@@ -134,6 +130,7 @@ namespace dak::tantrix_solver_app
       QErrorMessage*    my_error_message = nullptr;
 
       // Data.
+      std::vector<puzzle_api_t::ptr_t>          my_puzzle_apis;
       solver::problem_t::ptr_t                  my_puzzle;
       std::filesystem::path                     my_puzzle_filename;
       solver::all_solutions_t                   my_solutions;

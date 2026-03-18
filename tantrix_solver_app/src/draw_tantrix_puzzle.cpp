@@ -1,7 +1,10 @@
-#include <draw_tantrix_puzzle.h>
+#include <tantrix_puzzle_api.h>
 
+#include <dak/tantrix/puzzle.h>
+#include <dak/tantrix/solution.h>
 #include <dak/tantrix/direction.h>
 #include <dak/tantrix/color.h>
+#include <dak/tantrix/stream.h>
 
 #include <QtWidgets/qgraphicsview.h>
 #include <QtWidgets/qgraphicsscene.h>
@@ -9,6 +12,8 @@
 
 #include <QtGui/qpainter.h>
 #include <QtGui/qevent.h>
+
+#include <sstream>
 
 namespace dak::tantrix_solver_app
 {
@@ -161,7 +166,7 @@ namespace dak::tantrix_solver_app
       }
    }
 
-   static void draw_tile_selection(bool is_selected, const tantrix::position_t& a_pos, QGraphicsScene& a_scene)
+   static void draw_tile_selection(const tantrix::position_t& a_pos, QGraphicsScene& a_scene, bool is_selected)
    {
       const QPointF tile_center = convert_tile_pos(a_pos, tile_radius);
       const double factor = 1.25;
@@ -177,35 +182,45 @@ namespace dak::tantrix_solver_app
       a_scene.addItem(selection);
    }
 
-   void draw_tantrix_puzzle_tiles(
+   static bool is_selected_tile(const tantrix::tile_t& a_tile, const std::string& a_selected_tile)
+   {
+      tantrix::tile_t unrotated(a_tile.number());
+
+      std::ostringstream stream;
+      stream << "Tile #" << unrotated;
+      return stream.str() == a_selected_tile;
+   }
+
+   void tantrix_puzzle_api_t::draw_puzzle_tiles(
       QGraphicsView* a_view,
-      const std::shared_ptr<tantrix::puzzle_t>& a_puzzle,
-      const std::optional<tantrix::tile_t>& a_selected_tile)
+      const solver::problem_t::ptr_t& a_puzzle,
+      const std::string& a_selected_tile)
    {
       if (!a_view)
          return;
 
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(a_puzzle);
+
       auto scene = new QGraphicsScene;
 
-      if (!a_puzzle)
+      if (!puzzle)
       {
          delete a_view->scene();
          a_view->setScene(scene);
          return;
       }
 
-      const int tiles_per_row = std::sqrt(a_puzzle->initial_tiles_count());
+      const int tiles_per_row = std::sqrt(puzzle->initial_tiles().size());
       int tile_index = 0;
 
-      for (const auto& tile : a_puzzle->initial_tiles())
+      for (const auto& tile : puzzle->initial_tiles())
       {
          const int tile_x = tile_index % tiles_per_row;
          const int tile_y = tile_index / tiles_per_row;
          const tantrix::position_t pos(tile_x * 2 - tile_y, tile_y * 2);
 
-         bool is_selected = a_selected_tile.has_value() && a_selected_tile.value().is_same(tile);
-
-         draw_tile_selection(is_selected, pos, *scene);
+         // Note: we always draw the selection to avoid the scene shifting.
+         draw_tile_selection(pos, *scene, is_selected_tile(tile, a_selected_tile));
          draw_tile_in_scene(tile, pos, *scene);
 
          tile_index += 1;
@@ -215,16 +230,17 @@ namespace dak::tantrix_solver_app
       a_view->setScene(scene);
    }
 
-   void draw_tantrix_solution(
+   void tantrix_puzzle_api_t::draw_solution(
       QGraphicsView* a_view,
-      const std::shared_ptr<tantrix::puzzle_t>& a_puzzle,
-      const std::shared_ptr<tantrix::solution_t>& a_solution,
-      const std::optional<tantrix::tile_t>& a_selected_tile)
+      const solver::problem_t::ptr_t& a_puzzle,
+      const solver::solution_t::ptr_t& a_solution,
+      const std::string& a_selected_tile)
    {
       if (!a_view)
          return;
 
-      if (!a_solution)
+      auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(a_solution);
+      if (!solution)
          return;
 
       std::optional<tantrix::tile_t> selected_tile;
@@ -232,24 +248,24 @@ namespace dak::tantrix_solver_app
 
       auto scene = new QGraphicsScene;
 
-      for (size_t i = 0; i < a_solution->tiles_count(); ++i)
+      for (size_t i = 0; i < solution->tiles_count(); ++i)
       {
-         const auto& placed_tile = a_solution->tiles()[i];
-         bool is_selected = a_selected_tile.has_value() && a_selected_tile.value().is_same(placed_tile.tile);
-         if (is_selected)
+         const auto& placed_tile = solution->tiles()[i];
+         if (is_selected_tile(placed_tile.tile, a_selected_tile))
          {
             selected_pos = placed_tile.pos;
             selected_tile = placed_tile.tile;
             continue;
          }
 
-         draw_tile_selection(false, placed_tile.pos, *scene);
+         // Note: we always draw the selection to avoid the scene shifting.
+         draw_tile_selection(placed_tile.pos, *scene, false);
          draw_tile_in_scene(placed_tile.tile, placed_tile.pos, *scene);
       }
 
       if (selected_tile.has_value() && selected_pos.has_value())
       {
-         draw_tile_selection(true, selected_pos.value(), *scene);
+         draw_tile_selection(selected_pos.value(), *scene, true);
          draw_tile_in_scene(selected_tile.value(), selected_pos.value(), *scene);
       }
 

@@ -1,14 +1,16 @@
-#include <dak/six_eight/stream.h>
+#include <six_eight_puzzle_api.h>
+
+#include <dak/six_eight/puzzle.h>
+#include <dak/six_eight/solution.h>
 #include <dak/six_eight/direction.h>
 #include <dak/six_eight/tile.h>
+#include <dak/six_eight/stream.h>
 
 #include <QtWidgets/qgraphicsview.h>
 #include <QtWidgets/qgraphicsscene.h>
 #include <QtWidgets/qgraphicsitem.h>
 
-#include <fstream>
 #include <sstream>
-#include <iomanip>
 
 namespace dak::tantrix_solver_app
 {
@@ -116,31 +118,41 @@ namespace dak::tantrix_solver_app
       }
    }
 
-   void draw_six_eight_puzzle_tiles(
-      QGraphicsView* a_view,
-      const std::shared_ptr<six_eight::puzzle_t>& a_puzzle,
-      const std::optional<six_eight::tile_t>& a_selected_tile)
+   static bool is_selected_tile(const six_eight::tile_t& a_tile, const std::string& a_selected_tile)
    {
+      std::ostringstream stream;
+      stream << "Tile " << a_tile.id();
+      return stream.str() == a_selected_tile;
+   }
+
+   void six_eight_puzzle_api_t::draw_puzzle_tiles(
+      QGraphicsView* a_view,
+      const solver::problem_t::ptr_t& a_puzzle,
+      const std::string& a_selected_tile)
+   {
+      const auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(a_puzzle);
+      if (!puzzle)
+         return;
+
       auto scene = new QGraphicsScene;
 
-      if (!a_puzzle) {
+      if (!puzzle) {
          delete a_view->scene();
          a_view->setScene(scene);
          return;
       }
 
-      const int tiles_per_row = 1 + std::sqrt(a_puzzle->initial_tiles_count());
+      const int tiles_per_row = 1 + std::sqrt(puzzle->initial_tiles().size());
       int tile_index = 0;
 
-      for (const auto& tile : a_puzzle->initial_tiles())
+      for (const auto& tile : puzzle->initial_tiles())
       {
          const int tile_x = tile_index % tiles_per_row;
          const int tile_y = tile_index / tiles_per_row;
          const six_eight::position_t pos(tile_x * 6, tile_y * 6);
 
-         bool is_selected = a_selected_tile.has_value() && a_selected_tile.value().is_same(tile);
-
-         draw_tile_selection(tile, pos, *scene, is_selected);
+         // Note: we always draw the selection to avoid the scene shifting.
+         draw_tile_selection(tile, pos, *scene, is_selected_tile(tile, a_selected_tile));
          draw_tile_in_scene(tile, pos, *scene, tile_index);
 
          tile_index += 1;
@@ -150,13 +162,14 @@ namespace dak::tantrix_solver_app
       a_view->setScene(scene);
    }
 
-   void draw_six_eight_solution(
+   void six_eight_puzzle_api_t::draw_solution(
       QGraphicsView* a_view,
-      const std::shared_ptr<six_eight::puzzle_t>& /*a_puzzle*/,
-      const std::shared_ptr<six_eight::solution_t>& a_solution,
-      const std::optional<six_eight::tile_t>& a_selected_tile)
+      const solver::problem_t::ptr_t& /*a_puzzle*/,
+      const solver::solution_t::ptr_t& a_solution,
+      const std::string& a_selected_tile)
    {
-      if (!a_solution)
+      auto solution = std::dynamic_pointer_cast<six_eight::solution_t>(a_solution);
+      if (!solution)
          return;
 
       std::optional<six_eight::tile_t> selected_tile;
@@ -165,17 +178,17 @@ namespace dak::tantrix_solver_app
 
       auto scene = new QGraphicsScene;
 
-      for (size_t i = 0; i < a_solution->tiles_count(); ++i)
+      for (size_t i = 0; i < solution->tiles_count(); ++i)
       {
-         const auto& placed_tile = a_solution->tiles()[i];
-         bool is_selected = a_selected_tile.has_value() && a_selected_tile.value().is_same(placed_tile.tile);
-         if (is_selected) {
+         const auto& placed_tile = solution->tiles()[i];
+         if (is_selected_tile(placed_tile.tile, a_selected_tile)) {
             selected_pos = placed_tile.pos;
             selected_tile = placed_tile.tile;
             selected_index = i;
             continue;
          }
 
+         // Note: we always draw the selection to avoid the scene shifting.
          draw_tile_selection(placed_tile.tile, placed_tile.pos, *scene, false);
          draw_tile_in_scene(placed_tile.tile, placed_tile.pos, *scene, i);
       }

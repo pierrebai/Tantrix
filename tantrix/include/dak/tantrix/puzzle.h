@@ -64,7 +64,6 @@ namespace dak::tantrix
 
       // The list of tiles to place.
       const tiles_t& initial_tiles() const { return my_initial_tiles; }
-      size_t initial_tiles_count() const { return my_initial_tiles.size(); }
 
       // The list of lines or loops to form.
       const line_colors_t& line_colors() const { return my_line_colors; }

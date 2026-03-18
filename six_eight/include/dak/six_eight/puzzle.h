@@ -7,9 +7,9 @@
 #include "dak/six_eight/position.h"
 #include "dak/six_eight/tile.h"
 
-#include <vector>
 #include <algorithm>
-#include <optional>
+#include <string>
+#include <vector>
 
 
 namespace dak::six_eight
@@ -64,7 +64,7 @@ namespace dak::six_eight
 
       // The list of tiles to place.
       const tiles_t& initial_tiles() const { return my_initial_tiles; }
-      size_t initial_tiles_count() const { return my_initial_tiles.size(); }
+      const tile_t* get_tile(const std::string) const;
 
    protected:
       tiles_t my_initial_tiles;

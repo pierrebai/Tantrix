@@ -1,3 +1,5 @@
+#include <tantrix_puzzle_api.h>
+
 #include <dak/solver/problem.h>
 #include <dak/solver/solution.h>
 #include <dak/solver/solve.h>
@@ -13,14 +15,39 @@
 
 namespace dak::tantrix_solver_app
 {
-   solver::problem_t::ptr_t load_tantrix_puzzle(std::istream& a_stream)
+   solver::solution_t::ptr_t tantrix_puzzle_api_t::make_initial_solution(const solver::problem_t::ptr_t& a_puzzle)
+   {
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(a_puzzle);
+      if (!puzzle)
+         return {};
+
+         return std::make_shared<tantrix::solution_t>();
+   }
+
+   static std::shared_ptr<tantrix::puzzle_t> load_tantrix_puzzle(std::istream& a_stream)
    {
       std::shared_ptr<tantrix::puzzle_t> puzzle;
       a_stream >> puzzle;
       return puzzle;
    }
 
-   solver::problem_t::ptr_t load_tantrix_puzzle(const std::filesystem::path& a_path)
+   solver::problem_t::ptr_t tantrix_puzzle_api_t::load_puzzle_from_text(const std::string& a_puzzle_desc)
+   {
+      std::istringstream stream(a_puzzle_desc);
+      return load_tantrix_puzzle(stream);
+   }
+
+   std::string tantrix_puzzle_api_t::save_puzzle_to_text(const solver::problem_t::ptr_t& a_puzzle)
+   {
+      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(a_puzzle);
+      if (!puzzle)
+         return {};
+      std::ostringstream stream;
+      stream << puzzle << std::endl;
+      return stream.str();
+   }
+
+   std::shared_ptr<tantrix::puzzle_t> load_tantrix_puzzle(const std::filesystem::path& a_path)
    {
       if (a_path.empty())
          return {};
@@ -29,12 +56,25 @@ namespace dak::tantrix_solver_app
       return load_tantrix_puzzle(puzzle_stream);
    }
 
-   void save_tantrix_puzzle(std::ostream& a_stream, const solver::problem_t::ptr_t& a_puzzle)
+   std::vector<std::pair<std::string, std::string>> tantrix_puzzle_api_t::load_puzzle_descriptions(const std::filesystem::path& a_path)
+   {
+      std::shared_ptr<tantrix::puzzle_t> puzzle = load_tantrix_puzzle(a_path);
+      if (!puzzle)
+         return {};
+      return { { a_path.filename().string(), a_path.string() } };
+   }
+
+   solver::problem_t::ptr_t tantrix_puzzle_api_t::load_puzzle_from_description(const std::string& a_desc)
+   {
+      return load_tantrix_puzzle(std::filesystem::path(a_desc));
+   }
+
+   static void save_tantrix_puzzle(std::ostream& a_stream, const solver::problem_t::ptr_t& a_puzzle)
    {
       a_stream << std::dynamic_pointer_cast<tantrix::puzzle_t>(a_puzzle);
    }
 
-   void save_tantrix_puzzle(const std::filesystem::path& a_path, const solver::problem_t::ptr_t& a_puzzle)
+   void tantrix_puzzle_api_t::save_puzzle(const std::filesystem::path& a_path, const solver::problem_t::ptr_t& a_puzzle)
    {
       if (a_path.empty())
          return;
@@ -43,7 +83,7 @@ namespace dak::tantrix_solver_app
       save_tantrix_puzzle(puzzle_stream, a_puzzle);
    }
 
-   void save_tantrix_solutions(const std::filesystem::path& a_path, const solver::all_solutions_t& some_solutions)
+   void tantrix_puzzle_api_t::save_solutions(const std::filesystem::path& a_path, const solver::all_solutions_t& some_solutions)
    {
       if (a_path.empty())
          return;
@@ -58,7 +98,7 @@ namespace dak::tantrix_solver_app
       }
    }
 
-   solver::all_solutions_t load_tantrix_solutions(const std::filesystem::path& a_path)
+   solver::all_solutions_t tantrix_puzzle_api_t::load_solutions(const std::filesystem::path& a_path)
    {
       if (a_path.empty())
          return {};
@@ -74,7 +114,7 @@ namespace dak::tantrix_solver_app
       return solver_solutions;
    }
 
-   std::vector<std::string> get_tantrix_puzzle_description(const solver::problem_t::ptr_t& a_problem)
+   std::vector<std::string> tantrix_puzzle_api_t::get_puzzle_description(const solver::problem_t::ptr_t& a_problem)
    {
       auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(a_problem);
       if (!puzzle)
@@ -119,13 +159,17 @@ namespace dak::tantrix_solver_app
       return description;
    }
 
-   std::vector<std::string> get_tantrix_solutions_description(const solver::all_solutions_t& some_solutions)
+   std::vector<std::string> tantrix_puzzle_api_t::get_solutions_description(const solver::all_solutions_t& some_solutions)
    {
       std::vector<std::string> description;
 
       size_t solution_index = 0;
       for (const auto& [abstract_solution, count] : some_solutions)
       {
+         auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(abstract_solution);
+         if (!solution)
+            return {};
+
          std::ostringstream stream;
 
          if (solution_index == 1000 && some_solutions.size() > 1010)
@@ -134,10 +178,6 @@ namespace dak::tantrix_solver_app
             description.emplace_back(stream.str().c_str());
             break;
          }
-
-         auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(abstract_solution);
-         if (!solution)
-            continue;
 
          stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
          for (size_t i = 0; i < solution->tiles_count(); ++i)

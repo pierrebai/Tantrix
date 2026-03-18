@@ -67,7 +67,7 @@ namespace dak::tantrix
          return {};
 
       std::vector<solver::sub_problem_t::ptr_t> sub_puzzles;
-      for (size_t i = 0; i < initial_tiles_count(); ++i)
+      for (size_t i = 0; i < initial_tiles().size(); ++i)
       {
          for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
          {
