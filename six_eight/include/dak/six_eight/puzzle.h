@@ -39,6 +39,9 @@ namespace dak::six_eight
       puzzle_t();
       puzzle_t(const std::vector<tile_t>& some_tiles);
 
+      // Verify if the problem is valid.
+      bool is_valid() const override;
+
       // Solver interaction.
 
       // Create the initial list of sub-puzzles to solve.

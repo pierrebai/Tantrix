@@ -31,13 +31,13 @@ namespace dak::tantrix_solver_app
       return puzzle;
    }
 
-   solver::problem_t::ptr_t tantrix_puzzle_api_t::load_puzzle_from_text(const std::string& a_puzzle_desc)
+   solver::problem_t::ptr_t tantrix_puzzle_api_t::convert_text_to_puzzle(const std::string& a_puzzle_desc)
    {
       std::istringstream stream(a_puzzle_desc);
       return load_tantrix_puzzle(stream);
    }
 
-   std::string tantrix_puzzle_api_t::save_puzzle_to_text(const solver::problem_t::ptr_t& a_puzzle)
+   std::string tantrix_puzzle_api_t::convert_puzzle_to_text(const solver::problem_t::ptr_t& a_puzzle)
    {
       auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(a_puzzle);
       if (!puzzle)

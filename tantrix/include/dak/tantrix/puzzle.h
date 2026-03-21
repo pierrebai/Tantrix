@@ -54,6 +54,9 @@ namespace dak::tantrix
                bool must_be_loops,
                const maybe_size_t& a_holes_count = {});
 
+      // Verify if the problem is valid.
+      bool is_valid() const override;
+
       // Verify if there are more sub-puzzles to be created from the given sub-puzzle.
       bool has_more_sub_problems(const solver::sub_problem_t::ptr_t& a_current_sub_problem) const override;
 

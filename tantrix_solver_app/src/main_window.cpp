@@ -430,7 +430,7 @@ namespace dak::tantrix_solver_app
          std::string puzzle_text;
          std::shared_ptr<puzzle_api_t> good_puzzle_api;
          for (const auto& puzzle_api : my_puzzle_apis) {
-            puzzle_text = puzzle_api->save_puzzle_to_text(my_puzzle);
+            puzzle_text = puzzle_api->convert_puzzle_to_text(my_puzzle);
             if (!puzzle_text.empty()) {
                good_puzzle_api = puzzle_api;
                break;
@@ -442,7 +442,7 @@ namespace dak::tantrix_solver_app
          if (!new_text.isEmpty())
          {
             puzzle_text = new_text.toStdString();
-            my_puzzle = good_puzzle_api->load_puzzle_from_text(puzzle_text);
+            my_puzzle = good_puzzle_api->convert_text_to_puzzle(puzzle_text);
          }
 
          update_puzzle();
@@ -627,7 +627,7 @@ namespace dak::tantrix_solver_app
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
 
-      my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->has_more_sub_problems(nullptr));
+      my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->is_valid());
       my_stop_puzzle_action->setEnabled(my_async_solving.valid());
    }
 

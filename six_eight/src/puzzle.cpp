@@ -21,6 +21,11 @@ namespace dak::six_eight
    {
    }
 
+   bool puzzle_t::is_valid() const
+   {
+      return my_initial_tiles.size() > 0;
+   }
+
    // Create the initial list of sub-puzzles to solve.
    std::vector<solver::sub_problem_t::ptr_t> puzzle_t::create_initial_sub_problems() const
    {
@@ -121,10 +126,10 @@ namespace dak::six_eight
 
    bool puzzle_t::has_more_sub_problems(const solver::sub_problem_t::ptr_t& a_current_sub_problem) const
    {
-      if (!a_current_sub_problem)
-         return my_initial_tiles.size() > 0;
-         
       auto sub_puzzle = std::dynamic_pointer_cast<sub_puzzle_t>(a_current_sub_problem);
+      if (!a_current_sub_problem)
+         return false;
+
       return sub_puzzle->other_tiles.size() > 0;
    }
 

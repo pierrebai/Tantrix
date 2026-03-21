@@ -10,8 +10,8 @@ namespace dak::tantrix_solver_app
 
       solver::solution_t::ptr_t make_initial_solution(const solver::problem_t::ptr_t& a_puzzle) override;
 
-      solver::problem_t::ptr_t load_puzzle_from_text(const std::string& a_puzzle_desc) override;
-      std::string save_puzzle_to_text(const solver::problem_t::ptr_t & a_puzzle) override;
+      solver::problem_t::ptr_t convert_text_to_puzzle(const std::string& a_puzzle_desc) override;
+      std::string convert_puzzle_to_text(const solver::problem_t::ptr_t & a_puzzle) override;
       
       std::vector<std::pair<std::string, std::string>> load_puzzle_descriptions(const std::filesystem::path& a_path) override;
       solver::problem_t::ptr_t load_puzzle_from_description(const std::string& a_desc) override;
