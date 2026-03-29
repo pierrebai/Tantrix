@@ -79,6 +79,8 @@ namespace dak::tantrix
       // have the same set of positions and orientation.
       void normalize();
 
+      int value() const;
+
       // Check if a position is already occupied.
       bool is_occupied(const position_t& a_pos) const;
 

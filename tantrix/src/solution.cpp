@@ -42,7 +42,13 @@ namespace dak::tantrix
          return order;
 
       for (size_t i = 0; i < my_tiles_count; ++i) {
-         order = (my_tiles[i] <=> another_solution.my_tiles[i]);
+         order = (my_tiles[i].pos <=> another_solution.my_tiles[i].pos);
+         if (order != std::strong_ordering::equal)
+            return order;
+      }
+
+      for (size_t i = 0; i < my_tiles_count; ++i) {
+         order = (my_tiles[i].tile <=> another_solution.my_tiles[i].tile);
          if (order != std::strong_ordering::equal)
             return order;
       }
@@ -191,9 +197,43 @@ namespace dak::tantrix
       return rotated;
    }
 
+   int solution_t::value() const
+   {
+      int value = 0;
+      for (size_t i = 0; i < my_tiles_count; ++i) {
+         const placed_tile_t& placed_tile = my_tiles[i];
+         value += placed_tile.pos.x() * 1000;
+         value += placed_tile.pos.y();
+      }
+      return value;
+   }
+
    void solution_t::normalize()
    {
+      {
+         const solution_t original_solution = *this;
+         int lowest_rotation_value = 1000000;
+         for (int rotation = 0; rotation < 6; ++rotation) {
+            solution_t rot_solution = original_solution.rotate(rotation);
+
+            std::sort(rot_solution.my_tiles, rot_solution.my_tiles + rot_solution.my_tiles_count);
+            const position_t new_origin = rot_solution.my_tiles[0].pos;
+            rot_solution.rotate_in_place(0, new_origin);
+
+            int rot_value = rot_solution.value();
+            if (rot_value < lowest_rotation_value) {
+               lowest_rotation_value = rot_value;
+               *this = rot_solution;
+            }
+         }
+      }
+
       std::sort(my_tiles, my_tiles + my_tiles_count);
+
+      {
+         const position_t new_origin = my_tiles[0].pos;
+         rotate_in_place(0, new_origin);
+      }
    }
 
    std::vector<position_t> solution_t::get_borders(const std::optional<color_t>& a_color) const

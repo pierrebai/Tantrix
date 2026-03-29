@@ -179,7 +179,7 @@ namespace dak::tantrix_solver_app
             break;
          }
 
-         stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
+         stream << "Solution #" << ++solution_index << " found " << count << " times" << ":\n";
          for (size_t i = 0; i < solution->tiles_count(); ++i)
          {
             const auto& placed_tile = solution->tiles()[i];
@@ -187,7 +187,7 @@ namespace dak::tantrix_solver_app
                    << std::setw(3) << placed_tile.pos.x()
                    << " / "
                    << std::setw(3) << placed_tile.pos.y()
-                   << " : tile #" << std::setw(2) << placed_tile.tile << "\n";
+                   << " : tile #" << std::setw(2) << placed_tile.tile.number() << "\n";
          }
          description.emplace_back(stream.str().c_str());
       }

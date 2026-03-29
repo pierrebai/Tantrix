@@ -117,23 +117,28 @@ namespace dak::tantrix::tests
 			sol.add_tile(tile_t( 8), position_t( 2,  1));
 			sol.add_tile(tile_t( 5), position_t( 2,  2));
 			sol.add_tile(tile_t( 6), position_t( 3,  2));
+         sol.normalize();
 
 			solution_t sol_unordered;
-			sol_unordered.add_tile(tile_t( 4), position_t( 1,  2));
-			sol_unordered.add_tile(tile_t(12), position_t(-1,  0));
-			sol_unordered.add_tile(tile_t( 8), position_t( 2,  1));
-			sol_unordered.add_tile(tile_t( 9), position_t( 0,  1));
-			sol_unordered.add_tile(tile_t(13), position_t(-2,  4));
-			sol_unordered.add_tile(tile_t( 3), position_t( 0,  2));
-			sol_unordered.add_tile(tile_t( 1), position_t( 0,  0));
-			sol_unordered.add_tile(tile_t( 5), position_t( 2,  2));
-			sol_unordered.add_tile(tile_t(10), position_t( 0,  4));
-			sol_unordered.add_tile(tile_t( 2), position_t( 1,  0));
-			sol_unordered.add_tile(tile_t( 7), position_t(-1,  3));
-			sol_unordered.add_tile(tile_t(11), position_t( 1,  4));
-			sol_unordered.add_tile(tile_t( 6), position_t( 3,  2));
+			sol_unordered.add_tile(tile_t( 4), position_t( 1,  7));
+			sol_unordered.add_tile(tile_t(12), position_t(-1,  5));
+			sol_unordered.add_tile(tile_t( 8), position_t( 2,  6));
+			sol_unordered.add_tile(tile_t( 9), position_t( 0,  6));
+			sol_unordered.add_tile(tile_t(13), position_t(-2,  9));
+			sol_unordered.add_tile(tile_t( 3), position_t( 0,  7));
+			sol_unordered.add_tile(tile_t( 1), position_t( 0,  5));
+			sol_unordered.add_tile(tile_t( 5), position_t( 2,  7));
+			sol_unordered.add_tile(tile_t(10), position_t( 0,  9));
+			sol_unordered.add_tile(tile_t( 2), position_t( 1,  5));
+			sol_unordered.add_tile(tile_t( 7), position_t(-1,  8));
+			sol_unordered.add_tile(tile_t(11), position_t( 1,  9));
+			sol_unordered.add_tile(tile_t( 6), position_t( 3,  7));
+         sol_unordered.rotate_in_place(3, position_t(2, 2));
 
          sol_unordered.normalize();
+
+         Assert::AreEqual(sol.value(), sol_unordered.value());
+
 			Assert::AreEqual(sol, sol_unordered);
 		}
 

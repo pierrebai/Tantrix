@@ -26,6 +26,14 @@ namespace dak::tantrix
    {
       tile_t               tile_to_place;
       std::vector<tile_t>  other_tiles;
+
+      // In any-shape puzzles, this counts down to when we flip from adding
+      // tile to "right" side of the lines to adding tiles to the left side.
+      // The any shape puzzle always starts from the same tile, but add different
+      // numbers of tiles to the left and right for each initial sub-puzzles.
+      //
+      // For triangle puzzles, the count differentiates between up and down
+      // triangles.... although that should not matter?
       int                  right_sub_puzzles_count = 0;
 
       size_t count_tiles_of_color(color_t a_color) const
