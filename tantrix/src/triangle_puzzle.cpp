@@ -12,43 +12,37 @@ namespace dak::tantrix
                                         const maybe_size_t& a_holes_count)
       : puzzle_t(some_tiles, some_line_colors, must_be_loops, a_holes_count)
    {
-      my_up_pyramid_positions.resize(some_tiles.size());
-      my_down_pyramid_positions.resize(some_tiles.size());
+      my_pyramid_positions.resize(some_tiles.size());
 
       int line_index = 0;
-      size_t pos_index = some_tiles.size() - 1;
+      size_t pos_index = 0;
       while (pos_index < some_tiles.size())
       {
-         position_t up_pos(0 - line_index, line_index);
-         position_t down_pos(0, -line_index);
+         const size_t initial_pos_index = pos_index;
+         position_t in_line_pos(0 - line_index, line_index);
          const int tiles_per_line = line_index + 1;
          for (int i = 0; i < tiles_per_line && pos_index < some_tiles.size(); ++i)
          {
-            my_up_pyramid_positions[pos_index] = up_pos;
-            up_pos = up_pos.move(1, 0);
-            my_down_pyramid_positions[pos_index] = down_pos;
-            down_pos = down_pos.move(1, 0);
-            pos_index -= 1;
+            my_pyramid_positions[pos_index] = in_line_pos;
+            in_line_pos = in_line_pos.move(1, 0);
+            pos_index += 1;
          }
 
+         // Every two lines we reverse the order of the positions, so that the last position of
+         // the previous line is near the first position of the current line.
          if (line_index % 2)
          {
-            const size_t line_begin = pos_index + 1;
-            const size_t line_end   = line_begin + tiles_per_line;
-            std::reverse(my_up_pyramid_positions.begin() + line_begin, my_up_pyramid_positions.begin() + line_end);
-            std::reverse(my_down_pyramid_positions.begin() + line_begin, my_down_pyramid_positions.begin() + line_end);
+            std::reverse(my_pyramid_positions.begin() + initial_pos_index, my_pyramid_positions.begin() + pos_index);
          }
 
          line_index += 1;
       }
 
       // Place first tile at 0/0
-      const position_t up_delta = my_up_pyramid_positions[0];
-      const position_t down_delta = my_down_pyramid_positions[0];
-      for (size_t i = 0; i < my_up_pyramid_positions.size(); ++i)
+      const position_t down_delta = my_pyramid_positions.front();
+      for (size_t i = 0; i < my_pyramid_positions.size(); ++i)
       {
-         my_up_pyramid_positions[i] = my_up_pyramid_positions[i].move(-up_delta.x(), -up_delta.y());
-         my_down_pyramid_positions[i] = my_down_pyramid_positions[i].move(-down_delta.x(), -down_delta.y());
+         my_pyramid_positions[i] = my_pyramid_positions[i].move(-down_delta.x(), -down_delta.y());
       }
    }
 
@@ -75,11 +69,8 @@ namespace dak::tantrix
             sub_puzzle_t sub_puzzle;
             sub_puzzle.tile_to_place = tile;
             sub_puzzle.other_tiles = my_initial_tiles;
-            sub_puzzle.right_sub_puzzles_count = 1;
+            sub_puzzle.right_sub_puzzles_count = 0;
             sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-            sub_puzzles.emplace_back(std::make_shared<sub_puzzle_t>(sub_puzzle));
-
-            sub_puzzle.right_sub_puzzles_count = -1;
             sub_puzzles.emplace_back(std::make_shared<sub_puzzle_t>(sub_puzzle));
          }
       }
@@ -128,10 +119,7 @@ namespace dak::tantrix
    position_t triangle_puzzle_t::next_pyramid_position(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const
    {
       const size_t done_count = a_partial_solution.tiles_count();
-      if (a_current_sub_puzzle.right_sub_puzzles_count > 0)
-         return my_up_pyramid_positions[done_count];
-      else
-         return my_down_pyramid_positions[done_count];
+      return my_pyramid_positions[done_count];
    }
 
    std::vector<solver::solution_part_t::ptr_t> triangle_puzzle_t::get_sub_problem_potential_parts(

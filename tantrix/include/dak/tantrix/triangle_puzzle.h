@@ -43,8 +43,7 @@ namespace dak::tantrix
    private:
       position_t next_pyramid_position(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const;
 
-      std::vector<position_t> my_up_pyramid_positions;
-      std::vector<position_t> my_down_pyramid_positions;
+      std::vector<position_t> my_pyramid_positions;
    };
 
 }

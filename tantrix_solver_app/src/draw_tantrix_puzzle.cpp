@@ -48,7 +48,7 @@ namespace dak::tantrix_solver_app
       const double draw_x_offset = y * tile_spacing_x / 2;
       const double draw_x = x * tile_spacing_x + draw_x_offset;
       const double draw_y = y * tile_spacing_y;
-      return QPointF(draw_x, draw_y);
+      return QPointF(draw_x, -draw_y);
    }
 
    static QPointF convert_tile_side(const tantrix::position_t& a_pos, const tantrix::direction_t& a_dir, const double a_tile_radius)
