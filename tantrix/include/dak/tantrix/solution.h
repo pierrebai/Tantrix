@@ -10,7 +10,7 @@
 #include "dak/tantrix/position.h"
 #include "dak/tantrix/tile.h"
 
-#include <map>
+#include <set>
 #include <vector>
 #include <optional>
 
@@ -79,8 +79,6 @@ namespace dak::tantrix
       // have the same set of positions and orientation.
       void normalize();
 
-      int value() const;
-
       // Check if a position is already occupied.
       bool is_occupied(const position_t& a_pos) const;
 
@@ -109,6 +107,9 @@ namespace dak::tantrix
       std::strong_ordering operator<=>(const tantrix::solution_t& another_solution) const;
       bool operator==(const tantrix::solution_t& another_solution) const;
 
+      // Add a similar solution to this solution.
+      void add_similar_solution(const solver::solution_t::ptr_t& another_solution) override;
+
    private:
       tile_t* internal_tile_at(const position_t& a_pos) const;
 
@@ -119,7 +120,7 @@ namespace dak::tantrix
       tiles_by_pos_t my_tiles;
    };
 
-   using all_solutions_t = std::map<solution_t, size_t>;
+   using all_solutions_t = std::set<solution_t>;
 }
 
 #endif /* DAK_TANTRIX_SOLUTION_H */

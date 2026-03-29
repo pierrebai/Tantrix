@@ -641,7 +641,7 @@ namespace dak::tantrix_solver_app
       auto solution_it = my_solutions.begin();
       std::advance(solution_it, index);
 
-      return solution_it->first;
+      return *solution_it;
    }
 
    std::string main_window_t::get_selected_tile() const

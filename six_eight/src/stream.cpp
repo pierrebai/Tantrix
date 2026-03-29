@@ -173,7 +173,7 @@ namespace dak::six_eight
    std::ostream& operator<<(std::ostream& a_stream, const all_solutions_t& some_solutions)
    {
       a_stream << "solutions: " << some_solutions.size() << "\n";
-      for (const auto& [sol, count] : some_solutions)
+      for (const auto& sol : some_solutions)
          a_stream << sol << "\n";
 
       return a_stream;
@@ -182,7 +182,7 @@ namespace dak::six_eight
    std::wostream& operator<<(std::wostream& a_stream, const all_solutions_t& some_solutions)
    {
       a_stream << L"solutions: " << some_solutions.size() << L"\n";
-      for (const auto& [sol, count] : some_solutions)
+      for (const auto& sol : some_solutions)
          a_stream << sol << L"\n";
 
       return a_stream;
@@ -219,7 +219,7 @@ namespace dak::six_eight
                std::istringstream sol_stream(solution_buffer);
                solution_t solution;
                sol_stream >> solution;
-               some_solutions[std::move(solution)] += 1;
+               some_solutions.insert(std::move(solution));
                solution_buffer.clear();
                state = none;
             }
@@ -260,7 +260,7 @@ namespace dak::six_eight
                std::wistringstream sol_stream(solution_buffer);
                solution_t solution;
                sol_stream >> solution;
-               some_solutions[std::move(solution)] += 1;
+               some_solutions.insert(std::move(solution));
                solution_buffer.clear();
                state = none;
             }

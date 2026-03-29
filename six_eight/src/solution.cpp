@@ -145,6 +145,11 @@ namespace dak::six_eight
            : std::strong_ordering::less;
    }
 
+   void solution_t::add_similar_solution(const solver::solution_t::ptr_t& another_solution)
+   {
+      // TODO
+   }
+   
    bool solution_t::is_valid() const
    {
       return my_tiles_count == 8;

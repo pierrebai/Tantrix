@@ -7,7 +7,7 @@
 #include "dak/six_eight/position.h"
 #include "dak/six_eight/tile.h"
 
-#include <map>
+#include <set>
 #include <vector>
 #include <optional>
 
@@ -92,6 +92,9 @@ namespace dak::six_eight
       std::strong_ordering operator<=>(const six_eight::solution_t& another_solution) const;
       bool operator==(const solution_t& another_solution) const { return operator<=>(another_solution) == 0; }
 
+      // Add a similar solution to this solution.
+      void add_similar_solution(const solver::solution_t::ptr_t& another_solution) override;
+
    private:
       tile_t& internal_tile_at(const position_t& a_pos) const;
 
@@ -100,6 +103,6 @@ namespace dak::six_eight
       tile_t::id_t   my_tiles_at_pos[6][8] = { 0 };
    };
 
-   using all_solutions_t = std::map<solution_t, size_t>;
+   using all_solutions_t = std::set<solution_t>;
 }
 

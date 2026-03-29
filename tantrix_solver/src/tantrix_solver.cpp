@@ -56,7 +56,7 @@ int main(int arg_count, char** arg_values)
 
          ofstream solution_stream(solution_filename);
          for (const auto& solution : solutions) {
-            auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution.first);
+            auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution);
             if (!puzzle_solution)
                continue;
             solution_stream << *puzzle_solution << endl;

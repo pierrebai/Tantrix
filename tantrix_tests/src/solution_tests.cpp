@@ -137,8 +137,6 @@ namespace dak::tantrix::tests
 
          sol_unordered.normalize();
 
-         Assert::AreEqual(sol.value(), sol_unordered.value());
-
 			Assert::AreEqual(sol, sol_unordered);
 		}
 

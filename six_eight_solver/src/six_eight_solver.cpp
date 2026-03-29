@@ -59,7 +59,7 @@ int main(int arg_count, char** arg_values)
             cout << "solutions: " << solutions.size() << endl;
 
             for (const auto& solution : solutions) {
-               auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution.first);
+               auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution);
                if (!puzzle_solution)
                   continue;
                cout << *puzzle_solution << endl;

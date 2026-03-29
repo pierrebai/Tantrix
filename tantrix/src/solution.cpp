@@ -62,6 +62,11 @@ namespace dak::tantrix
       return (*this <=> another_solution) == std::strong_ordering::equal;
    }
 
+   void solution_t::add_similar_solution(const solver::solution_t::ptr_t& another_solution)
+   {
+      // TODO
+   }
+   
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
    {
       my_tiles[my_tiles_count].pos = a_pos;
@@ -197,11 +202,11 @@ namespace dak::tantrix
       return rotated;
    }
 
-   int solution_t::value() const
+   static int calculate_placed_tiles_value(const solution_t::tiles_by_pos_t& some_placed_tiles, size_t a_count)
    {
       int value = 0;
-      for (size_t i = 0; i < my_tiles_count; ++i) {
-         const placed_tile_t& placed_tile = my_tiles[i];
+      for (size_t i = 0; i < a_count; ++i) {
+         const placed_tile_t& placed_tile = some_placed_tiles[i];
          value += placed_tile.pos.x() * 1000;
          value += placed_tile.pos.y();
       }
@@ -220,7 +225,7 @@ namespace dak::tantrix
             const position_t new_origin = rot_solution.my_tiles[0].pos;
             rot_solution.rotate_in_place(0, new_origin);
 
-            int rot_value = rot_solution.value();
+            int rot_value = calculate_placed_tiles_value(rot_solution.my_tiles, rot_solution.my_tiles_count);
             if (rot_value < lowest_rotation_value) {
                lowest_rotation_value = rot_value;
                *this = rot_solution;

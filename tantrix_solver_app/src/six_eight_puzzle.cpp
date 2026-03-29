@@ -128,7 +128,7 @@ namespace dak::tantrix_solver_app
       std::ofstream solutions_stream(a_path);
 
       for (const auto& solution : some_solutions) {
-         auto puzzle_solution = std::dynamic_pointer_cast<six_eight::solution_t>(solution.first);
+         auto puzzle_solution = std::dynamic_pointer_cast<six_eight::solution_t>(solution);
          if (!puzzle_solution)
             continue;
 
@@ -146,8 +146,8 @@ namespace dak::tantrix_solver_app
       six_eight::all_solutions_t solutions;
       std::ifstream solutions_stream(a_path);
       solutions_stream >> solutions;
-      for (auto& [solution, count] : solutions)
-            solver_solutions[std::make_shared<six_eight::solution_t>(solution)] = count;
+      for (auto& solution : solutions)
+            solver_solutions.insert(std::make_shared<six_eight::solution_t>(solution));
 
       return solver_solutions;
    }
@@ -174,7 +174,7 @@ namespace dak::tantrix_solver_app
       std::vector<std::string> description;
 
       size_t solution_index = 0;
-      for (const auto& [abstract_solution, count] : some_solutions)
+      for (const auto& abstract_solution : some_solutions)
       {
          auto solution = std::dynamic_pointer_cast<six_eight::solution_t>(abstract_solution);
          if (!solution)
@@ -189,7 +189,7 @@ namespace dak::tantrix_solver_app
             break;
          }
 
-         stream << "Solution #" << ++solution_index << " found "<< count << " times" << ":\n";
+         stream << "Solution #" << ++solution_index << ":\n";
          for (size_t i = 0; i < solution->tiles_count(); ++i)
          {
             const auto& placed_tile = solution->tiles()[i];
