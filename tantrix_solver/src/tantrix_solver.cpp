@@ -42,7 +42,7 @@ int main(int arg_count, char** arg_values)
          stopwatch_t stopwatch(elapsed_time);
 
          stream_progress_t progress(cout);
-         std::shared_ptr<solution_t> empty_solution = std::make_shared<solution_t>();
+         std::shared_ptr<solution_t> empty_solution = std::make_shared<solution_t>(puzzle);
          const auto solutions = dak::solver::solve(puzzle, empty_solution, progress);
 
          stopwatch.stop();

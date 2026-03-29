@@ -4,6 +4,7 @@
 
 #include <compare>
 #include <cstdint>
+#include <vector>
 
 namespace dak::tantrix
 {
@@ -33,4 +34,6 @@ namespace dak::tantrix
 
       std::int8_t my_color = 0;
    };
+
+   using line_colors_t = std::vector<color_t>;
 }

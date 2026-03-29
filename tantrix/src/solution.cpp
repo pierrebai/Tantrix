@@ -20,6 +20,17 @@ namespace dak::tantrix
    //    - Check if vector of solutions already contains a solution.
    //    - Add a solution if it is not already known.
 
+   solution_t::solution_t(const std::shared_ptr<puzzle_t>& a_puzzle)
+   : my_puzzle(a_puzzle)
+   {
+   }
+
+   solution_t::solution_t(const std::shared_ptr<puzzle_t>& a_puzzle, const tile_t& a_tile, const position_t& a_pos)
+   : my_puzzle(a_puzzle)
+   {
+      add_tile(a_tile, a_pos);
+   }
+
    solution_t::ptr_t solution_t::clone() const
    {
       return std::make_shared<solution_t>(*this);
@@ -36,6 +47,55 @@ namespace dak::tantrix
    }
 
    std::strong_ordering solution_t::operator<=>(const tantrix::solution_t& another_solution) const
+   {
+      if (!my_puzzle || !another_solution.my_puzzle)
+         return is_identical(another_solution);
+
+      if (my_puzzle != another_solution.my_puzzle)
+         return my_puzzle <=> another_solution.my_puzzle;
+
+      auto order = (my_tiles_count <=> another_solution.my_tiles_count);
+      if (order != std::strong_ordering::equal)
+         return order;
+
+      for (size_t i = 0; i < my_tiles_count; ++i) {
+         order = (my_tiles[i].pos <=> another_solution.my_tiles[i].pos);
+         if (order != std::strong_ordering::equal)
+            return order;
+      }
+
+      if (!my_puzzle && !another_solution.my_puzzle)
+         return std::strong_ordering::equal;
+
+      for (const auto& color : my_puzzle->line_colors()) {
+         std::vector<position_t> my_ends(32);
+         const size_t my_ends_count = gather_line_positions(color, &my_ends[0]);
+         std::sort(my_ends.begin(), my_ends.begin() + my_ends_count);
+
+         std::vector<position_t> other_ends(32);
+         const size_t other_ends_count = another_solution.gather_line_positions(color, &other_ends[0]);
+         std::sort(other_ends.begin(), other_ends.begin() + other_ends_count);
+
+         if (my_ends_count != other_ends_count)
+            return my_ends_count <=> other_ends_count;
+
+         my_ends.resize(my_ends_count);
+         other_ends.resize(other_ends_count);
+
+         const auto ends_comp = (my_ends <=> other_ends);
+         if (ends_comp != std::strong_ordering::equal)
+             return ends_comp;
+      }
+
+      return std::strong_ordering::equal;
+   }
+
+   bool solution_t::operator==(const tantrix::solution_t& another_solution) const
+   {
+      return (*this <=> another_solution) == std::strong_ordering::equal;
+   }
+
+   std::strong_ordering solution_t::is_identical(const tantrix::solution_t& another_solution) const
    {
       auto order = (my_tiles_count <=> another_solution.my_tiles_count);
       if (order != std::strong_ordering::equal)
@@ -57,14 +117,14 @@ namespace dak::tantrix
      
    }
 
-   bool solution_t::operator==(const tantrix::solution_t& another_solution) const
-   {
-      return (*this <=> another_solution) == std::strong_ordering::equal;
-   }
-
    void solution_t::add_similar_solution(const solver::solution_t::ptr_t& another_solution)
    {
-      // TODO
+      auto other = std::dynamic_pointer_cast<const tantrix::solution_t>(another_solution);
+      if (!other)
+         return;
+
+      if (is_identical(*other) != std::strong_ordering::equal)
+         my_similar_solutions_count += 1;
    }
    
    void solution_t::add_tile(const tile_t& a_tile, const position_t& a_pos)
@@ -278,7 +338,7 @@ namespace dak::tantrix
           && internal_slow_has_line(a_color, must_be_loop);
    }
 
-   bool solution_t::internal_fast_has_line(const color_t& a_color, bool must_be_loop) const
+   size_t solution_t::gather_line_positions(const color_t& a_color, position_t some_ends[32]) const
    {
       // The idea for the algorithm is to expand the grid
       // and to record the junctions between tiles are grid point
@@ -290,12 +350,7 @@ namespace dak::tantrix
       // and the right of 4 is 5 and the left of 6 is 5. So 5
       // is recorded twice. When we have a pair, we know the line
       // is continuous there.
-      //
-      // We then simply have to count the number of discontinuities.
-      // If more than 2, we have more than two ends, so more than 1 line.
-      position_t ends[32];
       size_t ends_count = 0;
-
       for (size_t i = 0; i < my_tiles_count; ++i)
       {
          const placed_tile_t& placed_tile = my_tiles[i];
@@ -305,15 +360,27 @@ namespace dak::tantrix
             if (placed_tile.tile.color(dir) != a_color)
                continue;
 
-            ends[ends_count++] = position_t(
+            some_ends[ends_count++] = position_t(
                placed_tile.pos.x() * 2 + dir.delta_x(),
                placed_tile.pos.y() * 2 + dir.delta_y());
          }
       }
 
+      return ends_count;
+   }
+
+   bool solution_t::internal_fast_has_line(const color_t& a_color, bool must_be_loop) const
+   {
+      position_t ends[32];
+      const size_t ends_count = gather_line_positions(a_color, ends);
+
       // No color at all.
       if (ends_count <= 0)
          return false;
+
+      // Count the number of discontinuities.
+      // If more than 2, we have more than two ends, so more than 1 line.
+      // For loop, we must have zero ends.
 
       // This is the unfortunate expensive bit. 33% of the running time is spent here!
       std::sort(ends, ends + ends_count);

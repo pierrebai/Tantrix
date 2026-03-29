@@ -16,6 +16,8 @@
 
 namespace dak::tantrix
 {
+   struct puzzle_t;
+
    struct placed_tile_t : solver::solution_part_t
    {
       position_t  pos;
@@ -41,11 +43,8 @@ namespace dak::tantrix
       using hole_t = std::vector<position_t>;
 
       // Create a new solution.
-      solution_t() = default;
-      solution_t(const tile_t& a_tile, const position_t& a_pos)
-      {
-         add_tile(a_tile, a_pos);
-      }
+      solution_t(const std::shared_ptr<puzzle_t>& a_puzzle);
+      solution_t(const std::shared_ptr<puzzle_t>& a_puzzle, const tile_t& a_tile, const position_t& a_pos);
 
       // Make a copy of this solution.
       ptr_t clone() const override;
@@ -98,14 +97,25 @@ namespace dak::tantrix
       // Count how many occupied positions surround a position.
       size_t count_neighbours(const position_t& a_pos) const;
 
+      // Count how many similar solutions have been added to this solution.
+      size_t count_similar_solutions() const { return my_similar_solutions_count; }
+
       // Counts how many fully-surrounded holes the solution has.
       std::vector<hole_t> get_holes() const;
       size_t count_holes() const;
 
       // Compare solutions.
+      //
+      // The comparison is based on the shape of the desired lines of the puzzle,
+      // ignoring the other colors of the tiles. This is used to avoid having
+      // multiple solutions that are the same but with irrelevant differences.
       std::strong_ordering operator<=>(const solver::solution_t& another_solution) const override;
       std::strong_ordering operator<=>(const tantrix::solution_t& another_solution) const;
       bool operator==(const tantrix::solution_t& another_solution) const;
+   
+      // Check if this solution is exactly the same as another solution,
+      // meaning that they have the same tiles at the same positions and orientations.
+      std::strong_ordering is_identical(const tantrix::solution_t& another_solution) const;
 
       // Add a similar solution to this solution.
       void add_similar_solution(const solver::solution_t::ptr_t& another_solution) override;
@@ -113,11 +123,14 @@ namespace dak::tantrix
    private:
       tile_t* internal_tile_at(const position_t& a_pos) const;
 
+      size_t gather_line_positions(const color_t& a_color, position_t some_ends[32]) const;
       bool internal_fast_has_line(const color_t& a_color, bool must_be_loop) const;
       bool internal_slow_has_line(const color_t& a_color, bool must_be_loop) const;
 
-      size_t         my_tiles_count = 0;
-      tiles_by_pos_t my_tiles;
+      std::shared_ptr<puzzle_t>  my_puzzle;
+      size_t                     my_similar_solutions_count = 0;
+      size_t                     my_tiles_count = 0;
+      tiles_by_pos_t             my_tiles;
    };
 
    using all_solutions_t = std::set<solution_t>;

@@ -21,7 +21,7 @@ namespace dak::tantrix::tests
          const std::vector<color_t> junior_loops = { color_t::blue(), };
          const bool junior_must_be_loops = true;
          auto junior_puzzle = std::make_shared<any_shape_puzzle_t>(junior_tiles, junior_loops, junior_must_be_loops);
-         auto initial_solution = std::make_shared<solution_t>();
+         auto initial_solution = std::make_shared<solution_t>(junior_puzzle);
 
          struct dummy_progress_t : progress_t
          {
@@ -30,7 +30,7 @@ namespace dak::tantrix::tests
          dummy_progress_t progress;
          auto junior_solutions = solver::solve(junior_puzzle, initial_solution, progress);
 
-         Assert::AreEqual<size_t>(48, junior_solutions.size());
+         Assert::AreEqual<size_t>(3, junior_solutions.size());
 		}
 
       TEST_METHOD(solve_professor_puzzle)
@@ -39,7 +39,7 @@ namespace dak::tantrix::tests
          const std::vector<color_t> professor_loops = { color_t::blue(), color_t::yellow(), };
          const bool professor_must_be_loops = true;
          auto professor_puzzle = std::make_shared<any_shape_puzzle_t>(professor_tiles, professor_loops, professor_must_be_loops);
-         auto initial_solution = std::make_shared<solution_t>();
+         auto initial_solution = std::make_shared<solution_t>(professor_puzzle);
 
          struct dummy_progress_t : progress_t
          {
@@ -48,7 +48,7 @@ namespace dak::tantrix::tests
          dummy_progress_t progress;
          auto professor_solutions = solver::solve(professor_puzzle, initial_solution, progress);
 
-         Assert::AreEqual<size_t>(2, professor_solutions.size());
+         Assert::AreEqual<size_t>(1, professor_solutions.size());
       }
    };
 }

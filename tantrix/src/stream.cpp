@@ -215,7 +215,7 @@ namespace dak::tantrix
    {
       std::string validity;
       a_stream >> validity;
-      a_solution = solution_t();
+      a_solution = solution_t(nullptr);
       while (a_stream)
       {
          position_t pos;
@@ -235,7 +235,7 @@ namespace dak::tantrix
    {
       std::wstring validity;
       a_stream >> validity;
-      a_solution = solution_t();
+      a_solution = solution_t(nullptr);
       while (a_stream)
       {
          position_t pos;
@@ -298,7 +298,7 @@ namespace dak::tantrix
             if (line.find_first_not_of(" \t\r\n") == std::string::npos)
             {
                std::istringstream sol_stream(solution_buffer);
-               solution_t solution;
+               solution_t solution(nullptr);
                sol_stream >> solution;
                some_solutions.insert(std::move(solution));
                solution_buffer.clear();
@@ -339,7 +339,7 @@ namespace dak::tantrix
             if (line.find_first_not_of(L" \t\r\n") == std::wstring::npos)
             {
                std::wistringstream sol_stream(solution_buffer);
-               solution_t solution;
+               solution_t solution(nullptr);
                sol_stream >> solution;
                some_solutions.insert(std::move(solution));
                solution_buffer.clear();

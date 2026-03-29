@@ -52,7 +52,6 @@ namespace dak::tantrix
    struct puzzle_t : solver::problem_t
    {
       using tiles_t = std::vector<tile_t>;
-      using line_colors_t = std::vector<color_t>;
       using maybe_size_t = std::optional<size_t>;
 
       // Create a puzzle.

@@ -22,7 +22,7 @@ namespace dak::tantrix_solver_app
       if (!puzzle)
          return {};
 
-         return std::make_shared<tantrix::solution_t>();
+         return std::make_shared<tantrix::solution_t>(puzzle);
    }
 
    static std::shared_ptr<tantrix::puzzle_t> load_tantrix_puzzle(std::istream& a_stream)
@@ -181,6 +181,10 @@ namespace dak::tantrix_solver_app
          }
 
          stream << "Solution #" << ++solution_index << ":\n";
+         const size_t similar_count = solution->count_similar_solutions();
+         if (similar_count > 0) {
+            stream << "(with " << solution->count_similar_solutions() << " similar solution" << (similar_count == 1 ? "" : "s") << ")\n";
+         }
          for (size_t i = 0; i < solution->tiles_count(); ++i)
          {
             const auto& placed_tile = solution->tiles()[i];

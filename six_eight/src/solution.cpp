@@ -147,7 +147,7 @@ namespace dak::six_eight
 
    void solution_t::add_similar_solution(const solver::solution_t::ptr_t& another_solution)
    {
-      // TODO
+      // Similar solutions are actually identical for this puzzle type.
    }
    
    bool solution_t::is_valid() const
