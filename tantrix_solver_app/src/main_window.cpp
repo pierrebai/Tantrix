@@ -42,7 +42,6 @@ namespace dak::tantrix_solver_app
    // Create the main window.
 
    main_window_t::main_window_t()
-      : progress_t(10000), my_solving_stopwatch(my_solving_time_buffer)
    {
       my_puzzle_apis.push_back(std::make_shared<tantrix_puzzle_api_t>());
       my_puzzle_apis.push_back(std::make_shared<six_eight_puzzle_api_t>());
@@ -542,9 +541,7 @@ namespace dak::tantrix_solver_app
             if (item.size() > 0)
                my_puzzle_list->addItem(item.c_str());
 
-      my_solving_attempts = 0;
-      my_solving_stopwatch.elapsed();
-      stop_progress(true);
+      stop_puzzle();
 
       update_solving_attempts();
       update_solving_time();
@@ -579,11 +576,10 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::update_solving_time()
    {
-      if (my_solving_attempts)
+      std::string time_buffer = my_active_api ? my_active_api->get_solving_time() : "";
+      if (time_buffer.size() > 0)
       {
-         my_solving_stopwatch.elapsed();
-
-         my_solving_time_label->setText((std::string("Time: ") + my_solving_time_buffer).c_str());
+         my_solving_time_label->setText((std::string("Time: ") + time_buffer).c_str());
 
          if (!my_solving_time_label->isVisible())
             my_solving_time_label->show();
@@ -597,15 +593,17 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::update_solving_attempts()
    {
-      if (my_solving_attempts)
+      const size_t solving_attempts = my_active_api ? my_active_api->get_solving_attempts() : 0;
+
+      if (solving_attempts)
       {
          ostringstream stream;
-         if (my_solving_attempts < 2 * 1000)
-            stream << "Attempts: " << my_solving_attempts;
-         else if (my_solving_attempts < 2 * 1000 * 1000)
-            stream << "Attempts: " << (my_solving_attempts / 1000) << " thousands";
+         if (solving_attempts < 2 * 1000)
+            stream << "Attempts: " << solving_attempts;
+         else if (solving_attempts < 2 * 1000 * 1000)
+            stream << "Attempts: " << (solving_attempts / 1000) << " thousands";
          else
-            stream << "Attempts: " << (my_solving_attempts / (1000 * 1000)) << " millions";
+            stream << "Attempts: " << (solving_attempts / (1000 * 1000)) << " millions";
 
          my_solving_attempts_label->setText(stream.str().c_str());
          if (!my_solving_attempts_label->isVisible())
@@ -627,8 +625,8 @@ namespace dak::tantrix_solver_app
       my_save_solutions_action->setEnabled(my_solutions.size() > 0);
       my_load_solutions_action->setEnabled(true);
 
-      my_solve_puzzle_action->setEnabled(my_puzzle && my_puzzle->is_valid());
-      my_stop_puzzle_action->setEnabled(my_async_solving.valid());
+      my_solve_puzzle_action->setEnabled(my_puzzle != nullptr);
+      my_stop_puzzle_action->setEnabled(my_active_api != nullptr);
    }
 
    solver::solution_t::ptr_t main_window_t::get_selected_solution() const
@@ -671,15 +669,6 @@ namespace dak::tantrix_solver_app
 
    /////////////////////////////////////////////////////////////////////////
    //
-   // Asynchornous puzzle solving update.
-
-   void main_window_t::update_progress(size_t a_total_count_so_far)
-   {
-      my_solving_attempts = a_total_count_so_far;
-   }
-
-   /////////////////////////////////////////////////////////////////////////
-   //
    // Asynchronous puzzle solving.
 
    void main_window_t::solve_puzzle()
@@ -687,52 +676,36 @@ namespace dak::tantrix_solver_app
       if (!my_puzzle)
          return;
 
-      stop_progress(false);
-      my_solving_attempts = 0;
-      my_solving_stopwatch.start();
-      my_async_solving = std::async(std::launch::async, [self = this, puzzle = my_puzzle]()
-      {
-         try
-         {
-            for (const auto& puzzle_api : self->my_puzzle_apis) {
-               auto initial_solution = puzzle_api->make_initial_solution(puzzle);
-               if (initial_solution)
-                  return solver::solve(puzzle, initial_solution, *self);
-            }
+      stop_puzzle();
+      for (const auto& puzzle_api : my_puzzle_apis) {
+         if (puzzle_api->start_solving(my_puzzle)) {
+            my_active_api = puzzle_api;
+            break;
          }
-         catch (const std::exception&)
-         {
-         }
-         return solver::all_solutions_t();
-      });
+      }
+
       my_solve_puzzle_timer->start(500);
-   }
-
-   bool main_window_t::is_async_puzzle_solving_done()
-   {
-      if (!my_async_solving.valid())
-         return false;
-
-      if (my_async_solving.wait_for(1us) != future_status::ready)
-         return false;
-
-      return true;
    }
 
    void main_window_t::verify_async_puzzle_solving()
    {
-      update_solving_attempts();
-      update_solving_time();
-
-      if (!is_async_puzzle_solving_done())
-      {
-         my_solve_puzzle_timer->start(500);
+      if (!my_active_api)
          return;
-      }
 
       try
       {
-         my_solutions = my_async_solving.get();
+         const bool done = my_active_api->is_solved();
+
+         update_solving_attempts();
+         update_solving_time();
+
+         if (!done)
+         {
+            my_solve_puzzle_timer->start(500);
+            return;
+         }
+
+         my_solutions = my_active_api->get_solutions();
       }
       catch (const std::exception& ex)
       {
@@ -743,6 +716,7 @@ namespace dak::tantrix_solver_app
 
    void main_window_t::stop_puzzle()
    {
-      stop_progress(true);
+      if (my_active_api)
+         my_active_api->stop_solving();
    }
 }

@@ -59,17 +59,13 @@ namespace dak::tantrix
    //
    // Verify if the solution satisfies the initial puzzle.
 
-   bool puzzle_t::is_solution_valid(const solver::solution_t::ptr_t& a_solution) const
+   bool puzzle_t::is_solution_valid(const solution_t& a_solution) const
    {
-      auto solution = std::dynamic_pointer_cast<tantrix::solution_t>(a_solution);
-      if (!solution)
-         return false;
-
       for (const auto& color : my_line_colors)
-         if (!solution->has_line(color, my_must_be_loops))
+         if (!a_solution.has_line(color, my_must_be_loops))
             return false;
 
-      if (my_holes_count.has_value() && solution->count_holes() != my_holes_count.value())
+      if (my_holes_count.has_value() && a_solution.count_holes() != my_holes_count.value())
          return false;
 
       return true;
@@ -84,13 +80,9 @@ namespace dak::tantrix
    // Get the list of potential position for the tile-to-be-placed of the given sub-puzzle.
    // Verify if there are more sub-puzzles to be created from the given sub-puzzle.
 
-   bool puzzle_t::has_more_sub_problems(const solver::sub_problem_t::ptr_t& a_current_sub_problem) const
+   bool puzzle_t::has_more_sub_problems(const puzzle_t::sub_problem_t& a_current_sub_problem) const
    {
-      auto sub_puzzle = std::dynamic_pointer_cast<sub_puzzle_t>(a_current_sub_problem);
-      if (!sub_puzzle)
-         return false;
-
-      return sub_puzzle->other_tiles.size() > 0;
+      return a_current_sub_problem.other_tiles.size() > 0;
    }
 
 }

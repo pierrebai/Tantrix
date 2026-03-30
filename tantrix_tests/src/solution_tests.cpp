@@ -14,14 +14,14 @@ namespace dak::tantrix::tests
 		
 		TEST_METHOD(compare_solutions)
 		{
-			Assert::AreEqual(solution_t(nullptr), solution_t(nullptr));
+			Assert::AreEqual(solution_t({}), solution_t({}));
 
-			Assert::AreNotEqual(solution_t(nullptr), solution_t(nullptr, tile_t(3), position_t(0, 0)));
+			Assert::AreNotEqual(solution_t({}), solution_t({}, tile_t(3), position_t(0, 0)));
 		}
 
 		TEST_METHOD(add_tile_to_solution)
 		{
-			solution_t sol(nullptr);
+			solution_t sol({});
 			sol.add_tile(tile_t(13), position_t(-2,  2));
          Assert::AreEqual<size_t>(1, sol.tiles_count());
 			Assert::AreEqual(sol.tile_at(position_t(-2,  2)), tile_t(13));
@@ -41,10 +41,10 @@ namespace dak::tantrix::tests
 
 		TEST_METHOD(get_borders_solution)
 		{
-			solution_t sol(nullptr);
+			solution_t sol({});
 			Assert::AreEqual<size_t>(0, sol.get_borders(color_t::red()).size());
 
-			solution_t sol2(nullptr);
+			solution_t sol2({});
 			sol2.add_tile(tile_t(1), position_t(0, 0));
 			Assert::AreEqual<size_t>(2, sol2.get_borders(color_t::red()).size());
 			Assert::AreEqual<size_t>(2, sol2.get_borders(color_t::blue()).size());
@@ -58,7 +58,7 @@ namespace dak::tantrix::tests
 
 		TEST_METHOD(solution_is_occupied)
 		{
-			solution_t sol(nullptr);
+			solution_t sol({});
 			Assert::IsFalse(sol.is_occupied(position_t(0, 0)));
 
 			sol.add_tile(tile_t(1), position_t(0, 0));
@@ -82,28 +82,28 @@ namespace dak::tantrix::tests
 
 		TEST_METHOD(solution_is_compatible)
 		{
-			solution_t sol(nullptr);
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(0, 0))));
+			solution_t sol({});
+			Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t(4), position_t(0, 0))));
 
 			sol.add_tile(tile_t(1), position_t(0, 0));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 0,  0))));
-			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(-1,  0))));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 0, -1))));
-			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1, -1))));
-			Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1,  0))));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 0,  1))));
-			Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(-1,  1))));
+			Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 0,  0))));
+			Assert::IsTrue( sol.is_compatible(solution_t::part_t(tile_t(4), position_t(-1,  0))));
+			Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 0, -1))));
+			Assert::IsTrue( sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 1, -1))));
+			Assert::IsTrue( sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 1,  0))));
+			Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 0,  1))));
+			Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t(4), position_t(-1,  1))));
 
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1,  1))));
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 2,  0))));
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 2,  1))));
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t( 1,  2))));
-			Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t(4), position_t(-2, -5))));
+			Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 1,  1))));
+			Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 2,  0))));
+			Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 2,  1))));
+			Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t(4), position_t( 1,  2))));
+			Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t(4), position_t(-2, -5))));
 		}
 
 		TEST_METHOD(normalize_solution)
 		{
-			solution_t sol(nullptr);
+			solution_t sol({});
 			sol.add_tile(tile_t(13), position_t(-2,  4));
 			sol.add_tile(tile_t(12), position_t(-1,  0));
 			sol.add_tile(tile_t( 7), position_t(-1,  3));
@@ -119,7 +119,7 @@ namespace dak::tantrix::tests
 			sol.add_tile(tile_t( 6), position_t( 3,  2));
          sol.normalize();
 
-			solution_t sol_unordered(nullptr);
+			solution_t sol_unordered({});
 			sol_unordered.add_tile(tile_t( 4), position_t( 1,  7));
 			sol_unordered.add_tile(tile_t(12), position_t(-1,  5));
 			sol_unordered.add_tile(tile_t( 8), position_t( 2,  6));
@@ -143,7 +143,7 @@ namespace dak::tantrix::tests
 		TEST_METHOD(solution_is_valid)
 		{
 			{
-				solution_t sol(nullptr);
+				solution_t sol({});
 				sol.add_tile(tile_t(1), position_t( 0,  0));
 				sol.add_tile(tile_t(4), position_t( 1,  0));
 				sol.add_tile(tile_t(7), position_t( 0,- 1));
@@ -158,7 +158,7 @@ namespace dak::tantrix::tests
 
 			{
 				// Create hole with three yellow.
-				solution_t sol(nullptr);
+				solution_t sol({});
 				sol.add_tile(tile_t( 6), position_t( 0,  0));
 				sol.add_tile(tile_t( 4), position_t( 1,  0));
 				sol.add_tile(tile_t(10), position_t( 2, -1));
@@ -170,7 +170,7 @@ namespace dak::tantrix::tests
 		TEST_METHOD(solution_has_line)
 		{
 			{
-				solution_t sol(nullptr);
+				solution_t sol({});
 				sol.add_tile(tile_t( 1), position_t(0, 0));
 				sol.add_tile(tile_t( 4), position_t(1, 0));
 				sol.add_tile(tile_t(13), position_t(1, 1));
@@ -194,7 +194,7 @@ namespace dak::tantrix::tests
 
       TEST_METHOD(solution_count_neighbours)
       {
-         solution_t sol(nullptr);
+         solution_t sol({});
          sol.add_tile(tile_t(1), position_t(0, 0));
          sol.add_tile(tile_t(4), position_t(1, 0));
          sol.add_tile(tile_t(13), position_t(1, 1));
@@ -207,7 +207,7 @@ namespace dak::tantrix::tests
 
       TEST_METHOD(solution_count_holes)
       {
-         solution_t sol(nullptr);
+         solution_t sol({});
          Assert::AreEqual<size_t>(0, sol.count_holes());
 
          sol.add_tile(tile_t(7), position_t(0, 0));

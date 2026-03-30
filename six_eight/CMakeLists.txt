@@ -13,7 +13,7 @@ target_include_directories(six_eight PUBLIC
    include
 )
 
-target_link_libraries(six_eight dak_utility dak_solver)
+target_link_libraries(six_eight dak_utility)
 
 target_compile_features(six_eight PUBLIC cxx_std_20)
 

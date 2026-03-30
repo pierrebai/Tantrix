@@ -38,12 +38,9 @@ namespace dak::six_eight
       }
    }
 
-   void solution_t::add_part(const solver::solution_part_t::ptr_t& a_part)
+   void solution_t::add_part(const part_t& a_part)
    {
-      auto placed_tile = std::dynamic_pointer_cast<placed_tile_t>(a_part);
-      if (!placed_tile)
-         return;
-      add_tile(placed_tile->tile, placed_tile->pos);
+      add_tile(a_part.tile, a_part.pos);
    }
 
    tile_t& solution_t::internal_tile_at(const position_t& a_pos) const
@@ -61,7 +58,7 @@ namespace dak::six_eight
          return invalid;
 
       for (size_t i = 0; i < my_tiles_count; ++i) {
-         const placed_tile_t& placed_tile = my_tiles[i];
+         const part_t& placed_tile = my_tiles[i];
          if (placed_tile.tile.id() == id)
             return const_cast<tile_t &>(placed_tile.tile);
       }
@@ -105,13 +102,9 @@ namespace dak::six_eight
       return true;
    }
 
-   bool solution_t::is_compatible(const solver::solution_part_t::ptr_t& a_part) const
+   bool solution_t::is_compatible(const part_t& a_part) const
    {
-      auto placed_tile = std::dynamic_pointer_cast<placed_tile_t>(a_part);
-      if (!placed_tile)
-         return false;
-
-      return is_compatible(placed_tile->tile, placed_tile->pos);
+      return is_compatible(a_part.tile, a_part.pos);
    }
 
    void solution_t::normalize()
@@ -128,15 +121,6 @@ namespace dak::six_eight
       }
    }
 
-   std::strong_ordering solution_t::operator<=>(const solver::solution_t& another_solution) const
-   {
-      auto other = dynamic_cast<const six_eight::solution_t *>(&another_solution);
-      if (!other)
-         return std::strong_ordering::less;
-
-      return *this <=> *other;
-   }
-
    std::strong_ordering solution_t::operator<=>(const six_eight::solution_t& another_solution) const
    {
       int result = std::memcmp(my_tiles_at_pos, another_solution.my_tiles_at_pos, sizeof(my_tiles_at_pos));
@@ -145,7 +129,7 @@ namespace dak::six_eight
            : std::strong_ordering::less;
    }
 
-   void solution_t::add_similar_solution(const solver::solution_t::ptr_t& another_solution)
+   void solution_t::add_similar_solution(const solution_t& /*another_solution*/)
    {
       // Similar solutions are actually identical for this puzzle type.
    }

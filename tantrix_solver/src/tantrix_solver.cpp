@@ -11,7 +11,8 @@
 using namespace std;
 using namespace dak::tantrix;
 using namespace dak::utility;
-;
+using namespace dak::solver;
+
 int main(int arg_count, char** arg_values)
 {
    using clock = chrono::steady_clock;
@@ -42,8 +43,13 @@ int main(int arg_count, char** arg_values)
          stopwatch_t stopwatch(elapsed_time);
 
          stream_progress_t progress(cout);
-         std::shared_ptr<solution_t> empty_solution = std::make_shared<solution_t>(puzzle);
-         const auto solutions = dak::solver::solve(puzzle, empty_solution, progress);
+         solver_t<triangle_puzzle_t, dak::tantrix::solution_t>::all_solutions_t solutions;
+         if (auto tri = std::dynamic_pointer_cast<triangle_puzzle_t>(puzzle)) {
+            solutions = solver_t<triangle_puzzle_t, dak::tantrix::solution_t>::solve(*tri, dak::tantrix::solution_t(*tri), progress);
+         }
+         if (auto shape = std::dynamic_pointer_cast<any_shape_puzzle_t>(puzzle)) {
+            solutions = solver_t<any_shape_puzzle_t, dak::tantrix::solution_t>::solve(*shape, dak::tantrix::solution_t(*shape), progress);
+         }
 
          stopwatch.stop();
 
@@ -56,10 +62,7 @@ int main(int arg_count, char** arg_values)
 
          ofstream solution_stream(solution_filename);
          for (const auto& solution : solutions) {
-            auto puzzle_solution = std::dynamic_pointer_cast<solution_t>(solution);
-            if (!puzzle_solution)
-               continue;
-            solution_stream << *puzzle_solution << endl;
+            solution_stream << solution << endl;
          }
       }
       catch (exception& ex)

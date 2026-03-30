@@ -5,9 +5,10 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
-#include "dak/solver/problem.h"
+#include "dak/tantrix/position.h"
 #include "dak/tantrix/position.h"
 #include "dak/tantrix/tile.h"
+#include "dak/solver/problem.h"
 
 #include <vector>
 #include <algorithm>
@@ -20,37 +21,35 @@ namespace dak::tantrix
 
    ////////////////////////////////////////////////////////////////////////////
    //
-   // Sub puzzle
-
-   struct sub_puzzle_t : solver::sub_problem_t
-   {
-      tile_t               tile_to_place;
-      std::vector<tile_t>  other_tiles;
-
-      // In any-shape puzzles, this counts down to when we flip from adding
-      // tile to "right" side of the lines to adding tiles to the left side.
-      // The any shape puzzle always starts from the same tile, but add different
-      // numbers of tiles to the left and right for each initial sub-puzzles.
-      //
-      // For triangle puzzles, the count differentiates between up and down
-      // triangles.... although that should not matter?
-      int                  right_sub_puzzles_count = 0;
-
-      size_t count_tiles_of_color(color_t a_color) const
-      {
-         return std::count_if(other_tiles.begin(), other_tiles.end(), [a_color](const tile_t& tile) -> bool
-         {
-            return tile.has_color(a_color);
-         });
-      }
-   };
-
-   ////////////////////////////////////////////////////////////////////////////
-   //
    // Puzzle, provide tiles and next position to try to the solver.
 
    struct puzzle_t : solver::problem_t
    {
+      // Sub puzzle
+
+      struct sub_problem_t
+      {
+         tile_t               tile_to_place;
+         std::vector<tile_t>  other_tiles;
+
+         // In any-shape puzzles, this counts down to when we flip from adding
+         // tile to "right" side of the lines to adding tiles to the left side.
+         // The any shape puzzle always starts from the same tile, but add different
+         // numbers of tiles to the left and right for each initial sub-puzzles.
+         //
+         // For triangle puzzles, the count differentiates between up and down
+         // triangles.... although that should not matter?
+         int                  right_sub_puzzles_count = 0;
+
+         size_t count_tiles_of_color(color_t a_color) const
+         {
+            return std::count_if(other_tiles.begin(), other_tiles.end(), [a_color](const tile_t& tile) -> bool
+            {
+               return tile.has_color(a_color);
+            });
+         }
+      };
+
       using tiles_t = std::vector<tile_t>;
       using maybe_size_t = std::optional<size_t>;
 
@@ -62,13 +61,13 @@ namespace dak::tantrix
                const maybe_size_t& a_holes_count = {});
 
       // Verify if the problem is valid.
-      bool is_valid() const override;
+      bool is_valid() const;
 
       // Verify if there are more sub-puzzles to be created from the given sub-puzzle.
-      bool has_more_sub_problems(const solver::sub_problem_t::ptr_t& a_current_sub_problem) const override;
+      bool has_more_sub_problems(const sub_problem_t& a_current_sub_problem) const;
 
       // Verify if the solution satisfies the initial puzzle.
-      virtual bool is_solution_valid(const solver::solution_t::ptr_t& a_solution) const;
+      virtual bool is_solution_valid(const solution_t& a_solution) const;
 
       // The description of the puzzle.
 

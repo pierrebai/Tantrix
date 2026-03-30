@@ -192,7 +192,7 @@ namespace dak::tantrix
    std::ostream& operator<<(std::ostream& a_stream, const solution_t& a_solution)
    {
       a_stream << (a_solution.is_valid()   ? "valid\n"   : "invalid\n");
-      const placed_tile_t* tiles = a_solution.tiles();
+      const solution_t::part_t* tiles = a_solution.tiles();
       for (size_t i = 0; i < a_solution.tiles_count(); ++i)
       {
          a_stream << tiles[i].pos << ": " << tiles[i].tile << "\n";
@@ -203,7 +203,7 @@ namespace dak::tantrix
    std::wostream& operator<<(std::wostream& a_stream, const solution_t& a_solution)
    {
       a_stream << (a_solution.is_valid() ? "valid\n" : "invalid\n");
-      const placed_tile_t* tiles = a_solution.tiles();
+      const solution_t::part_t* tiles = a_solution.tiles();
       for (size_t i = 0; i < a_solution.tiles_count(); ++i)
       {
          a_stream << tiles[i].pos << ": " << tiles[i].tile << "\n";
@@ -215,7 +215,7 @@ namespace dak::tantrix
    {
       std::string validity;
       a_stream >> validity;
-      a_solution = solution_t(nullptr);
+      a_solution = solution_t({});
       while (a_stream)
       {
          position_t pos;
@@ -235,7 +235,7 @@ namespace dak::tantrix
    {
       std::wstring validity;
       a_stream >> validity;
-      a_solution = solution_t(nullptr);
+      a_solution = solution_t({});
       while (a_stream)
       {
          position_t pos;
@@ -298,7 +298,7 @@ namespace dak::tantrix
             if (line.find_first_not_of(" \t\r\n") == std::string::npos)
             {
                std::istringstream sol_stream(solution_buffer);
-               solution_t solution(nullptr);
+               solution_t solution({});
                sol_stream >> solution;
                some_solutions.insert(std::move(solution));
                solution_buffer.clear();
@@ -339,7 +339,7 @@ namespace dak::tantrix
             if (line.find_first_not_of(L" \t\r\n") == std::wstring::npos)
             {
                std::wistringstream sol_stream(solution_buffer);
-               solution_t solution(nullptr);
+               solution_t solution({});
                sol_stream >> solution;
                some_solutions.insert(std::move(solution));
                solution_buffer.clear();

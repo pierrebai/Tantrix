@@ -6,12 +6,11 @@
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
 #include "dak/tantrix/puzzle.h"
+#include "dak/tantrix/solution.h"
 
 
 namespace dak::tantrix
 {
-   struct solution_t;
-
    ////////////////////////////////////////////////////////////////////////////
    //
    // Puzzle with tiles placed in a triangle.
@@ -28,20 +27,22 @@ namespace dak::tantrix
       // Solver interaction.
 
       // Create the initial list of sub-puzzles to solve.
-      std::vector<solver::sub_problem_t::ptr_t> create_initial_sub_problems() const override;
+      std::vector<sub_problem_t> create_initial_sub_problems() const;
 
       // Create sub-puzzles from a given sub-puzzle that has its tile placed.
-      std::vector<solver::sub_problem_t::ptr_t> create_sub_problems(
-         const solver::sub_problem_t::ptr_t& a_current_sub_problem,
-         const solver::solution_t::ptr_t& a_partial_solution) const override;
+      std::vector<sub_problem_t> create_sub_problems(
+         const sub_problem_t& a_current_sub_problem,
+         const solution_t& a_partial_solution) const;
 
       // Get the list of potential position for the tile-to-be-placed of the given sub-puzzle.
-      std::vector<solver::solution_part_t::ptr_t> get_sub_problem_potential_parts(
-         const solver::sub_problem_t::ptr_t& a_current_sub_problem,
-         const solver::solution_t::ptr_t& a_partial_solution) const override;
+      std::vector<solution_t::part_t> get_sub_problem_potential_parts(
+         const sub_problem_t& a_current_sub_problem,
+         const solution_t& a_partial_solution) const;
 
    private:
-      position_t next_pyramid_position(const sub_puzzle_t& a_current_sub_puzzle, const solution_t& a_partial_solution) const;
+      position_t next_pyramid_position(
+         const sub_problem_t& a_current_sub_puzzle,
+         const solution_t& a_partial_solution) const;
 
       std::vector<position_t> my_pyramid_positions;
    };

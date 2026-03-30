@@ -6,11 +6,9 @@
 #include <QtWidgets/qlistwidget.h>
 
 #include <dak/solver/solve.h>
-#include <dak/utility/progress.h>
-#include <dak/utility/stopwatch.h>
+#include <dak/solver/problem.h>
+#include <dak/solver/solution.h>
 
-#include <chrono>
-#include <future>
 #include <memory>
 #include <filesystem>
 
@@ -30,9 +28,9 @@ namespace dak::tantrix_solver_app
 {
    /////////////////////////////////////////////////////////////////////////
    //
-   // Main window of the tantrix solver app.
+   // Main window of the Tantrix solver app.
 
-   class main_window_t : public QMainWindow, private utility::progress_t
+   class main_window_t : public QMainWindow
    {
    public:
       // Create the main window.
@@ -72,9 +70,6 @@ namespace dak::tantrix_solver_app
       void verify_async_puzzle_solving();
       bool is_async_puzzle_solving_done();
       void stop_puzzle();
-
-      // Asynchronous puzzle solving update.
-      void update_progress(size_t a_total_count_so_far) override;
 
       // UI updates from data.
       solver::solution_t::ptr_t get_selected_solution() const;
@@ -131,15 +126,10 @@ namespace dak::tantrix_solver_app
 
       // Data.
       std::vector<puzzle_api_t::ptr_t>          my_puzzle_apis;
+      puzzle_api_t::ptr_t                       my_active_api;
       solver::problem_t::ptr_t                  my_puzzle;
       std::filesystem::path                     my_puzzle_filename;
-      solver::all_solutions_t                   my_solutions;
-
-      std::future<solver::all_solutions_t>      my_async_solving;
-      std::atomic<size_t>                       my_solving_attempts = 0;
-      
-      dak::utility::stopwatch_t                 my_solving_stopwatch;
-      std::string                               my_solving_time_buffer;
+      std::vector<solver::solution_t::ptr_t>    my_solutions;
 
       Q_OBJECT;
    };

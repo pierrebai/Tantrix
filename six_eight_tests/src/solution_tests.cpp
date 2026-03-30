@@ -67,27 +67,27 @@ namespace dak::six_eight::tests
       {
          {
             solution_t sol;
-            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('B'), position_t(0, 0))));
+            Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t('B'), position_t(0, 0))));
 
             sol.add_tile(tile_t('B'), position_t(0, 0));
-            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 0,  0))));
-            Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  0))));
-            Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 2,  0))));
-            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  1))));
-            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 1,  1))));
-            Assert::IsTrue( sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t( 2,  1))));
-            Assert::IsFalse(sol.is_compatible(placed_tile_t::make(tile_t('^'), position_t(-1,  1))));
+            Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t('^'), position_t( 0,  0))));
+            Assert::IsTrue( sol.is_compatible(solution_t::part_t(tile_t('^'), position_t( 1,  0))));
+            Assert::IsTrue( sol.is_compatible(solution_t::part_t(tile_t('^'), position_t( 2,  0))));
+            Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t('^'), position_t( 1,  1))));
+            Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t('^'), position_t( 1,  1))));
+            Assert::IsTrue( sol.is_compatible(solution_t::part_t(tile_t('^'), position_t( 2,  1))));
+            Assert::IsFalse(sol.is_compatible(solution_t::part_t(tile_t('^'), position_t(-1,  1))));
          }
          {
             solution_t sol;
 
-            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('8').rotate(1), position_t(0, 0))));
+            Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t('8').rotate(1), position_t(0, 0))));
             sol.add_tile(tile_t('8').rotate(1), position_t(0, 0));
 
-            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('f').rotate(2), position_t(0, 1))));
+            Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t('f').rotate(2), position_t(0, 1))));
             sol.add_tile(tile_t('f').rotate(1), position_t(0, 1));
 
-            Assert::IsTrue(sol.is_compatible(placed_tile_t::make(tile_t('d').rotate(3), position_t(2, 1))));
+            Assert::IsTrue(sol.is_compatible(solution_t::part_t(tile_t('d').rotate(3), position_t(2, 1))));
             sol.add_tile(tile_t('d').rotate(1), position_t(2, 1));
          }
       }

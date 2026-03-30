@@ -2,10 +2,9 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
-#include <dak/solver/solution.h>
-
 #include "dak/six_eight/position.h"
 #include "dak/six_eight/tile.h"
+#include "dak/solver/solution.h"
 
 #include <set>
 #include <vector>
@@ -13,24 +12,7 @@
 
 namespace dak::six_eight
 {
-   struct placed_tile_t : solver::solution_part_t
-   {
-      tile_t      tile;
-      position_t  pos;
-
-      placed_tile_t() = default;
-      placed_tile_t(tile_t a_tile, position_t a_pos)
-      : tile(std::move(a_tile)), pos(std::move(a_pos)) {}
-
-      static std::shared_ptr<placed_tile_t> make()
-      { return std::make_shared<placed_tile_t>(); }
-
-      static std::shared_ptr<placed_tile_t> make(tile_t a_tile, position_t a_pos)
-      { return std::make_shared<placed_tile_t>(std::move(a_tile), std::move(a_pos)); }
-   
-      // Compare placed tiles.
-      auto operator<=>(const placed_tile_t&) const = default;
-   };
+   struct puzzle_t;
 
    ////////////////////////////////////////////////////////////////////////////
    //
@@ -38,7 +20,20 @@ namespace dak::six_eight
 
    struct solution_t : solver::solution_t
    {
-      using tiles_by_pos_t = placed_tile_t[8];
+      struct part_t
+      {
+         tile_t      tile;
+         position_t  pos;
+
+         part_t() = default;
+         part_t(tile_t a_tile, position_t a_pos)
+         : tile(std::move(a_tile)), pos(std::move(a_pos)) {}
+
+         // Compare placed tiles.
+         auto operator<=>(const part_t&) const = default;
+      };
+
+      using tiles_by_pos_t = part_t[8];
 
       // Create a new solution.
       solution_t();
@@ -48,11 +43,8 @@ namespace dak::six_eight
          add_tile(a_tile, a_pos);
       }
 
-      // Make a copy of this solution.
-      ptr_t clone() const override { return std::make_shared<six_eight::solution_t>(*this); }
-
       // Access the solution tiles.
-      const placed_tile_t* tiles() const { return my_tiles; }
+      const part_t* tiles() const { return my_tiles; }
       size_t tiles_count() const { return my_tiles_count; }
 
       const tile_t& tile_at(int x, int y) const { return tile_at(position_t(x, y)); }
@@ -65,7 +57,7 @@ namespace dak::six_eight
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
       // Add a part of the solution to this solution.
-      void add_part(const solver::solution_part_t::ptr_t& a_part) override;
+      void add_part(const part_t& a_part);
 
       // Normalize the solution so that any other identical solutions will
       // have the same set of positions and orientation.
@@ -79,21 +71,20 @@ namespace dak::six_eight
 
       // Check if a tile at a given position would be compatible with the solution.
       bool is_compatible(const tile_t& a_tile, const position_t& a_pos) const;
-      bool is_compatible(const solver::solution_part_t::ptr_t& a_part) const override;
+      bool is_compatible(const part_t& a_part) const;
 
       // Check if the solution is valid.
-      bool is_valid() const override;
+      bool is_valid() const;
 
       // Nearing completion, stop spawning threads.
-      bool is_almost_done(const std::shared_ptr<solver::problem_t>& a_problem) const override { return my_tiles_count > 5; }
+      bool is_almost_done(const puzzle_t& /*a_problem*/) const { return my_tiles_count > 5; }
 
       // Compare solutions.
-      std::strong_ordering operator<=>(const solver::solution_t& another_solution) const override;
-      std::strong_ordering operator<=>(const six_eight::solution_t& another_solution) const;
+      std::strong_ordering operator<=>(const solution_t& another_solution) const;
       bool operator==(const solution_t& another_solution) const { return operator<=>(another_solution) == 0; }
 
       // Add a similar solution to this solution.
-      void add_similar_solution(const solver::solution_t::ptr_t& another_solution) override;
+      void add_similar_solution(const solution_t& another_solution);
 
    private:
       tile_t& internal_tile_at(const position_t& a_pos) const;

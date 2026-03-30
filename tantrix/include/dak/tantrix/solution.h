@@ -5,10 +5,10 @@
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
 
-#include "dak/solver/problem.h"
-#include "dak/solver/solution.h"
+#include "dak/tantrix/puzzle.h"
 #include "dak/tantrix/position.h"
 #include "dak/tantrix/tile.h"
+#include "dak/solver/solution.h"
 
 #include <set>
 #include <vector>
@@ -16,41 +16,35 @@
 
 namespace dak::tantrix
 {
-   struct puzzle_t;
-
-   struct placed_tile_t : solver::solution_part_t
-   {
-      position_t  pos;
-      tile_t      tile;
-
-      placed_tile_t() = default;
-      placed_tile_t(tile_t tile, position_t pos) : pos(std::move(pos)), tile(std::move(tile)) {}
-   
-      static std::shared_ptr<placed_tile_t> make() { return std::make_shared<placed_tile_t>(); }
-      static std::shared_ptr<placed_tile_t> make(tile_t tile, position_t pos) { return std::make_shared<placed_tile_t>(std::move(tile), std::move(pos)); }
-
-      // Compare placed tiles.
-      auto operator<=>(const placed_tile_t&) const = default;
-   };
-
    ////////////////////////////////////////////////////////////////////////////
    //
    // Solution that places all the given tiles.
 
    struct solution_t : solver::solution_t
    {
-      using tiles_by_pos_t = placed_tile_t[32];
+      // Part of a solution
+      struct part_t
+      {
+         position_t  pos;
+         tile_t      tile;
+
+         part_t() = default;
+         part_t(tile_t tile, position_t pos) : pos(std::move(pos)), tile(std::move(tile)) {}
+      
+         // Compare placed tiles.
+         auto operator<=>(const part_t&) const = default;
+      };
+
+
+      using tiles_by_pos_t = part_t[32];
       using hole_t = std::vector<position_t>;
 
       // Create a new solution.
-      solution_t(const std::shared_ptr<puzzle_t>& a_puzzle);
-      solution_t(const std::shared_ptr<puzzle_t>& a_puzzle, const tile_t& a_tile, const position_t& a_pos);
+      solution_t(const puzzle_t& a_puzzle);
+      solution_t(const puzzle_t& a_puzzle, const tile_t& a_tile, const position_t& a_pos);
 
-      // Make a copy of this solution.
-      ptr_t clone() const override;
-      
       // Access the solution tiles.
-      const placed_tile_t* tiles() const { return my_tiles; }
+      const part_t* tiles() const { return my_tiles; }
       size_t tiles_count() const { return my_tiles_count; }
 
       const tile_t& tile_at(int x, int y) const { return tile_at(position_t(x, y)); }
@@ -63,7 +57,7 @@ namespace dak::tantrix
       void add_tile(const tile_t& a_tile, const position_t& a_pos);
 
       // Add a part of the solution to this solution.
-      void add_part(const solver::solution_part_t::ptr_t& a_part) override;
+      void add_part(const part_t& a_part);
 
       // Get the positions outside the solution where they touch a color.
       std::vector<position_t> get_borders(const std::optional<color_t>& a_color = std::optional<color_t>()) const;
@@ -82,16 +76,16 @@ namespace dak::tantrix
       bool is_occupied(const position_t& a_pos) const;
 
       // Check if a tile at a given position would be compatible with the solution.
-      bool is_compatible(const solver::solution_part_t::ptr_t& a_part) const;
+      bool is_compatible(const part_t& a_part) const;
 
       // Check if the solution has no invalid holes or borders.
       // (Hole with more than 3 sides or having more than two of the same color.)
       bool is_valid() const;
 
       // Nearing completion, stop spawning threads.
-      bool is_almost_done(const solver::problem_t::ptr_t& a_problem) const override;
+      bool is_almost_done(const puzzle_t& a_problem) const;
 
-      // Check if the solution has a contiuous line of the given color.
+      // Check if the solution has a continuous line of the given color.
       bool has_line(const color_t& a_color, bool must_be_loop) const;
 
       // Count how many occupied positions surround a position.
@@ -109,16 +103,15 @@ namespace dak::tantrix
       // The comparison is based on the shape of the desired lines of the puzzle,
       // ignoring the other colors of the tiles. This is used to avoid having
       // multiple solutions that are the same but with irrelevant differences.
-      std::strong_ordering operator<=>(const solver::solution_t& another_solution) const override;
-      std::strong_ordering operator<=>(const tantrix::solution_t& another_solution) const;
-      bool operator==(const tantrix::solution_t& another_solution) const;
+      std::strong_ordering operator<=>(const solution_t& another_solution) const;
+      bool operator==(const solution_t& another_solution) const;
    
       // Check if this solution is exactly the same as another solution,
       // meaning that they have the same tiles at the same positions and orientations.
-      std::strong_ordering is_identical(const tantrix::solution_t& another_solution) const;
+      std::strong_ordering is_identical(const solution_t& another_solution) const;
 
       // Add a similar solution to this solution.
-      void add_similar_solution(const solver::solution_t::ptr_t& another_solution) override;
+      void add_similar_solution(const solution_t& another_solution);
 
    private:
       tile_t* internal_tile_at(const position_t& a_pos) const;
@@ -127,7 +120,7 @@ namespace dak::tantrix
       bool internal_fast_has_line(const color_t& a_color, bool must_be_loop) const;
       bool internal_slow_has_line(const color_t& a_color, bool must_be_loop) const;
 
-      std::shared_ptr<puzzle_t>  my_puzzle;
+      puzzle_t                   my_puzzle;
       size_t                     my_similar_solutions_count = 0;
       size_t                     my_tiles_count = 0;
       tiles_by_pos_t             my_tiles;

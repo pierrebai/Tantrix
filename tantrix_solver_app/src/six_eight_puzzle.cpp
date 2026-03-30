@@ -13,19 +13,60 @@
 
 namespace dak::tantrix_solver_app
 {
-   solver::solution_t::ptr_t six_eight_puzzle_api_t::make_initial_solution(const solver::problem_t::ptr_t& a_puzzle)
+   using namespace std;
+
+   bool six_eight_puzzle_api_t::start_solving(const solver::problem_t::ptr_t& a_puzzle)
    {
-      auto puzzle = std::dynamic_pointer_cast<six_eight::puzzle_t>(a_puzzle);
+      auto puzzle = std::dynamic_pointer_cast<const six_eight::puzzle_t>(a_puzzle);
       if (!puzzle)
-         return {};
-         
-      return std::make_shared<six_eight::solution_t>();
+         return false;
+
+      stop_progress(false);
+      my_solving_attempts = 0;
+      my_solving_stopwatch.start();
+      my_async_solving = std::async(std::launch::async, [self = this, puzzle = puzzle]()
+      {
+         try
+         {
+            return solver::solver_t<six_eight::puzzle_t, six_eight::solution_t>::solve(*puzzle, {}, *self);
+         }
+         catch (const std::exception&)
+         {
+         }
+         return std::set<six_eight::solution_t>();
+      });
+      return true;
+   }
+
+   void six_eight_puzzle_api_t::stop_solving()
+   {
+      stop_progress(true);
+   }
+
+   bool six_eight_puzzle_api_t::is_solved()
+   {
+      if (!my_async_solving.valid())
+         return false;
+
+      if (my_async_solving.wait_for(1us) != future_status::ready)
+         return false;
+
+      my_solutions = my_async_solving.get();
+      return true;
+   }
+
+   six_eight_puzzle_api_t::all_solutions_t six_eight_puzzle_api_t::get_solutions() const
+   {
+      all_solutions_t solver_solutions;
+      for (const auto& solution : my_solutions)
+         solver_solutions.push_back(std::make_shared<six_eight::solution_t>(solution));
+      return solver_solutions;
    }
 
    static std::shared_ptr<six_eight::puzzle_t> load_six_eight_puzzle(std::istream& a_stream)
    {
-      std::shared_ptr<six_eight::puzzle_t> puzzle;
-      a_stream >> puzzle;
+      auto puzzle = std::make_shared<six_eight::puzzle_t>();
+      a_stream >> *puzzle;
       return puzzle;
    }
 
@@ -71,11 +112,11 @@ namespace dak::tantrix_solver_app
    {
       std::vector<std::string> puzzles;
       while (a_stream) {
-         std::shared_ptr<six_eight::puzzle_t> puzzle;
+         six_eight::puzzle_t puzzle;
          a_stream >> puzzle;
-         if (puzzle) {
+         if (a_stream) {
             std::ostringstream stream;
-            for (const auto& tile : puzzle->initial_tiles())
+            for (const auto& tile : puzzle.initial_tiles())
                stream <<tile.id() << " ";
             puzzles.emplace_back(stream.str());
          }
@@ -120,7 +161,7 @@ namespace dak::tantrix_solver_app
       save_six_eight_puzzle(puzzle_stream, a_puzzle);
    }
 
-   void six_eight_puzzle_api_t::save_solutions(const std::filesystem::path& a_path, const solver::all_solutions_t& some_solutions)
+   void six_eight_puzzle_api_t::save_solutions(const std::filesystem::path& a_path, const all_solutions_t& some_solutions)
    {
       if (a_path.empty())
          return;
@@ -136,18 +177,18 @@ namespace dak::tantrix_solver_app
       }
    }
 
-   solver::all_solutions_t six_eight_puzzle_api_t::load_solutions(const std::filesystem::path& a_path)
+   six_eight_puzzle_api_t::all_solutions_t six_eight_puzzle_api_t::load_solutions(const std::filesystem::path& a_path)
    {
       if (a_path.empty())
          return {};
 
-      solver::all_solutions_t solver_solutions;
+      all_solutions_t solver_solutions;
 
       six_eight::all_solutions_t solutions;
       std::ifstream solutions_stream(a_path);
       solutions_stream >> solutions;
       for (auto& solution : solutions)
-            solver_solutions.insert(std::make_shared<six_eight::solution_t>(solution));
+            solver_solutions.push_back(std::make_shared<six_eight::solution_t>(solution));
 
       return solver_solutions;
    }
@@ -169,7 +210,7 @@ namespace dak::tantrix_solver_app
       return description;
    }
 
-   std::vector<std::string> six_eight_puzzle_api_t::get_solutions_description(const solver::all_solutions_t& some_solutions)
+   std::vector<std::string> six_eight_puzzle_api_t::get_solutions_description(const all_solutions_t& some_solutions)
    {
       std::vector<std::string> description;
 

@@ -105,7 +105,7 @@ namespace dak::six_eight
          }
          
          if (y < a_solution.tiles_count()) {
-            const placed_tile_t& placed = a_solution.tiles()[y];
+            const auto& placed = a_solution.tiles()[y];
             a_stream << "    " << placed.pos << " " << placed.tile;
          }
          a_stream << std::endl;
@@ -122,7 +122,7 @@ namespace dak::six_eight
          }
          
          if (y < a_solution.tiles_count()) {
-            const placed_tile_t& placed = a_solution.tiles()[y];
+            const auto& placed = a_solution.tiles()[y];
             a_stream << "    " << placed.pos << " " << placed.tile;
          }
          a_stream << std::endl;
@@ -270,29 +270,23 @@ namespace dak::six_eight
       return a_stream;
    }
 
-   std::ostream& operator<<(std::ostream& a_stream, const std::shared_ptr<puzzle_t>& a_puzzle)
+   std::ostream& operator<<(std::ostream& a_stream, const puzzle_t& a_puzzle)
    {
-      if (!a_puzzle)
-         return a_stream;
-
-      for (const auto& tile : a_puzzle->initial_tiles())
+      for (const auto& tile : a_puzzle.initial_tiles())
          a_stream << tile.id() << ' ';
 
       return a_stream;
    }
 
-   std::wostream& operator<<(std::wostream& a_stream, const std::shared_ptr<puzzle_t>& a_puzzle)
+   std::wostream& operator<<(std::wostream& a_stream, const puzzle_t& a_puzzle)
    {
-      if (!a_puzzle)
-         return a_stream;
-
-      for (const auto& tile : a_puzzle->initial_tiles())
+      for (const auto& tile : a_puzzle.initial_tiles())
          a_stream << ' ' << tile.id();
 
       return a_stream;
    }
 
-   std::istream& operator>>(std::istream& a_stream, std::shared_ptr<puzzle_t>& a_puzzle)
+   std::istream& operator>>(std::istream& a_stream, puzzle_t& a_puzzle)
    {
       std::vector<tile_t> tiles;
 
@@ -311,12 +305,12 @@ namespace dak::six_eight
       }
 
       if (tiles.size() == 8)
-         a_puzzle.reset(new puzzle_t(tiles));
+         a_puzzle = puzzle_t(tiles);
 
       return a_stream;
    }
 
-   std::wistream& operator>>(std::wistream& a_stream, std::shared_ptr<puzzle_t>& a_puzzle)
+   std::wistream& operator>>(std::wistream& a_stream, puzzle_t& a_puzzle)
    {
       std::vector<tile_t> tiles;
 
@@ -335,7 +329,7 @@ namespace dak::six_eight
       }
 
       if (tiles.size() == 8)
-         a_puzzle.reset(new puzzle_t(tiles));
+         a_puzzle = puzzle_t(tiles);
 
       return a_stream;
    }

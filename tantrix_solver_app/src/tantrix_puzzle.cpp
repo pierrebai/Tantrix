@@ -6,6 +6,7 @@
 #include <dak/tantrix/solution.h>
 #include <dak/tantrix/stream.h>
 #include <dak/tantrix/triangle_puzzle.h>
+#include <dak/tantrix/any_shape_puzzle.h>
 
 #include <filesystem>
 #include <fstream>
@@ -16,15 +17,63 @@
 
 namespace dak::tantrix_solver_app
 {
-   solver::solution_t::ptr_t tantrix_puzzle_api_t::make_initial_solution(const solver::problem_t::ptr_t& a_puzzle)
-   {
-      auto puzzle = std::dynamic_pointer_cast<tantrix::puzzle_t>(a_puzzle);
-      if (!puzzle)
-         return {};
+   using namespace std;
 
-         return std::make_shared<tantrix::solution_t>(puzzle);
+   bool tantrix_puzzle_api_t::start_solving(const solver::problem_t::ptr_t& a_puzzle)
+   {
+      auto puzzle = std::dynamic_pointer_cast<const tantrix::puzzle_t>(a_puzzle);
+      if (!puzzle)
+         return false;
+
+      stop_progress(false);
+      my_solving_attempts = 0;
+      my_solving_stopwatch.start();
+      my_async_solving = std::async(std::launch::async, [self = this, puzzle = puzzle]()
+      {
+         try
+         {
+            if (auto triangle_puzzle = std::dynamic_pointer_cast<const tantrix::triangle_puzzle_t>(puzzle)) {
+               tantrix::solution_t initial_solution(*triangle_puzzle);
+               return solver::solver_t<tantrix::triangle_puzzle_t, tantrix::solution_t>::solve(*triangle_puzzle, initial_solution, *self);
+            }
+
+            if (auto any_shape_puzzle = std::dynamic_pointer_cast<const tantrix::any_shape_puzzle_t>(puzzle)) {
+               tantrix::solution_t initial_solution(*any_shape_puzzle);
+               return solver::solver_t<tantrix::any_shape_puzzle_t, tantrix::solution_t>::solve(*any_shape_puzzle, initial_solution, *self);
+            }
+         }
+         catch (const std::exception&)
+         {
+         }
+         return std::set<tantrix::solution_t>();
+      });
+      return true;
    }
 
+   void tantrix_puzzle_api_t::stop_solving()
+   {
+      stop_progress(true);
+   }
+
+   bool tantrix_puzzle_api_t::is_solved()
+   {
+      if (!my_async_solving.valid())
+         return false;
+
+      if (my_async_solving.wait_for(1us) != future_status::ready)
+         return false;
+
+      my_solutions = my_async_solving.get();
+      return true;
+   }
+
+   tantrix_puzzle_api_t::all_solutions_t tantrix_puzzle_api_t::get_solutions() const
+   {
+      all_solutions_t solver_solutions;
+      for (const auto& solution : my_solutions)
+         solver_solutions.push_back(std::make_shared<tantrix::solution_t>(solution));
+      return solver_solutions;
+   }
    static std::shared_ptr<tantrix::puzzle_t> load_tantrix_puzzle(std::istream& a_stream)
    {
       std::shared_ptr<tantrix::puzzle_t> puzzle;
@@ -84,7 +133,7 @@ namespace dak::tantrix_solver_app
       save_tantrix_puzzle(puzzle_stream, a_puzzle);
    }
 
-   void tantrix_puzzle_api_t::save_solutions(const std::filesystem::path& a_path, const solver::all_solutions_t& some_solutions)
+   void tantrix_puzzle_api_t::save_solutions(const std::filesystem::path& a_path, const all_solutions_t& some_solutions)
    {
       if (a_path.empty())
          return;
@@ -99,18 +148,18 @@ namespace dak::tantrix_solver_app
       }
    }
 
-   solver::all_solutions_t tantrix_puzzle_api_t::load_solutions(const std::filesystem::path& a_path)
+   tantrix_puzzle_api_t::all_solutions_t tantrix_puzzle_api_t::load_solutions(const std::filesystem::path& a_path)
    {
       if (a_path.empty())
          return {};
 
-      solver::all_solutions_t solver_solutions;
+      all_solutions_t solver_solutions;
 
       tantrix::all_solutions_t solutions;
       std::ifstream solutions_stream(a_path);
       solutions_stream >> solutions;
       for (auto& solution : solutions)
-            solver_solutions.insert(std::make_shared<tantrix::solution_t>(solution));
+            solver_solutions.push_back(std::make_shared<tantrix::solution_t>(solution));
 
       return solver_solutions;
    }
@@ -160,7 +209,7 @@ namespace dak::tantrix_solver_app
       return description;
    }
 
-   std::vector<std::string> tantrix_puzzle_api_t::get_solutions_description(const solver::all_solutions_t& some_solutions)
+   std::vector<std::string> tantrix_puzzle_api_t::get_solutions_description(const all_solutions_t& some_solutions)
    {
       std::vector<std::string> description;
 
