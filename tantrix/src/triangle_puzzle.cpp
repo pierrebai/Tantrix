@@ -63,16 +63,23 @@ namespace dak::tantrix
       std::vector<sub_problem_t> sub_puzzles;
       for (size_t i = 0; i < initial_tiles().size(); ++i)
       {
-         for (int selected_orientation = 0; selected_orientation < 6; ++selected_orientation)
-         {
-            tile_t tile = my_initial_tiles[i].rotate(selected_orientation);
-            sub_problem_t sub_puzzle;
-            sub_puzzle.tile_to_place = tile;
-            sub_puzzle.other_tiles = my_initial_tiles;
-            sub_puzzle.right_sub_puzzles_count = 0;
-            sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
-            sub_puzzles.emplace_back(sub_puzzle);
+         tile_t tile = my_initial_tiles[i];
+
+         // For the first tile of triangle puzzle with a single loop,
+         // that tile *must* have adjacent colors of the line color.
+         if (must_be_loops()) {
+            if (my_line_colors.size() == 1) {
+               if (!tile.has_adjacent_color(my_line_colors[0]))
+                  continue;
+            }
          }
+
+         sub_problem_t sub_puzzle;
+         sub_puzzle.tile_to_place = tile;
+         sub_puzzle.other_tiles = my_initial_tiles;
+         sub_puzzle.other_tiles.erase(sub_puzzle.other_tiles.begin() + i);
+         sub_puzzle.right_sub_puzzles_count = 0;
+         sub_puzzles.emplace_back(sub_puzzle);
       }
 
       return sub_puzzles;
@@ -119,6 +126,28 @@ namespace dak::tantrix
          const solution_t& a_partial_solution) const
    {
       std::vector<solution_t::part_t> next_positions;
+
+      // For the first tile of triangle puzzle with a single loop,
+      // that first tile was already selected to have adjacent colors of the line color,
+      // so we can just place it in the first position with the right orientation.
+      if (must_be_loops()) {
+         if (a_partial_solution.tiles_count() <= 0) {
+            if (my_line_colors.size() == 1) {
+               const color_t line_color = my_line_colors[0];
+               const tile_t& tile = a_current_sub_problem.tile_to_place;
+               for (int dir = 0; dir < 6; ++dir) {
+                  if (tile.color(dir) == line_color &&
+                      tile.color(dir + 1) == line_color) {
+                        next_positions.emplace_back(
+                              tile.rotate(dir),
+                              next_pyramid_position(a_current_sub_problem, a_partial_solution));
+                     break;
+                  }
+               }
+            }
+         }
+      }
+
       for (int rotation = 0; rotation < 6; ++rotation) {
          next_positions.emplace_back(
                a_current_sub_problem.tile_to_place.rotate(rotation),

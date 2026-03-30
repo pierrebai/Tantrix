@@ -73,6 +73,14 @@ namespace dak::tantrix
          return true;
       }
 
+      bool has_adjacent_color(const color_t& a_color) const
+      {
+         for (int dir = 0; dir < 6; ++dir)
+            if (color(dir) == a_color && color(dir + 1) == a_color)
+               return true;
+         return false;
+      }
+
       // Rotate the tile in place by a multiple of sixth of a turn.
       tile_t& rotate_in_place(int an_amount)
       {
